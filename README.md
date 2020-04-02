@@ -1,3 +1,5 @@
+![banner by Hans Braxmeier](spices.jpg)
+
 # Spice
 
 Spice is a state of the art clock-based spiking neural network simulator. The accompanying paper ["Faster and Simpler SNN Simulation with Work Queues"](https://arxiv.org/abs/1912.07423) has been recently accepted at IJCNN 2020.
