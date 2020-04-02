@@ -4,3 +4,8 @@ Spice is a state of the art clock-based spiking neural network simulator. The ac
 
 ## WIP
 The repository is still work in progress: We're continually improving the code and documentation. Be patient and stay tuned.
+
+## Requirements
+- CUDA SDK 8.0 or higher
+- nVidia GPU with compute capability 6.1
+- CMAKE 3.0.2 or higher, recommended default settings, builds out of the box.
