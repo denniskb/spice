@@ -42,6 +42,8 @@ int main( int const argc, char const ** argv )
 			// Ommit simulation steps without activations from output.
 			// if( n.size() > 0 )
 			{
+				std::sort( n.begin(), n.end() );
+
 				auto delim = "";
 				for( int x : n )
 				{
