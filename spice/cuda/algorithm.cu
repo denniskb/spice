@@ -242,10 +242,7 @@ static __global__ void _process_spikes(
 						    synapse_iter<typename Model::synapse>( isyn ),
 						    src,
 						    dst,
-						    // history( circidx( k - delay, max_history ), src / 32 ) >> ( src % 32
-						    // ) &
-						    //    1u,
-						    k == iter,
+						    MODE == UPDT_SYNS ? false : k == iter,
 						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
 						    dt,
 						    info,
