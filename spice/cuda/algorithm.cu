@@ -91,13 +91,6 @@ template <typename Decl>
 using const_synapse_iter = iter<Decl, false, true>;
 
 
-template <typename T>
-static __global__ void _fill( T * x, int len, T val )
-{
-	for( int i = threadid(); i < len; i += num_threads() )
-		x[i] = val;
-}
-
 static __global__ void
 _generate_adj_ids( int4 const * const layout, int const len, int * const out_edges )
 {
@@ -242,7 +235,7 @@ static __global__ void _process_spikes(
 						    synapse_iter<typename Model::synapse>( isyn ),
 						    src,
 						    dst,
-						    MODE == UPDT_SYNS ? false : k == iter,
+						    MODE == HNDL_SPKS && k == iter,
 						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
 						    dt,
 						    info,
