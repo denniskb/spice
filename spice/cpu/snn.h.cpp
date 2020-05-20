@@ -2,6 +2,7 @@
 
 #include <spice/models/brunel.h>
 #include <spice/models/brunel_with_plasticity.h>
+#include <spice/models/synth.h>
 #include <spice/models/vogels_abbott.h>
 #include <spice/util/assert.h>
 #include <spice/util/random.h>
@@ -220,4 +221,5 @@ void snn<Model>::_step( int const istep, float const dt, std::vector<int> * out_
 template class snn<vogels_abbott>;
 template class snn<brunel>;
 template class snn<brunel_with_plasticity>;
+template class snn<synth>;
 } // namespace spice::cpu

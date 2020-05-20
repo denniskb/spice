@@ -7,6 +7,7 @@
 #include <spice/cuda/util/warp.cuh>
 #include <spice/models/brunel.h>
 #include <spice/models/brunel_with_plasticity.h>
+#include <spice/models/synth.h>
 #include <spice/models/vogels_abbott.h>
 #include <spice/util/circular_buffer.h>
 
@@ -328,6 +329,9 @@ template void upload_storage<::spice::brunel>(
 template void upload_storage<::spice::brunel_with_plasticity>(
     ::spice::brunel_with_plasticity::neuron::ptuple_t const & neuron,
     ::spice::brunel_with_plasticity::synapse::ptuple_t const & synapse );
+template void upload_storage<::spice::synth>(
+    ::spice::synth::neuron::ptuple_t const & neuron,
+    ::spice::synth::synapse::ptuple_t const & synapse );
 
 // TOOD: Fuse these two into one function using conditional compilation ('if constexpr')
 template <typename Model>
@@ -341,6 +345,7 @@ void init( snn_info const info, span2d<int const> adj /* = {} */ )
 template void init<::spice::vogels_abbott>( snn_info, span2d<int const> );
 template void init<::spice::brunel>( snn_info, span2d<int const> );
 template void init<::spice::brunel_with_plasticity>( snn_info, span2d<int const> );
+template void init<::spice::synth>( snn_info, span2d<int const> );
 
 template <typename Model>
 void update(
@@ -427,6 +432,19 @@ template void update<::spice::brunel_with_plasticity>(
     int const,
     int const,
     span2d<int const> );
+template void update<::spice::synth>(
+    snn_info,
+    float,
+    int *,
+    unsigned *,
+    span2d<unsigned>,
+    int *,
+    int *,
+    unsigned *,
+    int const,
+    int const,
+    int const,
+    span2d<int const> );
 
 template <typename Model>
 void receive(
@@ -486,6 +504,19 @@ template void receive<::spice::brunel>(
     int const delay,
     float const dt );
 template void receive<::spice::brunel_with_plasticity>(
+    snn_info const,
+    span2d<int const>,
+
+    int const *,
+    unsigned const *,
+
+    int *,
+    span2d<unsigned>,
+    int const,
+    int const iter,
+    int const delay,
+    float const dt );
+template void receive<::spice::synth>(
     snn_info const,
     span2d<int const>,
 

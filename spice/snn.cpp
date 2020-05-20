@@ -2,6 +2,7 @@
 
 #include <spice/models/brunel.h>
 #include <spice/models/brunel_with_plasticity.h>
+#include <spice/models/synth.h>
 #include <spice/models/vogels_abbott.h>
 #include <spice/util/assert.h>
 #include <spice/util/type_traits.h>
@@ -66,4 +67,5 @@ void snn<Model>::init( float dt, int delay )
 template class snn<vogels_abbott>;
 template class snn<brunel>;
 template class snn<brunel_with_plasticity>;
+template class snn<synth>;
 } // namespace spice

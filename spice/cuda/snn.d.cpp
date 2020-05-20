@@ -6,6 +6,7 @@
 #include <spice/cuda/util/stream.h>
 #include <spice/models/brunel.h>
 #include <spice/models/brunel_with_plasticity.h>
+#include <spice/models/synth.h>
 #include <spice/models/vogels_abbott.h>
 #include <spice/util/assert.h>
 #include <spice/util/type_traits.h>
@@ -231,4 +232,5 @@ void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spik
 template class snn<spice::vogels_abbott>;
 template class snn<spice::brunel>;
 template class snn<spice::brunel_with_plasticity>;
+template class snn<spice::synth>;
 } // namespace spice::cuda

@@ -3,9 +3,9 @@
 #include <benchmark/benchmark.h>
 
 inline void
-exp_range( benchmark::internal::Benchmark * b, int64_t start, int64_t stop, int64_t mul = 2 )
+exp_range( benchmark::internal::Benchmark * b, int64_t start, int64_t stop, double mul = 2 )
 {
-	for( ; start <= stop; start *= mul )
+	for( ; start <= stop; start = ( int64_t )( start * mul ) )
 		b->Args( {start} );
 }
 
