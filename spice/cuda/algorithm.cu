@@ -215,49 +215,92 @@ static __global__ void _process_spikes(
 {
 	backend bak( threadid() + seed * num_threads() );
 
-	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
-	     i += gridDim.x )
+	if( Model::synapse::size == 0 )
 	{
-		int const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
+		int const S = *num_spikes;
 
-		for( int j = threadIdx.x; j < adj.width(); j += blockDim.x )
+#if 1 // one warp per spike
+		for( int i = warpid_grid(); i < S * ( adj.width() / WARP_SZ ); i += num_warps() )
 		{
-			int const isyn = adj.row( src ) - adj.row( 0 ) + j; // src * max_degree + j;
-			int const dst = adj( src, j );
+			int s = i % S;
+			int o = i / S;
+
+			int src = spikes[s];
+			int dst = adj( src, WARP_SZ * o + laneid() );
 
 			if( dst != INT_MAX )
+				Model::neuron::template receive(
+				    src,
+				    neuron_iter<typename Model::neuron>( dst ),
+				    const_synapse_iter<typename Model::synapse>( -1 ),
+				    info,
+				    bak );
+		}
+#else // one block per spike
+		for( int i = blockIdx.x; i < S * ( adj.width() / blockDim.x ); i += gridDim.x )
+		{
+			int s = i % S;
+			int o = i / S;
+
+			int src = spikes[s];
+			int dst = adj( src, blockDim.x * o + laneid() );
+
+			if( dst != INT_MAX )
+				Model::neuron::template receive(
+				    src,
+				    neuron_iter<typename Model::neuron>( dst ),
+				    const_synapse_iter<typename Model::synapse>( -1 ),
+				    info,
+				    bak );
+		}
+#endif
+	}
+	else
+	{
+		for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
+		     i += gridDim.x )
+		{
+			int const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
+
+			for( int j = threadIdx.x; j < adj.width(); j += blockDim.x )
 			{
-				if( MODE == INIT_SYNS )
-					Model::synapse::template init(
-					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
-				else if( Model::synapse::size > 0 )
-					for( int k = ages[src]; k <= iter; k++ )
-						Model::synapse::template update(
-						    synapse_iter<typename Model::synapse>( isyn ),
+				int const isyn = adj.row( src ) - adj.row( 0 ) + j; // src * max_degree + j;
+				int const dst = adj( src, j );
+
+				if( dst != INT_MAX )
+				{
+					if( MODE == INIT_SYNS )
+						Model::synapse::template init(
+						    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
+					else if( Model::synapse::size > 0 )
+						for( int k = ages[src]; k <= iter; k++ )
+							Model::synapse::template update(
+							    synapse_iter<typename Model::synapse>( isyn ),
+							    src,
+							    dst,
+							    MODE == HNDL_SPKS && k == iter,
+							    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
+							    dt,
+							    info,
+							    bak );
+
+					if( MODE == HNDL_SPKS )
+						Model::neuron::template receive(
 						    src,
-						    dst,
-						    MODE == HNDL_SPKS && k == iter,
-						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
-						    dt,
+						    neuron_iter<typename Model::neuron>( dst ),
+						    const_synapse_iter<typename Model::synapse>( isyn ),
 						    info,
 						    bak );
-
-				if( MODE == HNDL_SPKS )
-					Model::neuron::template receive(
-					    src,
-					    neuron_iter<typename Model::neuron>( dst ),
-					    const_synapse_iter<typename Model::synapse>( isyn ),
-					    info,
-					    bak );
+				}
 			}
-		}
 
-		if( MODE != INIT_SYNS && Model::synapse::size > 0 )
-		{
-			__syncthreads();
+			if( MODE != INIT_SYNS && Model::synapse::size > 0 )
+			{
+				__syncthreads();
 
-			if( threadIdx.x == 0 )
-				ages[src] = iter + 1;
+				if( threadIdx.x == 0 )
+					ages[src] = iter + 1;
+			}
 		}
 	}
 }
@@ -462,7 +505,8 @@ void receive(
     float const dt /* = 0 */ )
 {
 	// Assume 2% neurons spiking
-	_process_spikes<Model, HNDL_SPKS><<<nblocks( 5 * info.num_neurons, 128, 256 ), 256>>>(
+	//_process_spikes<Model, HNDL_SPKS><<<nblocks( 5 * info.num_neurons, 128, 256 ), 256>>>(
+	_process_spikes<Model, HNDL_SPKS><<<128, 128>>>(
 	    info,
 	    _seed++,
 	    adj,
