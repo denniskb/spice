@@ -506,7 +506,7 @@ void receive(
 {
 	// Assume 2% neurons spiking
 	//_process_spikes<Model, HNDL_SPKS><<<nblocks( 5 * info.num_neurons, 128, 256 ), 256>>>(
-	_process_spikes<Model, HNDL_SPKS><<<128, 128>>>(
+	_process_spikes<Model, HNDL_SPKS><<<64, 256>>>(
 	    info,
 	    _seed++,
 	    adj,
