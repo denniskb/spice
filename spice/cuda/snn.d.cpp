@@ -23,7 +23,7 @@ namespace spice::cuda
 template <typename Model>
 int snn<Model>::MAX_HISTORY() const
 {
-	return std::max( this->delay() + 1, 50 );
+	return std::max( this->delay() + 1, 32 );
 }
 
 template <typename Model>
