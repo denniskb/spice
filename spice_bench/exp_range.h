@@ -5,8 +5,7 @@
 inline void
 exp_range( benchmark::internal::Benchmark * b, int64_t start, int64_t stop, double mul = 2 )
 {
-	for( ; start <= stop; start = ( int64_t )( start * mul ) )
-		b->Args( {start} );
+	for( ; start <= stop; start = ( int64_t )( start * mul ) ) b->Args( {start} );
 }
 
 inline void exp_ranges(
@@ -16,8 +15,7 @@ inline void exp_ranges(
 	auto mul2 = range2.size() > 2 ? range2[2] : 2;
 
 	for( ; range1[0] <= range1[1]; range1[0] *= mul1 )
-		for( int64_t i = range2[0]; i <= range2[1]; i *= mul2 )
-			b->Args( {range1[0], i} );
+		for( int64_t i = range2[0]; i <= range2[1]; i *= mul2 ) b->Args( {range1[0], i} );
 }
 
 // clang-format off

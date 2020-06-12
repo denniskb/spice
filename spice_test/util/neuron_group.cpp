@@ -31,8 +31,7 @@ TEST( NeuronGroup, Ctor )
 
 		{
 			int i = 0;
-			for( auto const & c : x.connections() )
-				ASSERT_EQ( c, C[i++] );
+			for( auto const & c : x.connections() ) ASSERT_EQ( c, C[i++] );
 		}
 
 		ASSERT_EQ( 2, x.neighbors( 0 ).size() );

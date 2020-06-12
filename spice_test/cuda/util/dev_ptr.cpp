@@ -32,10 +32,8 @@ TEST( DevPtr, Ctor )
 
 	y[0] = 5;
 	ASSERT_EQ( y[0], 5 );
-	for( auto i : y )
-		ASSERT_EQ( i, 5 );
-	for( auto i : static_cast<nonstd::span<int const>>( y ) )
-		ASSERT_EQ( i, 5 );
+	for( auto i : y ) ASSERT_EQ( i, 5 );
+	for( auto i : static_cast<nonstd::span<int const>>( y ) ) ASSERT_EQ( i, 5 );
 }
 
 TEST( DevPtr, Copy )

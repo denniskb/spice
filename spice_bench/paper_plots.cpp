@@ -84,11 +84,9 @@ static void plot2_RunTime( benchmark::State & state )
 		event start, stop;
 		for( auto _ : state )
 		{
-			for( int i = 0; i < 150; i++ )
-				net->step();
+			for( int i = 0; i < 150; i++ ) net->step();
 			start.record();
-			for( int i = 0; i < ITER; i++ )
-				net->step();
+			for( int i = 0; i < ITER; i++ ) net->step();
 			stop.record();
 			stop.synchronize();
 
@@ -119,8 +117,7 @@ static void gen( benchmark::State & state )
 {
 	std::vector<adj_list::int4> layout( 100'000 );
 
-	for( auto _ : state )
-		adj_list::generate( {100'000, 0.1f}, layout );
+	for( auto _ : state ) adj_list::generate( {100'000, 0.1f}, layout );
 
 	state.SetBytesProcessed( 20 * 100'000 * state.iterations() );
 }

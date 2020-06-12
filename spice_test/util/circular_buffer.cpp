@@ -19,11 +19,9 @@ TEST( CircBuffer, Ctor )
 		ASSERT_EQ( x.size(), 10 );
 		ASSERT_EQ( x.end() - x.begin(), 10 );
 
-		for( int i = 0; i < 10; i++ )
-			ASSERT_EQ( x[i], 0 );
+		for( int i = 0; i < 10; i++ ) ASSERT_EQ( x[i], 0 );
 
-		for( auto j : x )
-			ASSERT_EQ( j, 0 );
+		for( auto j : x ) ASSERT_EQ( j, 0 );
 	}
 }
 

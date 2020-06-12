@@ -105,8 +105,7 @@ _generate_adj_ids( int4 const * const layout, int const len, int * const out_edg
 		int4 desc = layout[wid];
 
 		if( desc.z == -1 )
-			for( int i = laneid(); i < desc.y; i += WARP_SZ )
-				( out_edges + desc.x )[i] = -1;
+			for( int i = laneid(); i < desc.y; i += WARP_SZ ) ( out_edges + desc.x )[i] = -1;
 		else
 			while( desc.y > 0 )
 			{

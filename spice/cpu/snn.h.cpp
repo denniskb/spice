@@ -117,8 +117,7 @@ snn<Model>::snn( neuron_group const & desc, float const dt, int const delay /* =
 		    _graph.adj );
 
 		_spikes.flags.emplace( delay + 1 );
-		for( auto & bitvec : *_spikes.flags )
-			bitvec.resize( desc.size() );
+		for( auto & bitvec : *_spikes.flags ) bitvec.resize( desc.size() );
 	}
 }
 

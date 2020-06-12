@@ -59,8 +59,7 @@ TEST( dAlgorithm, AdjList )
 		}
 	}
 
-	for( std::size_t i = 30; i < 60; i++ )
-		ASSERT_EQ( adj.neighbors( i ).size(), 0 );
+	for( std::size_t i = 30; i < 60; i++ ) ASSERT_EQ( adj.neighbors( i ).size(), 0 );
 }
 
 

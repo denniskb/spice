@@ -32,7 +32,10 @@ nonstd::span<int const> adj_list::neighbors( std::size_t i_node ) const
 
 	auto const first = &_edges[i_node * max_degree()];
 
-	return {first, max_degree() - std::count( first, first + max_degree(), -1 )};
+	std::ptrdiff_t d = narrow_int<ptrdiff_t>( max_degree() ) - 1;
+	while( d >= 0 && first[d] < 0 ) --d;
+
+	return {first, static_cast<std::size_t>( d + 1 )};
 }
 
 int adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
@@ -136,8 +139,7 @@ void adj_list::generate( std::vector<int4> const & layout, std::vector<int> & ed
 
 		if( desc.first == -1 )
 		{
-			for( std::size_t j = 0; j < desc.degree; j++ )
-				edges.at( desc.offset + j ) = -1;
+			for( std::size_t j = 0; j < desc.degree; j++ ) edges.at( desc.offset + j ) = -1;
 
 			continue;
 		}

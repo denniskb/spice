@@ -27,8 +27,7 @@ TEST( AdjList, Ctor )
 		ASSERT_EQ( x.max_degree(), 0 );
 		ASSERT_EQ( x.num_edges(), 0 );
 
-		for( int i = 0; i < 100; i++ )
-			ASSERT_EQ( x.neighbors( i ).size(), 0 );
+		for( int i = 0; i < 100; i++ ) ASSERT_EQ( x.neighbors( i ).size(), 0 );
 	}
 
 	{
