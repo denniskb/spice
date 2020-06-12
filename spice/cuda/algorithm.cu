@@ -104,10 +104,9 @@ _generate_adj_ids( int4 const * const layout, int const len, int * const out_edg
 	{
 		int4 desc = layout[wid];
 
-		// TODO: Split into two kernels???
 		if( desc.z == -1 )
 			for( int i = laneid(); i < desc.y; i += WARP_SZ )
-				( out_edges + desc.x )[i] = INT_MAX;
+				( out_edges + desc.x )[i] = -1;
 		else
 			while( desc.y > 0 )
 			{
@@ -180,9 +179,9 @@ static __global__ void _process_neurons(
 			{
 				unsigned const flag = __ballot_sync( __activemask(), spiked );
 				if( laneid() == 0 )
-					history[i / 32] = flag;
+					history[i / WARP_SZ] = flag;
 
-				bool const delayed_spike = delayed_history[i / 32] >> ( i % 32 ) & 1u;
+				bool const delayed_spike = delayed_history[i / WARP_SZ] >> ( i % WARP_SZ ) & 1u;
 
 				if( iter - ages[i] == max_history - 1 && !delayed_spike )
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
@@ -218,93 +217,83 @@ static __global__ void _process_spikes(
 {
 	backend bak( threadid() + seed * num_threads() );
 
-	if( Model::synapse::size == 0 )
+	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
+	     i += gridDim.x )
 	{
-		int const S = *num_spikes;
+		int const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
 
-#if 1 // one warp per spike
-		for( int i = warpid_grid(); i < S * ( adj.width() / WARP_SZ ); i += num_warps() )
+		for( int j = threadIdx.x; j < adj.width(); j += blockDim.x )
 		{
-			int s = i % S;
-			int o = i / S;
+			int const isyn = adj.row( src ) - adj.row( 0 ) + j; // src * max_degree + j;
+			int const dst = adj( src, j );
 
-			int src = spikes[s];
-			int dst = adj( src, WARP_SZ * o + laneid() );
-
-			if( dst != INT_MAX )
-				Model::neuron::template receive(
-				    src,
-				    neuron_iter<typename Model::neuron>( dst ),
-				    const_synapse_iter<typename Model::synapse>( -1 ),
-				    info,
-				    bak );
-		}
-#else // one block per spike
-		for( int i = blockIdx.x; i < S * ( adj.width() / blockDim.x ); i += gridDim.x )
-		{
-			int s = i % S;
-			int o = i / S;
-
-			int src = spikes[s];
-			int dst = adj( src, blockDim.x * o + laneid() );
-
-			if( dst != INT_MAX )
-				Model::neuron::template receive(
-				    src,
-				    neuron_iter<typename Model::neuron>( dst ),
-				    const_synapse_iter<typename Model::synapse>( -1 ),
-				    info,
-				    bak );
-		}
-#endif
-	}
-	else
-	{
-		for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
-		     i += gridDim.x )
-		{
-			int const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
-
-			for( int j = threadIdx.x; j < adj.width(); j += blockDim.x )
+			if( dst >= 0 )
 			{
-				int const isyn = adj.row( src ) - adj.row( 0 ) + j; // src * max_degree + j;
-				int const dst = adj( src, j );
-
-				if( dst != INT_MAX )
-				{
-					if( MODE == INIT_SYNS )
-						Model::synapse::template init(
-						    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
-					else if( Model::synapse::size > 0 )
-						for( int k = ages[src]; k <= iter; k++ )
-							Model::synapse::template update(
-							    synapse_iter<typename Model::synapse>( isyn ),
-							    src,
-							    dst,
-							    MODE == HNDL_SPKS && k == iter,
-							    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
-							    dt,
-							    info,
-							    bak );
-
-					if( MODE == HNDL_SPKS )
-						Model::neuron::template receive(
+				if( MODE == INIT_SYNS )
+					Model::synapse::template init(
+					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
+				else if( Model::synapse::size > 0 )
+					for( int k = ages[src]; k <= iter; k++ )
+						Model::synapse::template update(
+						    synapse_iter<typename Model::synapse>( isyn ),
 						    src,
-						    neuron_iter<typename Model::neuron>( dst ),
-						    const_synapse_iter<typename Model::synapse>( isyn ),
+						    dst,
+						    MODE == HNDL_SPKS && k == iter,
+						    history( circidx( k, max_history ), dst / WARP_SZ ) >>
+						            ( dst % WARP_SZ ) &
+						        1u,
+						    dt,
 						    info,
 						    bak );
-				}
-			}
 
-			if( MODE != INIT_SYNS && Model::synapse::size > 0 )
-			{
-				__syncthreads();
-
-				if( threadIdx.x == 0 )
-					ages[src] = iter + 1;
+				if( MODE == HNDL_SPKS )
+					Model::neuron::template receive(
+					    src,
+					    neuron_iter<typename Model::neuron>( dst ),
+					    const_synapse_iter<typename Model::synapse>( isyn ),
+					    info,
+					    bak );
 			}
 		}
+
+		if( MODE != INIT_SYNS && Model::synapse::size > 0 )
+		{
+			__syncthreads();
+
+			if( threadIdx.x == 0 )
+				ages[src] = iter + 1;
+		}
+	}
+}
+
+template <typename Model>
+static __global__ void _process_spikes_cache_aware(
+    snn_info const info,
+    unsigned const seed,
+    span2d<int const> adj,
+
+    int const * spikes = nullptr,
+    unsigned const * num_spikes = nullptr )
+{
+	backend bak( threadid() + seed * num_threads() );
+
+	int const S = *num_spikes;
+
+	for( int i = warpid_grid(); i < S * ( adj.width() / WARP_SZ ); i += num_warps() )
+	{
+		int s = i % S;
+		int o = i / S;
+
+		int src = spikes[s];
+		int dst = adj( src, WARP_SZ * o + laneid() );
+
+		if( dst >= 0 )
+			Model::neuron::template receive(
+			    src,
+			    neuron_iter<typename Model::neuron>( dst ),
+			    const_synapse_iter<typename Model::synapse>( -1 ),
+			    info,
+			    bak );
 	}
 }
 
@@ -425,7 +414,7 @@ void update(
 	    history.row( circidx( iter - delay, max_history ) ) );
 
 	if( Model::synapse::size > 0 )
-		_process_spikes<Model, UPDT_SYNS><<<nblocks( 5 * info.num_neurons, 128, 256 ), 256>>>(
+		_process_spikes<Model, UPDT_SYNS><<<256, 256>>>(
 		    info,
 		    _seed++,
 		    adj,
@@ -508,22 +497,32 @@ void receive(
     int const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	// Assume 2% neurons spiking
-	//_process_spikes<Model, HNDL_SPKS><<<nblocks( 5 * info.num_neurons, 128, 256 ), 256>>>(
-	_process_spikes<Model, HNDL_SPKS><<<64, 256>>>(
-	    info,
-	    _seed++,
-	    adj,
+	int const launch = Model::synapse::size > 0 ? 256 : 128;
 
-	    spikes,
-	    num_spikes,
+	// TODO: Fine-tune boundary for final paper!
+	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
+		_process_spikes<Model, HNDL_SPKS><<<launch, launch>>>(
+		    info,
+		    _seed++,
+		    adj,
 
-	    ages,
-	    history,
-	    max_history,
-	    iter,
-	    delay,
-	    dt );
+		    spikes,
+		    num_spikes,
+
+		    ages,
+		    history,
+		    max_history,
+		    iter,
+		    delay,
+		    dt );
+	else
+		_process_spikes_cache_aware<Model><<<launch, launch>>>(
+		    info,
+		    _seed++,
+		    adj,
+
+		    spikes,
+		    num_spikes );
 }
 template void receive<::spice::vogels_abbott>(
     snn_info const,

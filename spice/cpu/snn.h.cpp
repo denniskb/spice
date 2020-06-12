@@ -59,10 +59,10 @@ static void for_each( F && f, int const count, ID && id, adj_list const & adj )
 	for( int i = 0; i < count; i++ )
 	{
 		int const src = std::forward<ID>( id )( i );
-		int isyn = adj.edge_index( src, 0 );
 
+		int j = 0;
 		for( int dst : adj.neighbors( src ) )
-			std::forward<F>( f )( isyn++, src, dst );
+			std::forward<F>( f )( adj.edge_index( src, j++ ), src, dst );
 	}
 }
 

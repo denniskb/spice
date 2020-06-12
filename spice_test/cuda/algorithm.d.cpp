@@ -54,7 +54,7 @@ TEST( dAlgorithm, AdjList )
 		for( auto n : adj.neighbors( i ) )
 		{
 			ASSERT_TRUE( n < 10 || n >= 30 );
-			ASSERT_GT( n, prev ) << i;
+			ASSERT_GT( n, prev );
 			prev = n;
 		}
 	}

@@ -1,3 +1,4 @@
+#include <spice/cuda/util/defs.h>
 #include <spice/util/adj_list.h>
 #include <spice/util/assert.h>
 #include <spice/util/random.h>
@@ -8,7 +9,7 @@
 #include <random>
 
 
-static int _seed = 1337;
+static int _seed = 1339;
 
 
 namespace spice::util
@@ -30,11 +31,8 @@ nonstd::span<int const> adj_list::neighbors( std::size_t i_node ) const
 	spice_assert( i_node < num_nodes(), "index out of bounds" );
 
 	auto const first = &_edges[i_node * max_degree()];
-	// TODO: Interpolation search
-	auto const degree =
-	    std::lower_bound( first, first + max_degree(), std::numeric_limits<int>::max() ) - first;
 
-	return {first, narrow_cast<std::size_t>( degree )};
+	return {first, max_degree() - std::count( first, first + max_degree(), -1 )};
 }
 
 int adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
@@ -77,7 +75,8 @@ std::size_t adj_list::generate( neuron_group const & desc, std::vector<int4> & l
 		}
 	}
 
-	auto const max_degree = ( *std::max_element( offsets.begin(), offsets.end() ) + 31 ) / 32 * 32;
+	auto const max_degree =
+	    ( *std::max_element( offsets.begin(), offsets.end() ) + WARP_SZ - 1 ) / WARP_SZ * WARP_SZ;
 
 	for( std::size_t i = 0; i < offsets.size(); i++ )
 	{
@@ -138,7 +137,7 @@ void adj_list::generate( std::vector<int4> const & layout, std::vector<int> & ed
 		if( desc.first == -1 )
 		{
 			for( std::size_t j = 0; j < desc.degree; j++ )
-				edges.at( desc.offset + j ) = std::numeric_limits<int>::max();
+				edges.at( desc.offset + j ) = -1;
 
 			continue;
 		}

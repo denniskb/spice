@@ -2,19 +2,19 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(spice LANGUAGES CXX CUDA)
 
-# Use only for dev/testing -- turn off for benchmarking:
-# add_definitions(-DSPICE_ASSERT_RELEASE)
-
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "/std:c++17 /EHsc /W4 /WX /fp:fast")
 endif()
 set(CMAKE_CUDA_FLAGS "--expt-extended-lambda -gencode=arch=compute_61,code=sm_61 --use_fast_math")
 
-
-set(with_bench FALSE CACHE BOOL "Build benchmarks (optional, intended for developers, requires google benchmark)")
-set(with_samples TRUE CACHE BOOL "Build samples (optional, recommended)")	
+set(with_samples TRUE CACHE BOOL "Build samples (optional, recommended)")
+set(with_release_asserts TRUE CACHE BOOL "Use for dev/testing. Turn off for bench/production.")
+set(with_bench FALSE CACHE BOOL "Build benchmarks (optional, intended for developers, requires google benchmark)")	
 set(with_tests FALSE CACHE BOOL "Build unit tests (optional, intended for developers, requires google test)")
 
+if(with_release_asserts)
+	add_definitions(-DSPICE_ASSERT_RELEASE)
+endif()
 
 # spice
 file(GLOB_RECURSE spice_src spice/*)

@@ -1,9 +1,7 @@
 #pragma once
 
+#include <spice/cuda/util/defs.h>
 
-#ifndef WARP_SZ
-#define WARP_SZ 32
-#endif
 
 #ifndef MASK_ALL
 #define MASK_ALL 0xffffffff
