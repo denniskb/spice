@@ -11,7 +11,7 @@ namespace spice
 {
 struct synth : model
 {
-	struct neuron : ::spice::neuron<int>
+	struct neuron : ::spice::neuron<int, int>
 	{
 		enum attr
 		{
@@ -29,7 +29,7 @@ struct synth : model
 		}
 
 		template <typename Iter, typename Backend>
-		HYBRID static bool update( Iter, float const, snn_info info, Backend & bak )
+		HYBRID static bool update( Iter n, float const, snn_info info, Backend & bak )
 		{
 			return bak.rand() < 0.01f;
 		}

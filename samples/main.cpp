@@ -1,6 +1,7 @@
 #include "../spice/cuda/snn.h"
 #include "../spice/models/brunel.h"
 #include "../spice/models/brunel_with_plasticity.h"
+#include "../spice/models/synth.h"
 #include "../spice/models/vogels_abbott.h"
 
 #include <fstream>
@@ -17,7 +18,7 @@ int main( int const argc, char const ** argv )
 	if( argc != 5 )
 	{
 		std::printf(
-		    "Usage: spice_bench.exe {brunel|brunel+|vogels} [neuron-count] [iter-count] "
+		    "Usage: spice_bench.exe {brunel|brunel+|vogels|synth} [neuron-count] [iter-count] "
 		    "[out-file]" );
 		return EXIT_FAILURE;
 	}
@@ -78,6 +79,8 @@ int main( int const argc, char const ** argv )
 		// Initialize a snn with the vogels&abbott model
 		else if( !strcmp( argv[1], "vogels" ) )
 			run_sim( cuda::snn<vogels_abbott>( NNEURON, 0.02f, 0.0001f, 8 ) );
+		else if( !strcmp( argv[1], "synth" ) )
+			run_sim( cuda::snn<synth>( NNEURON, 0.1f, 0.0001f, 1 ) );
 	}
 	catch( std::exception & e )
 	{

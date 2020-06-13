@@ -16,8 +16,6 @@ template <typename Model>
 class snn
 {
 public:
-	snn() = default;
-	explicit snn( float dt, int delay = 1 );
 	virtual ~snn() = default;
 
 	void step( std::vector<int> * out_spikes = nullptr );
@@ -33,7 +31,9 @@ public:
 	virtual typename Model::synapse::tuple_t get_synapse( std::size_t i ) const = 0;
 
 protected:
-	void init( float dt, int delay );
+	snn() = default;
+	explicit snn( float dt, int delay = 1 );
+	void init( float dt, int delay = 1 );
 
 private:
 	float _dt = 0.0f;
@@ -41,7 +41,6 @@ private:
 	int _i = 0;
 	spice::util::kahan_sum<float> _simtime;
 
-	// TODO: Fix overload resolution
 	virtual void _step( int i, float dt, std::vector<int> * out_spikes ) = 0;
 };
 } // namespace spice

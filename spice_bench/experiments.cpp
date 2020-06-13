@@ -16,9 +16,9 @@ using namespace spice::util;
 
 static void cache_synth( benchmark::State & state )
 {
-	float const P = 0.002f;
-	std::size_t const N = state.range( 0 );
-	std::size_t const NSYN = narrow_cast<std::size_t>( N * N * P );
+	float const P = 0.1f;
+	std::size_t const NSYN = state.range( 0 );
+	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -27,9 +27,7 @@ static void cache_synth( benchmark::State & state )
 	{
 		cuda::snn<synth> net( {{N}, {{0, 0, P}}}, 1, 1 );
 
-		std::vector<int> spikes;
-		net.step( &spikes );
-		state.counters["spikes_per_n"] = narrow_cast<double>( spikes.size() * P );
+		net.step();
 
 		event start, stop;
 		for( auto _ : state )
@@ -52,7 +50,8 @@ BENCHMARK( cache_synth )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     //->DenseRange( 100'000'000, 1'000'000'000, 100'000'000 );
-    ->DenseRange( 100'000, 900'000, 50'000 );
+    ->DenseRange( 1'850'000'000, 2'150'000'000, 150'000'000 );
+//->Range( 2'150'000'000, 2'150'000'000 );
 
 static void cache_brunel( benchmark::State & state )
 {

@@ -27,12 +27,7 @@ TEST( dAlgorithm, AdjList )
 
 	dev_ptr<int> d_e( deg * 60 );
 	dev_ptr<adj_list::int4> d_layout( layout );
-	generate_rnd_adj_list(
-	    d_layout.data(),
-	    narrow_int<int>( d_layout.size() ),
-	    60,
-	    narrow_int<int>( deg ),
-	    d_e.data() );
+	generate_rnd_adj_list( d_layout.data(), narrow_int<int>( d_layout.size() ), d_e.data() );
 	cudaDeviceSynchronize();
 
 	adj_list adj( 60, deg, d_e.data() );

@@ -148,8 +148,7 @@ TEST( AdjList, Ctor )
 			auto const y = bounds.range;
 
 			ASSERT_TRUE(
-			    x == 0 && y == 10 || x == 10 && y == 20 || x == 30 && y == 30 ||
-			    x == -1 && y == -1 );
+			    x == 0 && y == 10 || x == 10 && y == 20 || x == 30 && y == 30 || x == 0 && y == 0 );
 		}
 	}
 }

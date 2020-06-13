@@ -31,13 +31,8 @@ void snn<Model>::reserve(
     std::size_t const num_neurons, std::size_t const max_degree, int const delay )
 {
 	auto num_synapses = num_neurons * max_degree;
-	if( num_synapses > _graph.edges.capacity() )
-	{
-		// Hysteresis (TODO: Make generic (compute avg. connect. inside neuron group))
-		double const p = std::is_same_v<Model, vogels_abbott> ? 0.02 : 0.05;
-		num_synapses = narrow_cast<std::size_t>(
-		    ( std::sqrt( 15.0 / p / num_neurons ) + 1.0 ) * num_synapses );
-	}
+	if( _graph.edges.capacity() > 0 && num_synapses > _graph.edges.capacity() ) // Hysteresis
+		num_synapses = narrow_cast<std::size_t>( num_synapses * 1.01 );
 
 	_spikes.ids_data.resize( delay * num_neurons );
 	_spikes.ids = {_spikes.ids_data.data(), narrow_int<int>( num_neurons )};
@@ -138,12 +133,7 @@ void snn<Model>::init( spice::util::neuron_group const & desc, float dt, int del
 	cudaMemcpyAsync(
 	    d_layout.data(), layout.data(), d_layout.size_in_bytes(), cudaMemcpyHostToDevice );
 
-	generate_rnd_adj_list(
-	    d_layout.data(),
-	    narrow_int<int>( layout.size() ),
-	    narrow_int<int>( desc.size() ),
-	    narrow_int<int>( max_degree ),
-	    _graph.edges.data() );
+	generate_rnd_adj_list( d_layout.data(), narrow_int<int>( layout.size() ), _graph.edges.data() );
 	_graph.edges.read_mostly();
 
 	set();

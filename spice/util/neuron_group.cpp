@@ -21,15 +21,12 @@ neuron_group::neuron_group(
     , _connectivity( connectivity )
 {
 	for( auto gs : group_sizes )
-		spice_assert( gs > 0 && gs < std::numeric_limits<int>::max(), "invalid group size" );
+		spice_assert( gs <= std::numeric_limits<int>::max(), "invalid group size" );
 
 	for( auto c : connectivity )
 	{
 		spice_assert(
-		    std::get<0>( c ) >= 0 &&
-		        narrow_cast<std::size_t>( std::get<0>( c ) ) < group_sizes.size() &&
-		        std::get<1>( c ) >= 0 &&
-		        narrow_cast<std::size_t>( std::get<1>( c ) ) < group_sizes.size(),
+		    std::get<0>( c ) < group_sizes.size() && std::get<1>( c ) < group_sizes.size(),
 		    "invalid index in connectivity matrix" );
 		spice_assert(
 		    std::get<2>( c ) >= 0.0f && std::get<2>( c ) <= 1.0f, "invalid connect. prob." );
@@ -60,23 +57,23 @@ std::size_t neuron_group::size() const
 }
 std::size_t neuron_group::size( std::size_t i ) const
 {
-	spice_assert( i >= 0 && i < num_groups(), "index out of range" );
+	spice_assert( i < num_groups(), "index out of range" );
 	return _group_sizes[i];
 }
 
 std::size_t neuron_group::first( std::size_t i ) const
 {
-	spice_assert( i >= 0 && i < num_groups(), "index out of range" );
+	spice_assert( i < num_groups(), "index out of range" );
 	return std::accumulate( _group_sizes.begin(), _group_sizes.begin() + i, std::size_t( 0 ) );
 }
 std::size_t neuron_group::last( std::size_t i ) const
 {
-	spice_assert( i >= 0 && i < num_groups(), "index out of range" );
+	spice_assert( i < num_groups(), "index out of range" );
 	return std::accumulate( _group_sizes.begin(), _group_sizes.begin() + i + 1, std::size_t( 0 ) );
 }
 std::size_t neuron_group::range( std::size_t i ) const
 {
-	spice_assert( i >= 0 && i < num_groups(), "index out of range" );
+	spice_assert( i < num_groups(), "index out of range" );
 	return last( i ) - first( i );
 }
 

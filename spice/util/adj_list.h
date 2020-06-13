@@ -16,14 +16,14 @@ class adj_list
 public:
 	struct int4
 	{
-		int offset, degree, first, range;
+		unsigned offset, degree, first, range;
 	};
 
 	adj_list() = default;
 	adj_list( std::size_t num_nodes, std::size_t max_degree, int const * edges );
 
 	nonstd::span<int const> neighbors( std::size_t i_node ) const;
-	int edge_index( std::size_t i_src, std::size_t i_dst ) const;
+	std::size_t edge_index( std::size_t i_src, std::size_t i_dst ) const;
 
 	static std::size_t generate( neuron_group const & desc, std::vector<int4> & layout );
 	static std::size_t generate( neuron_group const & desc, std::vector<int> & edges );

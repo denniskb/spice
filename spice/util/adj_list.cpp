@@ -19,10 +19,11 @@ adj_list::adj_list( std::size_t num_nodes, std::size_t max_degree, int const * e
     , _max_degree( max_degree )
     , _edges( edges )
 {
-	spice_assert( num_nodes < std::numeric_limits<int>::max(), "invalid node count" );
-	spice_assert( max_degree < std::numeric_limits<int>::max(), "invalid degree" );
+	spice_assert( num_nodes <= std::numeric_limits<int>::max(), "invalid node count" );
+	spice_assert( max_degree <= std::numeric_limits<int>::max(), "invalid degree" );
 	spice_assert(
-	    num_nodes * max_degree < std::numeric_limits<int>::max(), "no. of edges out of boudns" );
+	    num_nodes * max_degree <= std::numeric_limits<unsigned>::max(),
+	    "no. of edges out of boudns" );
 }
 
 
@@ -38,12 +39,12 @@ nonstd::span<int const> adj_list::neighbors( std::size_t i_node ) const
 	return {first, static_cast<std::size_t>( d + 1 )};
 }
 
-int adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
+std::size_t adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
 {
 	spice_assert( i_src < num_nodes(), "index out of bounds" );
 	spice_assert( i_dst < neighbors( i_src ).size(), "index out of bounds" );
 
-	return narrow_cast<int>( i_src * max_degree() + i_dst );
+	return i_src * max_degree() + i_dst;
 }
 
 
@@ -53,18 +54,18 @@ std::size_t adj_list::generate( neuron_group const & desc, std::vector<int4> & l
 	layout.clear();
 	layout.reserve( 2 * desc.size() );
 
-	std::vector offsets( desc.size(), 0 );
+	std::vector<unsigned> offsets( desc.size(), 0 );
 
 	xorwow gen( _seed++ );
 
 	for( auto edge : desc.connections() )
 	{
-		util::binomial_distribution<> binom(
+		util::binomial_distribution<unsigned> binom(
 		    narrow_int<int>( desc.size( std::get<1>( edge ) ) ), std::get<2>( edge ) );
 
-		std::pair<int, int> const bound(
-		    narrow_cast<int>( desc.first( std::get<1>( edge ) ) ),
-		    narrow_cast<int>( desc.range( std::get<1>( edge ) ) ) );
+		std::pair<unsigned, unsigned> const bound(
+		    narrow_cast<unsigned>( desc.first( std::get<1>( edge ) ) ),
+		    narrow_cast<unsigned>( desc.range( std::get<1>( edge ) ) ) );
 
 		for( std::size_t i = desc.first( std::get<0>( edge ) ),
 		                 n = desc.last( std::get<0>( edge ) );
@@ -74,7 +75,7 @@ std::size_t adj_list::generate( neuron_group const & desc, std::vector<int4> & l
 			auto const degree = binom( gen );
 
 			offsets[i] += degree;
-			layout.push_back( {-1, degree, bound.first, bound.second} );
+			layout.push_back( {0, degree, bound.first, bound.second} );
 		}
 	}
 
@@ -83,9 +84,9 @@ std::size_t adj_list::generate( neuron_group const & desc, std::vector<int4> & l
 
 	for( std::size_t i = 0; i < offsets.size(); i++ )
 	{
-		int const offset = narrow_cast<int>( i * max_degree );
+		auto const offset = narrow_cast<unsigned>( i * max_degree );
 
-		layout.push_back( {offset + offsets[i], max_degree - offsets[i], -1, -1} );
+		layout.push_back( {offset + offsets[i], max_degree - offsets[i], 0, 0} );
 		offsets[i] = offset;
 	}
 
@@ -137,10 +138,9 @@ void adj_list::generate( std::vector<int4> const & layout, std::vector<int> & ed
 	{
 		auto const desc = layout[i];
 
-		if( desc.first == -1 )
+		if( desc.range == 0 )
 		{
 			for( std::size_t j = 0; j < desc.degree; j++ ) edges.at( desc.offset + j ) = -1;
-
 			continue;
 		}
 
@@ -154,7 +154,7 @@ void adj_list::generate( std::vector<int4> const & layout, std::vector<int> & ed
 		}
 
 		float const scale = ( desc.range - desc.degree ) / total;
-		for( int j = 0; j < desc.degree; j++ )
+		for( unsigned j = 0; j < desc.degree; j++ )
 			edges.at( desc.offset + j ) =
 			    desc.first + narrow_cast<int>( neighbor_ids[j] * scale ) + j;
 	}

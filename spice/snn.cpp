@@ -11,16 +11,6 @@
 namespace spice
 {
 template <typename Model>
-snn<Model>::snn( float dt, int delay /* = 1 */ )
-{
-	spice_assert( dt >= 0.0f );
-	spice_assert( delay >= 1 );
-
-	init( dt, delay );
-}
-
-
-template <typename Model>
 void snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
 	_step( _i++, _simtime.add( dt() ), out_spikes );
@@ -53,6 +43,14 @@ snn_info snn<Model>::info() const
 	return {util::narrow_cast<int>( num_neurons() )};
 }
 
+template <typename Model>
+snn<Model>::snn( float dt, int delay /* = 1 */ )
+{
+	spice_assert( dt >= 0.0f );
+	spice_assert( delay >= 1 );
+
+	init( dt, delay );
+}
 template <typename Model>
 void snn<Model>::init( float dt, int delay )
 {

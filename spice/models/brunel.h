@@ -37,7 +37,7 @@ struct brunel : model
 			int const Tref = 20;              // dt
 			float const Vthres = 0.02f;       // v
 
-			if( n.id() < info.num_neurons / 2 ) // poisson neuron
+			if( n.id() < static_cast<unsigned>( info.num_neurons / 2 ) ) // poisson neuron
 			{
 				float const firing_rate = 20; // Hz
 

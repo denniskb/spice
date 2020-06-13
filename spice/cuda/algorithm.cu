@@ -38,10 +38,10 @@ public:
 	{
 	}
 
-	__device__ int id() const { return _i; }
+	__device__ unsigned id() const { return _i; }
 
 private:
-	int const _i = 0;
+	unsigned const _i = 0;
 };
 
 template <typename Decl, bool Neuron = true, bool Const = false>
@@ -93,7 +93,7 @@ using const_synapse_iter = iter<Decl, false, true>;
 
 
 static __global__ void
-_generate_adj_ids( int4 const * const layout, int const len, int * const out_edges )
+_generate_adj_ids( uint4 const * layout, int const len, int * const out_edges )
 {
 	int const MAX_DEGREE = 1024;
 	__shared__ float rows[4][MAX_DEGREE];
@@ -102,15 +102,15 @@ _generate_adj_ids( int4 const * const layout, int const len, int * const out_edg
 
 	for( int wid = warpid_grid(); wid < len; wid += num_warps() )
 	{
-		int4 desc = layout[wid];
+		auto desc = layout[wid];
 
-		if( desc.z == -1 )
+		if( desc.w == 0 )
 			for( int i = laneid(); i < desc.y; i += WARP_SZ ) ( out_edges + desc.x )[i] = -1;
 		else
 			while( desc.y > 0 )
 			{
 				int const degree = min( desc.y, MAX_DEGREE );
-				int2 const bounds = {desc.z, (float)degree / desc.y * desc.w};
+				int2 const bounds = {desc.z, (int)( (float)degree / desc.y * desc.w )};
 
 				// accumulate
 				float total = 0.0f;
@@ -137,7 +137,7 @@ _generate_adj_ids( int4 const * const layout, int const len, int * const out_edg
 				}
 
 				desc.x += degree;
-				desc.y -= MAX_DEGREE;
+				desc.y -= min( desc.y, MAX_DEGREE );
 				desc.z = bounds.x + bounds.y;
 				desc.w -= bounds.y;
 			}
@@ -162,6 +162,8 @@ static __global__ void _process_neurons(
     int const max_history = 0,
     unsigned * delayed_history = nullptr )
 {
+	assert( info.num_neurons < INT_MAX - num_threads() );
+
 	backend bak( threadid() + num_threads() * seed );
 
 	for( int i = threadid(); i < info.num_neurons; i += num_threads() )
@@ -219,11 +221,11 @@ static __global__ void _process_spikes(
 	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
 	     i += gridDim.x )
 	{
-		int const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
+		unsigned const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
 
-		for( int j = threadIdx.x; j < adj.width(); j += blockDim.x )
+		for( unsigned j = threadIdx.x; j < adj.width(); j += blockDim.x )
 		{
-			int const isyn = adj.row( src ) - adj.row( 0 ) + j; // src * max_degree + j;
+			unsigned const isyn = adj.row( src ) - adj.row( 0 ) + j; // src * max_degree + j;
 			int const dst = adj( src, j );
 
 			if( dst >= 0 )
@@ -290,7 +292,7 @@ static __global__ void _process_spikes_cache_aware(
 			Model::neuron::template receive(
 			    src,
 			    neuron_iter<typename Model::neuron>( dst ),
-			    const_synapse_iter<typename Model::synapse>( -1 ),
+			    const_synapse_iter<typename Model::synapse>( 0 ),
 			    info,
 			    bak );
 	}
@@ -338,14 +340,9 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list(
-    spice::util::adj_list::int4 const * layout,
-    int len,
-    int num_neurons,
-    int max_degree,
-    int * out_edges )
+void generate_rnd_adj_list( spice::util::adj_list::int4 const * layout, int len, int * out_edges )
 {
-	_generate_adj_ids<<<128, 128>>>( reinterpret_cast<int4 const *>( layout ), len, out_edges );
+	_generate_adj_ids<<<128, 128>>>( reinterpret_cast<uint4 const *>( layout ), len, out_edges );
 }
 
 template <typename Model>

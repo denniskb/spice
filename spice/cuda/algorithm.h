@@ -11,12 +11,7 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list(
-    spice::util::adj_list::int4 const * layout,
-    int len,
-    int num_neurons,
-    int max_degree,
-    int * out_edges );
+void generate_rnd_adj_list( spice::util::adj_list::int4 const * layout, int len, int * out_edges );
 
 template <typename Model>
 void upload_storage(

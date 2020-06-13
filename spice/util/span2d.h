@@ -17,21 +17,21 @@ public:
 	{
 	}
 
-	HYBRID int width() const { return _width; }
+	HYBRID unsigned width() const { return _width; }
 
 	HYBRID T * data() { return _data; }
 	HYBRID T const * data() const { return _data; }
 
-	HYBRID T * row( int i ) { return &_data[i * _width]; }
-	HYBRID T const * row( int i ) const { return &_data[i * _width]; }
+	HYBRID T * row( unsigned i ) { return &_data[i * _width]; }
+	HYBRID T const * row( unsigned i ) const { return &_data[i * _width]; }
 
 	// i = row, j = col
-	HYBRID T & operator()( int i, int j ) { return row( i )[j]; }
-	HYBRID T const & operator()( int i, int j ) const { return row( i )[j]; }
+	HYBRID T & operator()( unsigned i, unsigned j ) { return row( i )[j]; }
+	HYBRID T const & operator()( unsigned i, unsigned j ) const { return row( i )[j]; }
 
 private:
 	T * _data = nullptr;
-	int _width = 0;
+	unsigned _width = 0;
 };
 } // namespace util
 } // namespace spice

@@ -21,14 +21,13 @@ template <typename T, bool Const = false>
 class iter
 {
 public:
-	iter( T * data, int i )
+	iter( T * data, unsigned i )
 	    : _data( data )
 	    , _i( i )
 	{
-		spice_assert( i >= 0, "invalid index" );
 	}
 
-	int id() const { return _i; }
+	unsigned id() const { return _i; }
 
 	template <int I, bool C = Const>
 	auto const & get( typename std::enable_if_t<C> * dummy = 0 )
@@ -46,7 +45,7 @@ public:
 
 private:
 	T * _data = nullptr;
-	int _i = 0;
+	unsigned _i = 0;
 };
 
 template <typename T>
@@ -62,7 +61,7 @@ static void for_each( F && f, int const count, ID && id, adj_list const & adj )
 
 		int j = 0;
 		for( int dst : adj.neighbors( src ) )
-			std::forward<F>( f )( adj.edge_index( src, j++ ), src, dst );
+			std::forward<F>( f )( narrow_int<unsigned>( adj.edge_index( src, j++ ) ), src, dst );
 	}
 }
 
@@ -77,7 +76,7 @@ snn<Model>::snn(
     int const delay /* = 1 */ )
     : snn( neuron_group( num_neurons, p_connect ), dt, delay )
 {
-	spice_assert( num_neurons >= 0 && num_neurons < std::numeric_limits<int>::max() );
+	spice_assert( num_neurons <= std::numeric_limits<int>::max() );
 	spice_assert( p_connect >= 0.0f && p_connect <= 1.0f );
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
@@ -108,7 +107,7 @@ snn<Model>::snn( neuron_group const & desc, float const dt, int const delay /* =
 	{
 		_synapses.emplace( _graph.adj.num_edges() );
 		for_each(
-		    [&]( int syn, int src, int dst ) {
+		    [&]( unsigned syn, int src, int dst ) {
 			    Model::synapse::template init(
 			        iter( _synapses->data(), syn ), src, dst, this->info(), _backend );
 		    },
