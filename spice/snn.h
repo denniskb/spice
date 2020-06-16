@@ -31,7 +31,6 @@ public:
 	virtual typename Model::synapse::tuple_t get_synapse( std::size_t i ) const = 0;
 
 protected:
-	snn() = default;
 	explicit snn( float dt, int delay = 1 );
 	void init( float dt, int delay = 1 );
 
@@ -39,7 +38,7 @@ private:
 	float _dt = 0.0f;
 	int _delay = 1;
 	int _i = 0;
-	spice::util::kahan_sum<float> _simtime;
+	util::kahan_sum<float> _simtime;
 
 	virtual void _step( int i, float dt, std::vector<int> * out_spikes ) = 0;
 };

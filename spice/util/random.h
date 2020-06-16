@@ -33,7 +33,7 @@ private:
 #if defined( SPICE_ASSERT_RELEASE ) || !defined( NDEBUG )
 template <typename Prec = int>
 using binomial_distribution = std::binomial_distribution<Prec>;
-#else // perf. TODO: Turn on for benchmarking!
+#else
 template <typename Prec = int>
 class binomial_distribution
 {

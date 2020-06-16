@@ -22,12 +22,12 @@ TEST( dAlgorithm, AdjList )
 	// A->C = 50%
 	// B->A = 100%
 	// B->C = 50%
-	std::vector<adj_list::int4> layout( 3 );
-	auto const deg = adj_list::generate( desc, layout );
+	std::vector<int> layout;
+	auto const deg = adj_list::generate_layout( desc, layout );
 
 	dev_ptr<int> d_e( deg * 60 );
-	dev_ptr<adj_list::int4> d_layout( layout );
-	generate_rnd_adj_list( d_layout.data(), narrow_int<int>( d_layout.size() ), d_e.data() );
+	dev_ptr<int> d_layout( layout );
+	generate_rnd_adj_list( desc, d_layout.data(), d_e.data(), narrow_int<int>( deg ) );
 	cudaDeviceSynchronize();
 
 	adj_list adj( 60, deg, d_e.data() );

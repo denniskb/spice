@@ -1,10 +1,13 @@
 #pragma once
 
 
-namespace spice::util
+namespace spice
+{
+namespace util
 {
 void _assert( char const * cond, char const * file, int line, char const * msg = nullptr );
 }
+} // namespace spice
 
 
 #if defined( SPICE_ASSERT_RELEASE ) || !defined( NDEBUG )

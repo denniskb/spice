@@ -9,6 +9,7 @@
 #include <spice/models/brunel_with_plasticity.h>
 #include <spice/models/synth.h>
 #include <spice/models/vogels_abbott.h>
+#include <spice/util/assert.h>
 #include <spice/util/circular_buffer.h>
 
 #include <array>
@@ -20,6 +21,7 @@ using namespace spice::cuda;
 using namespace spice::cuda::util;
 
 
+__constant__ int2 _desc[20];
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
 static unsigned _seed = 0;
@@ -92,29 +94,31 @@ template <typename Decl>
 using const_synapse_iter = iter<Decl, false, true>;
 
 
-static __global__ void
-_generate_adj_ids( uint4 const * layout, int const len, int * const out_edges )
+static __global__ void _generate_adj_ids(
+    int const desc_len, int const N, int const * layout, int * const out_edges, int const width )
 {
 	int const MAX_DEGREE = 1024;
 	__shared__ float rows[4][MAX_DEGREE];
 
 	xorwow rng( threadid() );
 
-	for( int wid = warpid_grid(); wid < len; wid += num_warps() )
+	for( unsigned wid = warpid_grid(); wid < N; wid += num_warps() )
 	{
-		auto desc = layout[wid];
+		unsigned offset = wid * width;
+		for( int c = 0; c < desc_len; c++ )
+		{
+			int degree = layout[wid + c * N];
+			int first = _desc[c].x;
+			int range = _desc[c].y;
 
-		if( desc.w == 0 )
-			for( int i = laneid(); i < desc.y; i += WARP_SZ ) ( out_edges + desc.x )[i] = -1;
-		else
-			while( desc.y > 0 )
+			while( degree > 0 )
 			{
-				int const degree = min( desc.y, MAX_DEGREE );
-				int2 const bounds = {desc.z, (int)( (float)degree / desc.y * desc.w )};
+				int const d = min( degree, MAX_DEGREE );
+				int const r = (int)( (long long)d * range / degree );
 
 				// accumulate
 				float total = 0.0f;
-				for( int i = laneid(); i < degree; i += WARP_SZ )
+				for( int i = laneid(); i < d; i += WARP_SZ )
 				{
 					float f = -logf( rng() );
 
@@ -130,17 +134,21 @@ _generate_adj_ids( uint4 const * layout, int const len, int * const out_edges )
 					total -= logf( rng() );
 					total = __shfl_sync( MASK_ALL, total, 0 );
 
-					float const scale = ( bounds.y - degree ) / total;
-					for( int i = laneid(); i < degree; i += WARP_SZ )
-						( out_edges + desc.x )[i] =
-						    bounds.x + static_cast<int>( rows[warpid_block()][i] * scale ) + i;
+					float const scale = ( r - d ) / total;
+					for( int i = laneid(); i < d; i += WARP_SZ )
+						( out_edges + offset )[i] =
+						    first + static_cast<int>( rows[warpid_block()][i] * scale ) + i;
 				}
 
-				desc.x += degree;
-				desc.y -= min( desc.y, MAX_DEGREE );
-				desc.z = bounds.x + bounds.y;
-				desc.w -= bounds.y;
+				offset += d;
+				degree -= MAX_DEGREE;
+				first += r;
+				range -= r;
 			}
+		}
+
+		for( unsigned i = offset + laneid(); i < ( wid + 1 ) * width; i += WARP_SZ )
+			out_edges[i] = -1;
 	}
 }
 
@@ -179,8 +187,7 @@ static __global__ void _process_neurons(
 			if( Model::synapse::size > 0 ) // plast.
 			{
 				unsigned const flag = __ballot_sync( __activemask(), spiked );
-				if( laneid() == 0 )
-					history[i / WARP_SZ] = flag;
+				if( laneid() == 0 ) history[i / WARP_SZ] = flag;
 
 				bool const delayed_spike = delayed_history[i / WARP_SZ] >> ( i % WARP_SZ ) & 1u;
 
@@ -188,8 +195,7 @@ static __global__ void _process_neurons(
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
-			if( spiked )
-				spikes[atomicInc( num_spikes, info.num_neurons )] = i;
+			if( spiked ) spikes[atomicInc( num_spikes, info.num_neurons )] = i;
 		}
 	}
 }
@@ -261,8 +267,7 @@ static __global__ void _process_spikes(
 		{
 			__syncthreads();
 
-			if( threadIdx.x == 0 )
-				ages[src] = iter + 1;
+			if( threadIdx.x == 0 ) ages[src] = iter + 1;
 		}
 	}
 }
@@ -307,7 +312,7 @@ static __global__ void _zero_async( T * t )
 
 template <typename Model>
 static void
-_upload_storage( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple_t const & synapse )
+_upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple_t const & synapse )
 {
 	static_assert(
 	    Model::neuron::size <= 20,
@@ -340,29 +345,41 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::adj_list::int4 const * layout, int len, int * out_edges )
+void generate_rnd_adj_list(
+    spice::util::neuron_group const & desc, int const * layout, int * out_edges, int const width )
 {
-	_generate_adj_ids<<<128, 128>>>( reinterpret_cast<uint4 const *>( layout ), len, out_edges );
+	spice_assert(
+	    desc.connections().size() <= 20,
+	    "spice doesn't support models with more than 20 connections between neuron populations" );
+
+	std::array<int2, 20> tmp;
+	for( std::size_t i = 0; i < desc.connections().size(); i++ )
+	{
+		tmp[i].x = desc.first( std::get<1>( desc.connections().at( i ) ) );
+		tmp[i].y = desc.range( std::get<1>( desc.connections().at( i ) ) );
+	}
+	success_or_throw(
+	    cudaMemcpyToSymbolAsync( _desc, tmp.data(), sizeof( int2 ) * desc.connections().size() ) );
+
+	_generate_adj_ids<<<128, 128>>>(
+	    desc.connections().size(), desc.size(), layout, out_edges, width );
 }
 
 template <typename Model>
-void upload_storage(
-    Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple_t const & synapse )
+void upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple_t const & synapse )
 {
-	_upload_storage<Model>( neuron, synapse );
+	_upload_meta<Model>( neuron, synapse );
 }
-template void upload_storage<::spice::vogels_abbott>(
-    ::spice::vogels_abbott::neuron::ptuple_t const & neuron,
-    ::spice::vogels_abbott::synapse::ptuple_t const & synapse );
-template void upload_storage<::spice::brunel>(
-    ::spice::brunel::neuron::ptuple_t const & neuron,
-    ::spice::brunel::synapse::ptuple_t const & synapse );
-template void upload_storage<::spice::brunel_with_plasticity>(
-    ::spice::brunel_with_plasticity::neuron::ptuple_t const & neuron,
-    ::spice::brunel_with_plasticity::synapse::ptuple_t const & synapse );
-template void upload_storage<::spice::synth>(
-    ::spice::synth::neuron::ptuple_t const & neuron,
-    ::spice::synth::synapse::ptuple_t const & synapse );
+template void upload_meta<::spice::vogels_abbott>(
+    ::spice::vogels_abbott::neuron::ptuple_t const &,
+    ::spice::vogels_abbott::synapse::ptuple_t const & );
+template void upload_meta<::spice::brunel>(
+    ::spice::brunel::neuron::ptuple_t const &, ::spice::brunel::synapse::ptuple_t const & );
+template void upload_meta<::spice::brunel_with_plasticity>(
+    ::spice::brunel_with_plasticity::neuron::ptuple_t const &,
+    ::spice::brunel_with_plasticity::synapse::ptuple_t const & );
+template void upload_meta<::spice::synth>(
+    ::spice::synth::neuron::ptuple_t const &, ::spice::synth::synapse::ptuple_t const & );
 
 // TOOD: Fuse these two into one function using conditional compilation ('if constexpr')
 template <typename Model>

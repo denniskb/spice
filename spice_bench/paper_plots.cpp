@@ -19,6 +19,79 @@ using namespace spice::cuda::util;
 using namespace spice::util;
 
 
+static void gen( benchmark::State & state )
+{
+	std::size_t const NSYN = state.range( 0 );
+	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / 0.1 ) );
+
+	state.counters["num_neurons"] = narrow_cast<double>( N );
+	state.counters["num_syn"] = narrow_cast<double>( NSYN );
+
+	try
+	{
+		neuron_group desc( {N}, {{0, 0, 0.1f}} );
+		// neuron_group desc( {N / 2, N / 2}, {{0, 1, 0.2f}, {1, 1, 0.2f}} );
+
+		std::vector<int> l;
+		adj_list::generate_layout( desc, l );
+
+		for( auto _ : state ) adj_list::generate_layout( desc, l );
+	}
+	catch( std::exception & e )
+	{
+		std::printf( "%s\n", e.what() );
+		return;
+	}
+
+	state.SetBytesProcessed( ( N * 4 ) * state.iterations() );
+}
+BENCHMARK( gen )->Unit( benchmark::kMillisecond )->ExpRange( 1'000'000, 2048'000'000 );
+
+static void plot0_AdjGen( benchmark::State & state )
+{
+	std::size_t const NSYN = state.range( 0 );
+	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / 0.1 ) );
+
+	state.counters["num_neurons"] = narrow_cast<double>( N );
+	state.counters["num_syn"] = narrow_cast<double>( NSYN );
+
+	try
+	{
+		neuron_group desc( {N}, {{0, 0, 0.1f}} );
+
+		std::vector<int> l;
+		auto w = adj_list::generate_layout( desc, l );
+
+		dev_ptr<int> ld( l );
+		dev_ptr<int> e( w * desc.size() );
+		generate_rnd_adj_list( desc, ld.data(), e.data(), narrow_int<int>( w ) );
+
+		event start, stop;
+		for( auto _ : state )
+		{
+			start.record();
+			for( int i = 0; i < 10; i++ )
+				generate_rnd_adj_list( desc, ld.data(), e.data(), (int)w );
+			// cudaMemset( e.data(), 0, 4 * NSYN );
+			stop.record();
+			stop.synchronize();
+
+			state.SetIterationTime( stop.elapsed_time( start ) * 0.001 / 10 );
+		}
+	}
+	catch( std::exception & e )
+	{
+		std::printf( "%s\n", e.what() );
+		return;
+	}
+
+	state.SetBytesProcessed( ( NSYN * 4 ) * state.iterations() );
+}
+BENCHMARK( plot0_AdjGen )
+    ->UseManualTime()
+    ->Unit( benchmark::kMillisecond )
+    ->ExpRange( 1'000'000, 2048'000'000 );
+
 // Absolute setup time as a function of synapse count,
 // given a homogenous network with connectivity P=0.1
 static void plot1_SetupTime( benchmark::State & state )
@@ -111,14 +184,3 @@ BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 125'000, 512'000'000 );
-
-
-static void gen( benchmark::State & state )
-{
-	std::vector<adj_list::int4> layout( 100'000 );
-
-	for( auto _ : state ) adj_list::generate( {100'000, 0.1f}, layout );
-
-	state.SetBytesProcessed( 20 * 100'000 * state.iterations() );
-}
-BENCHMARK( gen )->Unit( benchmark::kMillisecond );

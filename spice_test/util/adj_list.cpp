@@ -90,8 +90,8 @@ TEST( AdjList, Ctor )
 		// B->A = 100%
 		// B->C = 50%
 		std::vector<int> e( 3 );
-		std::vector<adj_list::int4> l( 3 );
-		adj_list::generate( desc, l );
+		std::vector<int> l( 3 );
+		adj_list::generate_layout( desc, l );
 
 		auto const deg = adj_list::generate( desc, e );
 		adj_list adj( 60, deg, e.data() );
@@ -142,13 +142,6 @@ TEST( AdjList, Ctor )
 			ASSERT_EQ( adj.neighbors( i ).size(), 0 );
 		}
 
-		for( auto bounds : l )
-		{
-			auto const x = bounds.first;
-			auto const y = bounds.range;
-
-			ASSERT_TRUE(
-			    x == 0 && y == 10 || x == 10 && y == 20 || x == 30 && y == 30 || x == 0 && y == 0 );
-		}
+		for( auto d : l ) ASSERT_TRUE( d >= 0 && d < 60 );
 	}
 }

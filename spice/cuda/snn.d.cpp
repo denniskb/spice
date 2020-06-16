@@ -41,8 +41,7 @@ void snn<Model>::reserve(
 	_graph.edges.resize( num_synapses );
 	_graph.adj = {num_neurons, max_degree, _graph.edges.data()};
 
-	if constexpr( Model::neuron::size > 0 )
-		_neurons.resize( num_neurons );
+	if constexpr( Model::neuron::size > 0 ) _neurons.resize( num_neurons );
 
 	if constexpr( Model::synapse::size > 0 )
 	{
@@ -123,17 +122,18 @@ void snn<Model>::init( spice::util::neuron_group const & desc, float dt, int del
 
 	spice::snn<Model>::init( dt, delay );
 
-	static std::vector<spice::util::adj_list::int4> layout;
-	auto const max_degree = adj_list::generate( desc, layout );
+	static std::vector<int> layout;
+	auto const max_degree = adj_list::generate_layout( desc, layout );
 
 	reserve( desc.size(), max_degree, delay );
 
-	static dev_ptr<spice::util::adj_list::int4> d_layout;
+	static dev_ptr<int> d_layout;
 	d_layout.resize( layout.size() );
 	cudaMemcpyAsync(
 	    d_layout.data(), layout.data(), d_layout.size_in_bytes(), cudaMemcpyHostToDevice );
 
-	generate_rnd_adj_list( d_layout.data(), narrow_int<int>( layout.size() ), _graph.edges.data() );
+	generate_rnd_adj_list(
+	    desc, d_layout.data(), _graph.edges.data(), narrow_int<int>( max_degree ) );
 	_graph.edges.read_mostly();
 
 	set();
@@ -145,7 +145,7 @@ void snn<Model>::init( spice::util::neuron_group const & desc, float dt, int del
 template <typename Model>
 void snn<Model>::set()
 {
-	upload_storage<Model>( _neurons.data(), _synapses.data() );
+	upload_meta<Model>( _neurons.data(), _synapses.data() );
 }
 
 
@@ -173,8 +173,7 @@ void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spik
 {
 	zero_async( &_spikes.counts[circidx( i, this->delay() )] );
 
-	if constexpr( Model::synapse::size > 0 )
-		_spikes.num_updates.zero_async();
+	if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();
 
 	update<Model>(
 	    this->info(),

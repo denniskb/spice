@@ -160,11 +160,9 @@ void snn<Model>::_step( int const istep, float const dt, std::vector<int> * out_
 			bool const spiked = Model::neuron::template update(
 			    iter( _neurons ? _neurons->data() : nullptr, i ), dt, this->info(), _backend );
 
-			if constexpr( Model::synapse::size > 0 )
-				( *( _spikes.flags ) )[post][i] = spiked;
+			if constexpr( Model::synapse::size > 0 ) ( *( _spikes.flags ) )[post][i] = spiked;
 
-			if( spiked )
-				_spikes.ids.push_back( i );
+			if( spiked ) _spikes.ids.push_back( i );
 		}
 
 		_spikes.counts.push_back( _spikes.ids.size() - nspikes );
