@@ -9,7 +9,7 @@
 #include <random>
 
 
-static int _seed = 1339;
+static int _seed = 1400;
 
 
 namespace spice::util
@@ -47,69 +47,11 @@ std::size_t adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
 	return i_src * max_degree() + i_dst;
 }
 
-
 // static
-std::size_t adj_list::generate_layout( neuron_group const & desc, std::vector<int> & layout )
+void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 {
-	// #neurons * #edges(desc) degrees
-	layout.resize( desc.size() * desc.connections().size() );
-	std::vector<int> degrees_acc( desc.size() );
+	edges.resize( desc.size() * desc.max_degree() );
 
-	xorwow gen( _seed++ );
-
-	{
-		int * d = layout.data();
-		for( auto edge : desc.connections() )
-		{
-			util::binomial_distribution<> binom(
-			    narrow_int<int>( desc.size( std::get<1>( edge ) ) ), std::get<2>( edge ) );
-
-			for( std::size_t i = 0, n = desc.first( std::get<0>( edge ) ); i < n; i++ ) d[i] = 0;
-
-			for( std::size_t i = desc.first( std::get<0>( edge ) ),
-			                 n = desc.last( std::get<0>( edge ) );
-			     i < n;
-			     i++ )
-			{
-				int const x = binom( gen );
-				d[i] = x;
-				degrees_acc[i] += x;
-			}
-
-			for( std::size_t i = desc.last( std::get<0>( edge ) ), n = desc.size(); i < n; i++ )
-				d[i] = 0;
-
-			d += desc.size();
-		}
-	}
-
-	return ( *std::max_element( degrees_acc.begin(), degrees_acc.end() ) + WARP_SZ - 1 ) / WARP_SZ *
-	       WARP_SZ;
-} // namespace spice::util
-
-// static
-std::size_t adj_list::generate( neuron_group const & desc, std::vector<int> & edges )
-{
-	std::vector<int> layout;
-
-	auto const degree = generate_layout( desc, layout );
-	edges.resize( degree * desc.size() );
-	generate( desc, layout, edges );
-
-	return degree;
-}
-
-int const * adj_list::edges() const { return _edges; }
-
-std::size_t adj_list::num_nodes() const { return _num_nodes; }
-std::size_t adj_list::max_degree() const { return _max_degree; }
-std::size_t adj_list::num_edges() const { return num_nodes() * max_degree(); }
-
-
-// static
-void adj_list::generate(
-    neuron_group const & desc, std::vector<int> const & layout, std::vector<int> & edges )
-{
 	xorwow gen( _seed++ );
 	std::exponential_distribution<float> exp;
 	auto bounded_exp = [&]( auto & gen ) {
@@ -117,21 +59,24 @@ void adj_list::generate(
 	};
 
 	std::size_t const N = desc.size();
-	std::size_t const max_d = edges.size() / N;
 
 	std::size_t offset = 0;
 	for( std::size_t i = 0; i < N; i++ )
 	{
-		for( std::size_t j = 0; j < desc.connections().size(); j++ )
+		int total_degree = 0;
+		for( auto const c : desc.connections() )
 		{
-			int const degree = layout[i + j * N];
+			if( i < desc.first( std::get<0>( c ) ) || i >= desc.last( std::get<0>( c ) ) ) continue;
 
-			if( !degree ) continue;
+			util::binomial_distribution<> binom(
+			    narrow_int<int>( desc.size( std::get<1>( c ) ) ), std::get<2>( c ) );
 
-			int const first =
-			    narrow_int<int>( desc.first( std::get<1>( desc.connections().at( j ) ) ) );
-			int const range =
-			    narrow_int<int>( desc.range( std::get<1>( desc.connections().at( j ) ) ) );
+			int const degree =
+			    std::min( narrow_int<int>( desc.max_degree() - total_degree ), binom( gen ) );
+			total_degree += degree;
+
+			int const first = narrow_int<int>( desc.first( std::get<1>( c ) ) );
+			int const range = narrow_int<int>( desc.range( std::get<1>( c ) ) );
 
 			float * neighbor_ids = reinterpret_cast<float *>( edges.data() + offset );
 
@@ -147,7 +92,13 @@ void adj_list::generate(
 				edges[offset++] = first + narrow_cast<int>( neighbor_ids[k] * scale ) + k;
 		}
 
-		while( offset < ( i + 1 ) * max_d ) edges[offset++] = -1;
+		while( offset < ( i + 1 ) * desc.max_degree() ) edges[offset++] = -1;
 	}
 }
+
+int const * adj_list::edges() const { return _edges; }
+
+std::size_t adj_list::num_nodes() const { return _num_nodes; }
+std::size_t adj_list::max_degree() const { return _max_degree; }
+std::size_t adj_list::num_edges() const { return num_nodes() * max_degree(); }
 } // namespace spice::util

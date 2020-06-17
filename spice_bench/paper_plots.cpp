@@ -30,12 +30,11 @@ static void gen( benchmark::State & state )
 	try
 	{
 		neuron_group desc( {N}, {{0, 0, 0.1f}} );
-		// neuron_group desc( {N / 2, N / 2}, {{0, 1, 0.2f}, {1, 1, 0.2f}} );
 
 		std::vector<int> l;
-		adj_list::generate_layout( desc, l );
+		adj_list::generate( desc, l );
 
-		for( auto _ : state ) adj_list::generate_layout( desc, l );
+		for( auto _ : state ) adj_list::generate( desc, l );
 	}
 	catch( std::exception & e )
 	{
@@ -49,30 +48,26 @@ BENCHMARK( gen )->Unit( benchmark::kMillisecond )->ExpRange( 1'000'000, 2048'000
 
 static void plot0_AdjGen( benchmark::State & state )
 {
+	float const P = 0.1f;
 	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / 0.1 ) );
+	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
 
 	try
 	{
-		neuron_group desc( {N}, {{0, 0, 0.1f}} );
+		neuron_group desc( {N}, {{0, 0, P}} );
 
-		std::vector<int> l;
-		auto w = adj_list::generate_layout( desc, l );
-
-		dev_ptr<int> ld( l );
-		dev_ptr<int> e( w * desc.size() );
-		generate_rnd_adj_list( desc, ld.data(), e.data(), narrow_int<int>( w ) );
+		dev_ptr<int> e( desc.size() * desc.max_degree() );
+		generate_rnd_adj_list( desc, e.data() );
 
 		event start, stop;
 		for( auto _ : state )
 		{
 			start.record();
-			for( int i = 0; i < 10; i++ )
-				generate_rnd_adj_list( desc, ld.data(), e.data(), (int)w );
-			// cudaMemset( e.data(), 0, 4 * NSYN );
+			for( int i = 0; i < 10; i++ ) generate_rnd_adj_list( desc, e.data() );
+			// cudaMemsetAsync( e.data(), 0, 4 * NSYN );
 			stop.record();
 			stop.synchronize();
 
@@ -172,14 +167,14 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-// BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
-//    ->UseManualTime()
-//    ->Unit( benchmark::kMicrosecond )
-//    ->ExpRange( 125'000, 1024'000'000 );
-// BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
-//    ->UseManualTime()
-//    ->Unit( benchmark::kMicrosecond )
-//    ->ExpRange( 125'000, 2048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 125'000, 2048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 125'000, 2048'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )

@@ -26,20 +26,22 @@ int snn<Model>::MAX_HISTORY() const
 	return std::max( this->delay() + 1, 48 );
 }
 
+#pragma warning( push )
+#pragma warning( disable : 4100 ) // unreferenced formal parameter 'num_synapses' for certain
+                                  // template inst.
 template <typename Model>
 void snn<Model>::reserve(
-    std::size_t const num_neurons, std::size_t const max_degree, int const delay )
+    std::size_t const num_neurons, std::size_t const num_synapses, int const delay )
 {
-	auto num_synapses = num_neurons * max_degree;
-	if( _graph.edges.capacity() > 0 && num_synapses > _graph.edges.capacity() ) // Hysteresis
-		num_synapses = narrow_cast<std::size_t>( num_synapses * 1.01 );
+	spice_assert( num_synapses % num_neurons == 0 );
+
+	// TODO: Hysteresis
+	_graph.edges.resize( num_synapses );
+	_graph.adj = {num_neurons, num_synapses / num_neurons, _graph.edges.data()};
 
 	_spikes.ids_data.resize( delay * num_neurons );
 	_spikes.ids = {_spikes.ids_data.data(), narrow_int<int>( num_neurons )};
 	_spikes.counts.resize( delay );
-
-	_graph.edges.resize( num_synapses );
-	_graph.adj = {num_neurons, max_degree, _graph.edges.data()};
 
 	if constexpr( Model::neuron::size > 0 ) _neurons.resize( num_neurons );
 
@@ -58,6 +60,7 @@ void snn<Model>::reserve(
 		_graph.ages.zero_async();
 	}
 }
+#pragma warning( pop )
 
 template <typename Model>
 snn<Model>::snn(
@@ -74,7 +77,7 @@ snn<Model>::snn(
 }
 
 template <typename Model>
-snn<Model>::snn( spice::util::neuron_group const & desc, float const dt, int const delay /* = 1 */ )
+snn<Model>::snn( spice::util::neuron_group desc, float const dt, int const delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
 {
 	spice_assert( dt > 0.0f );
@@ -88,7 +91,7 @@ template <typename Model>
 snn<Model>::snn( spice::cpu::snn<Model> const & net )
     : ::spice::snn<Model>( net )
 {
-	reserve( net.num_neurons(), net.graph().max_degree(), net.delay() );
+	reserve( net.num_neurons(), net.num_synapses(), net.delay() );
 
 	cudaMemcpy(
 	    _graph.edges.data(), net.graph().edges(), net.num_synapses() * 4, cudaMemcpyHostToDevice );
@@ -115,25 +118,15 @@ void snn<Model>::init( std::size_t num_neurons, float p_connect, float dt, int d
 	init( neuron_group( num_neurons, p_connect ), dt, delay );
 }
 template <typename Model>
-void snn<Model>::init( spice::util::neuron_group const & desc, float dt, int delay /* = 1 */ )
+void snn<Model>::init( spice::util::neuron_group desc, float dt, int delay /* = 1 */ )
 {
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
 
 	spice::snn<Model>::init( dt, delay );
 
-	static std::vector<int> layout;
-	auto const max_degree = adj_list::generate_layout( desc, layout );
-
-	reserve( desc.size(), max_degree, delay );
-
-	static dev_ptr<int> d_layout;
-	d_layout.resize( layout.size() );
-	cudaMemcpyAsync(
-	    d_layout.data(), layout.data(), d_layout.size_in_bytes(), cudaMemcpyHostToDevice );
-
-	generate_rnd_adj_list(
-	    desc, d_layout.data(), _graph.edges.data(), narrow_int<int>( max_degree ) );
+	reserve( desc.size(), desc.size() * desc.max_degree(), delay );
+	generate_rnd_adj_list( desc, _graph.edges.data() );
 	_graph.edges.read_mostly();
 
 	set();

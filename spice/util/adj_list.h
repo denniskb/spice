@@ -20,8 +20,7 @@ public:
 	nonstd::span<int const> neighbors( std::size_t i_node ) const;
 	std::size_t edge_index( std::size_t i_src, std::size_t i_dst ) const;
 
-	static std::size_t generate_layout( neuron_group const & desc, std::vector<int> & layout );
-	static std::size_t generate( neuron_group const & desc, std::vector<int> & edges );
+	static void generate( neuron_group & desc, std::vector<int> & edges );
 
 	int const * edges() const;
 
@@ -33,9 +32,6 @@ private:
 	std::size_t _num_nodes = 0;
 	std::size_t _max_degree = 0;
 	int const * _edges = nullptr;
-
-	static void generate(
-	    neuron_group const & desc, std::vector<int> const & layout, std::vector<int> & edges );
 };
 } // namespace util
 } // namespace spice

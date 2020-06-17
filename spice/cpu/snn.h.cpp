@@ -83,15 +83,15 @@ snn<Model>::snn(
 }
 
 template <typename Model>
-snn<Model>::snn( neuron_group const & desc, float const dt, int const delay /* = 1 */ )
+snn<Model>::snn( neuron_group desc, float const dt, int const delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
 {
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
 
 	{
-		auto const max_degree = adj_list::generate( desc, _graph.edges );
-		_graph.adj = {desc.size(), max_degree, _graph.edges.data()};
+		adj_list::generate( desc, _graph.edges );
+		_graph.adj = {desc.size(), desc.max_degree(), _graph.edges.data()};
 	}
 
 	// Init neurons

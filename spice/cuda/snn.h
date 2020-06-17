@@ -18,11 +18,11 @@ class snn : public ::spice::snn<Model>
 public:
 	snn() = default;
 	snn( std::size_t num_neurons, float p_connect, float dt, int delay = 1 );
-	snn( spice::util::neuron_group const & desc, float dt, int delay = 1 );
+	snn( spice::util::neuron_group desc, float dt, int delay = 1 );
 	snn( spice::cpu::snn<Model> const & net );
 
 	void init( std::size_t num_neurons, float p_connect, float dt, int delay = 1 );
-	void init( spice::util::neuron_group const & desc, float dt, int delay = 1 );
+	void init( spice::util::neuron_group desc, float dt, int delay = 1 );
 
 	/**
 	 * Sets this network as active. Only one network can be active at any given time. Calling step()

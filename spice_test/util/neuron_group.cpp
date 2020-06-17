@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <spice/util/adj_list.h>
 #include <spice/util/neuron_group.h>
 
 

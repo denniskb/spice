@@ -5,7 +5,11 @@
 #include <cuda_runtime.h>
 
 
-namespace spice::cuda::util
+namespace spice
+{
+namespace cuda
+{
+namespace util
 {
 class device
 {
@@ -31,4 +35,6 @@ private:
 
 	constexpr device( int id ) noexcept;
 };
-} // namespace spice::cuda::util
+} // namespace util
+} // namespace cuda
+} // namespace spice

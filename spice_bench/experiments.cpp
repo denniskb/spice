@@ -16,7 +16,7 @@ using namespace spice::util;
 
 static void cache_synth( benchmark::State & state )
 {
-	float const P = 0.1f;
+	float const P = 0.01f;
 	std::size_t const NSYN = state.range( 0 );
 	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
 
@@ -49,9 +49,7 @@ static void cache_synth( benchmark::State & state )
 BENCHMARK( cache_synth )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    //->DenseRange( 100'000'000, 1'000'000'000, 100'000'000 );
-    ->DenseRange( 1'850'000'000, 2'150'000'000, 150'000'000 );
-//->Range( 2'150'000'000, 2'150'000'000 );
+    ->DenseRange( 100'000'000, 2'000'000'000, 100'000'000 );
 
 static void cache_brunel( benchmark::State & state )
 {

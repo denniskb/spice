@@ -19,7 +19,9 @@ TEST( AdjList, Ctor )
 
 	{
 		std::vector<int> e;
-		auto const deg = adj_list::generate( neuron_group( 100, 0 ), e );
+		neuron_group desc( 100, 0 );
+		auto const deg = desc.max_degree();
+		adj_list::generate( desc, e );
 
 		adj_list x( 100, deg, e.data() );
 
@@ -32,7 +34,9 @@ TEST( AdjList, Ctor )
 
 	{
 		std::vector<int> e;
-		auto const deg = adj_list::generate( neuron_group( 100, 1 ), e );
+		neuron_group desc( 100, 1 );
+		auto const deg = desc.max_degree();
+		adj_list::generate( desc, e );
 
 		adj_list x( 100, deg, e.data() );
 
@@ -56,7 +60,9 @@ TEST( AdjList, Ctor )
 
 	{
 		std::vector<int> e;
-		auto const deg = adj_list::generate( neuron_group( 100, 0.5f ), e );
+		neuron_group desc( 100, 0.5f );
+		auto const deg = desc.max_degree();
+		adj_list::generate( desc, e );
 
 		adj_list x( 100, deg, e.data() );
 
@@ -79,7 +85,7 @@ TEST( AdjList, Ctor )
 	}
 
 	{
-		auto const desc = neuron_group(
+		auto desc = neuron_group(
 		    {10, 20, 30}, {{0, 0, 0.5f}, {0, 1, 0.1f}, {0, 2, 0.5f}, {1, 0, 1.0f}, {1, 2, 0.5f}} );
 		// A(10)
 		// B(20)
@@ -89,12 +95,10 @@ TEST( AdjList, Ctor )
 		// A->C = 50%
 		// B->A = 100%
 		// B->C = 50%
-		std::vector<int> e( 3 );
-		std::vector<int> l( 3 );
-		adj_list::generate_layout( desc, l );
-
-		auto const deg = adj_list::generate( desc, e );
-		adj_list adj( 60, deg, e.data() );
+		std::vector<int> e;
+		adj_list::generate( desc, e );
+		adj_list adj( 60, desc.max_degree(), e.data() );
+		auto const deg = desc.max_degree();
 
 		for( std::size_t i = 0; i < 10; i++ )
 		{
@@ -141,7 +145,5 @@ TEST( AdjList, Ctor )
 
 			ASSERT_EQ( adj.neighbors( i ).size(), 0 );
 		}
-
-		for( auto d : l ) ASSERT_TRUE( d >= 0 && d < 60 );
 	}
 }

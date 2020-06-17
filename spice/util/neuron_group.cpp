@@ -1,5 +1,6 @@
 #include <spice/util/neuron_group.h>
 
+#include <spice/cuda/util/defs.h>
 #include <spice/util/assert.h>
 #include <spice/util/type_traits.h>
 
@@ -19,6 +20,7 @@ neuron_group::neuron_group(
     std::vector<std::size_t> const & group_sizes, std::vector<edge> const & connectivity )
     : _group_sizes( group_sizes )
     , _connectivity( connectivity )
+    , _max_degree( 0 )
 {
 	for( auto gs : group_sizes )
 		spice_assert( gs <= std::numeric_limits<int>::max(), "invalid group size" );
@@ -91,6 +93,36 @@ nonstd::span<neuron_group::edge const> neuron_group::neighbors( std::size_t cons
 
 	return {_connectivity.data() + ( first - _connectivity.begin() ),
 	        static_cast<std::size_t>( last - first )};
+}
+
+std::size_t neuron_group::max_degree()
+{
+	if( !_max_degree )
+	{
+		std::size_t src = std::get<0>( connections().at( 0 ) );
+
+		std::size_t result = 0;
+		double m = 0.0, s2 = 0.0;
+		for( auto c : connections() )
+		{
+			if( std::get<0>( c ) != src )
+			{
+				result = std::max( result, narrow_cast<std::size_t>( m + 4.75 * std::sqrt( s2 ) ) );
+				src = std::get<0>( c );
+				m = 0.0;
+				s2 = 0.0;
+			}
+
+			m += size( std::get<1>( c ) ) * std::get<2>( c );
+			s2 += size( std::get<1>( c ) ) * std::get<2>( c ) * ( 1.0 - std::get<2>( c ) );
+		}
+
+		_max_degree = ( std::max( result, narrow_cast<std::size_t>( m + 4.75 * std::sqrt( s2 ) ) ) +
+		                WARP_SZ - 1 ) /
+		              WARP_SZ * WARP_SZ;
+	}
+
+	return _max_degree;
 }
 
 

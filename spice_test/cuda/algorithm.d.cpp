@@ -12,7 +12,7 @@ using namespace spice::cuda::util;
 
 TEST( dAlgorithm, AdjList )
 {
-	auto const desc = neuron_group(
+	auto desc = neuron_group(
 	    {10, 20, 30}, {{0, 0, 0.5f}, {0, 1, 0.1f}, {0, 2, 0.5f}, {1, 0, 1.0f}, {1, 2, 0.5f}} );
 	// A(10)
 	// B(20)
@@ -22,12 +22,9 @@ TEST( dAlgorithm, AdjList )
 	// A->C = 50%
 	// B->A = 100%
 	// B->C = 50%
-	std::vector<int> layout;
-	auto const deg = adj_list::generate_layout( desc, layout );
-
-	dev_ptr<int> d_e( deg * 60 );
-	dev_ptr<int> d_layout( layout );
-	generate_rnd_adj_list( desc, d_layout.data(), d_e.data(), narrow_int<int>( deg ) );
+	dev_ptr<int> d_e( 60 * desc.max_degree() );
+	auto deg = desc.max_degree();
+	generate_rnd_adj_list( desc, d_e.data() );
 	cudaDeviceSynchronize();
 
 	adj_list adj( 60, deg, d_e.data() );

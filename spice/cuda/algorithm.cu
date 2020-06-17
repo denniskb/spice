@@ -21,7 +21,10 @@ using namespace spice::cuda;
 using namespace spice::cuda::util;
 
 
-__constant__ int2 _desc[20];
+__constant__ int3 _desc_gendeg[20];
+__constant__ float _desc_p[20];
+__constant__ int2 _desc_genids[20];
+
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
 static unsigned _seed = 0;
@@ -94,62 +97,67 @@ template <typename Decl>
 using const_synapse_iter = iter<Decl, false, true>;
 
 
-static __global__ void _generate_adj_ids(
-    int const desc_len, int const N, int const * layout, int * const out_edges, int const width )
+static __global__ void
+_generate_adj_ids( int const desc_len, int const N, int const max_degree, int * const out_edges )
 {
-	int const MAX_DEGREE = 1024;
-	__shared__ float rows[4][MAX_DEGREE];
+	__shared__ float rows[4][1024];
 
 	xorwow rng( threadid() );
 
-	for( unsigned wid = warpid_grid(); wid < N; wid += num_warps() )
+	unsigned const wid = warpid_grid();
+
+	if( wid >= N ) return;
+
+	unsigned offset = wid * max_degree;
+	int total_degree = 0;
+	for( int c = 0; c < desc_len; c++ )
 	{
-		unsigned offset = wid * width;
-		for( int c = 0; c < desc_len; c++ )
+		if( wid < _desc_gendeg[c].x || wid >= _desc_gendeg[c].y ) continue;
+
+		// TODO: binom. distr.! (AND: all threads must draw same number!!!)
+		int degree = min( max_degree - total_degree, (int)( _desc_gendeg[c].z * _desc_p[c] ) );
+		total_degree += degree;
+		int first = _desc_genids[c].x;
+		int range = _desc_genids[c].y;
+
+		while( degree > 0 )
 		{
-			int degree = layout[wid + c * N];
-			int first = _desc[c].x;
-			int range = _desc[c].y;
+			int const d = min( degree, 1024 );
+			int const r = (int)( (long long)d * range / degree );
 
-			while( degree > 0 )
+			// accumulate
+			float total = 0.0f;
+			for( int i = laneid(); i < d; i += WARP_SZ )
 			{
-				int const d = min( degree, MAX_DEGREE );
-				int const r = (int)( (long long)d * range / degree );
+				float f = -logf( rng() );
 
-				// accumulate
-				float total = 0.0f;
-				for( int i = laneid(); i < d; i += WARP_SZ )
-				{
-					float f = -logf( rng() );
+				float sum;
+				f = total + warp::inclusive_scan( f, sum, __activemask() );
+				total += sum;
 
-					float sum;
-					f = total + warp::inclusive_scan( f, sum, __activemask() );
-					total += sum;
-
-					rows[warpid_block()][i] = f;
-				}
-
-				// normalize
-				{
-					total -= logf( rng() );
-					total = __shfl_sync( MASK_ALL, total, 0 );
-
-					float const scale = ( r - d ) / total;
-					for( int i = laneid(); i < d; i += WARP_SZ )
-						( out_edges + offset )[i] =
-						    first + static_cast<int>( rows[warpid_block()][i] * scale ) + i;
-				}
-
-				offset += d;
-				degree -= MAX_DEGREE;
-				first += r;
-				range -= r;
+				rows[warpid_block()][i] = f;
 			}
-		}
 
-		for( unsigned i = offset + laneid(); i < ( wid + 1 ) * width; i += WARP_SZ )
-			out_edges[i] = -1;
+			// normalize
+			{
+				total -= logf( rng() );
+				total = __shfl_sync( MASK_ALL, total, 0 );
+
+				float const scale = ( r - d ) / total;
+				for( int i = laneid(); i < d; i += WARP_SZ )
+					( out_edges + offset )[i] =
+					    first + static_cast<int>( rows[warpid_block()][i] * scale ) + i;
+			}
+
+			offset += d;
+			degree -= 1024;
+			first += r;
+			range -= r;
+		}
 	}
+
+	for( unsigned i = offset + laneid(); i < ( wid + 1 ) * max_degree; i += WARP_SZ )
+		out_edges[i] = -1;
 }
 
 template <typename Model, bool INIT>
@@ -187,9 +195,9 @@ static __global__ void _process_neurons(
 			if( Model::synapse::size > 0 ) // plast.
 			{
 				unsigned const flag = __ballot_sync( __activemask(), spiked );
-				if( laneid() == 0 ) history[i / WARP_SZ] = flag;
+				if( laneid() == 0 ) history[i / 32] = flag;
 
-				bool const delayed_spike = delayed_history[i / WARP_SZ] >> ( i % WARP_SZ ) & 1u;
+				bool const delayed_spike = delayed_history[i / 32] >> ( i % 32 ) & 1u;
 
 				if( iter - ages[i] == max_history - 1 && !delayed_spike )
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
@@ -246,9 +254,7 @@ static __global__ void _process_spikes(
 						    src,
 						    dst,
 						    MODE == HNDL_SPKS && k == iter,
-						    history( circidx( k, max_history ), dst / WARP_SZ ) >>
-						            ( dst % WARP_SZ ) &
-						        1u,
+						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
 						    dt,
 						    info,
 						    bak );
@@ -345,24 +351,37 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list(
-    spice::util::neuron_group const & desc, int const * layout, int * out_edges, int const width )
+void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges )
 {
 	spice_assert(
 	    desc.connections().size() <= 20,
 	    "spice doesn't support models with more than 20 connections between neuron populations" );
+	spice_assert( edges );
 
-	std::array<int2, 20> tmp;
+	std::array<int3, 20> tmp_deg;
+	std::array<float, 20> tmp_p;
+	std::array<int2, 20> tmp_ids;
 	for( std::size_t i = 0; i < desc.connections().size(); i++ )
 	{
-		tmp[i].x = desc.first( std::get<1>( desc.connections().at( i ) ) );
-		tmp[i].y = desc.range( std::get<1>( desc.connections().at( i ) ) );
-	}
-	success_or_throw(
-	    cudaMemcpyToSymbolAsync( _desc, tmp.data(), sizeof( int2 ) * desc.connections().size() ) );
+		tmp_deg[i].x = desc.first( std::get<0>( desc.connections().at( i ) ) );
+		tmp_deg[i].y = desc.last( std::get<0>( desc.connections().at( i ) ) );
+		tmp_deg[i].z = desc.size( std::get<1>( desc.connections().at( i ) ) );
 
-	_generate_adj_ids<<<128, 128>>>(
-	    desc.connections().size(), desc.size(), layout, out_edges, width );
+		tmp_p[i] = std::get<2>( desc.connections().at( i ) );
+
+		tmp_ids[i].x = desc.first( std::get<1>( desc.connections().at( i ) ) );
+		tmp_ids[i].y = desc.range( std::get<1>( desc.connections().at( i ) ) );
+	}
+
+	success_or_throw( cudaMemcpyToSymbolAsync(
+	    _desc_gendeg, tmp_deg.data(), sizeof( int3 ) * desc.connections().size() ) );
+	success_or_throw( cudaMemcpyToSymbolAsync(
+	    _desc_p, tmp_p.data(), sizeof( float ) * desc.connections().size() ) );
+	success_or_throw( cudaMemcpyToSymbolAsync(
+	    _desc_genids, tmp_ids.data(), sizeof( int2 ) * desc.connections().size() ) );
+
+	_generate_adj_ids<<<( desc.size() * WARP_SZ + 127 ) / 128, 128>>>(
+	    desc.connections().size(), desc.size(), desc.max_degree(), edges );
 }
 
 template <typename Model>

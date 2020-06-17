@@ -12,8 +12,7 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list(
-    spice::util::neuron_group const & desc, int const * layout, int * out_edges, int const width );
+void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges );
 
 template <typename Model>
 void upload_meta(

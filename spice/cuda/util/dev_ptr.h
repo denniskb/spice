@@ -12,7 +12,11 @@
 #include <vector>
 
 
-namespace spice::cuda::util
+namespace spice
+{
+namespace cuda
+{
+namespace util
 {
 template <typename T>
 class dev_ptr
@@ -220,4 +224,6 @@ bool operator!=( std::vector<T> const & lhs, dev_ptr<T> const & rhs )
 {
 	return rhs != lhs;
 }
-} // namespace spice::cuda::util
+} // namespace util
+} // namespace cuda
+} // namespace spice

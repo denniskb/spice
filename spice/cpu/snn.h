@@ -19,7 +19,7 @@ class snn : public ::spice::snn<Model>
 {
 public:
 	snn( std::size_t num_neurons, float p_connect, float dt, int delay = 1 );
-	snn( util::neuron_group const & desc, float dt, int delay = 1 );
+	snn( util::neuron_group desc, float dt, int delay = 1 );
 
 	util::adj_list const & graph() const override;
 	typename Model::neuron::tuple_t get_neuron( std::size_t i ) const override;
