@@ -97,22 +97,22 @@ template <typename Decl>
 using const_synapse_iter = iter<Decl, false, true>;
 
 
-static __global__ void
-_generate_adj_ids( int const desc_len, int const N, int const max_degree, int * const out_edges )
+static __global__ void _generate_adj_ids(
+    unsigned const seed,
+    int const desc_len,
+    int const N,
+    unsigned const max_degree,
+    int * const out_edges )
 {
-	__shared__ float rows[4][1024];
+	__shared__ float rows[768];
 
-	xorwow rng( threadid() );
+	xorwow rng( threadid() + ( seed << 20 ) );
 
-	unsigned const wid = warpid_grid();
-
-	if( wid >= N ) return;
-
-	unsigned offset = wid * max_degree;
+	unsigned offset = blockIdx.x * max_degree;
 	int total_degree = 0;
 	for( int c = 0; c < desc_len; c++ )
 	{
-		if( wid < _desc_gendeg[c].x || wid >= _desc_gendeg[c].y ) continue;
+		if( blockIdx.x < _desc_gendeg[c].x || blockIdx.x >= _desc_gendeg[c].y ) continue;
 
 		// TODO: binom. distr.! (AND: all threads must draw same number!!!)
 		int degree = min(
@@ -124,12 +124,12 @@ _generate_adj_ids( int const desc_len, int const N, int const max_degree, int * 
 
 		while( degree > 0 )
 		{
-			int const d = min( degree, 1024 );
+			int const d = min( 768, degree );
 			int const r = (int)( (long long)d * range / degree );
 
 			// accumulate
 			float total = 0.0f;
-			for( int i = laneid(); i < d; i += WARP_SZ )
+			for( int i = threadIdx.x; i < d; i += WARP_SZ )
 			{
 				float f = exp_distr::rand( rng );
 
@@ -137,7 +137,7 @@ _generate_adj_ids( int const desc_len, int const N, int const max_degree, int * 
 				f = total + warp::inclusive_scan( f, sum, __activemask() );
 				total += sum;
 
-				rows[warpid_block()][i] = f;
+				rows[i] = f;
 			}
 
 			// normalize
@@ -146,19 +146,18 @@ _generate_adj_ids( int const desc_len, int const N, int const max_degree, int * 
 				total = __shfl_sync( MASK_ALL, total, 0 );
 
 				float const scale = ( r - d ) / total;
-				for( int i = laneid(); i < d; i += WARP_SZ )
-					( out_edges + offset )[i] =
-					    first + static_cast<int>( rows[warpid_block()][i] * scale ) + i;
+				for( int i = threadIdx.x; i < d; i += WARP_SZ )
+					( out_edges + offset )[i] = first + static_cast<int>( rows[i] * scale ) + i;
 			}
 
 			offset += d;
-			degree -= 1024;
+			degree -= 768;
 			first += r;
 			range -= r;
 		}
 	}
 
-	for( unsigned i = offset + laneid(); i < ( wid + 1 ) * max_degree; i += WARP_SZ )
+	for( unsigned i = offset + threadIdx.x; i < ( blockIdx.x + 1 ) * max_degree; i += WARP_SZ )
 		out_edges[i] = -1;
 }
 
@@ -182,7 +181,7 @@ static __global__ void _process_neurons(
 {
 	assert( info.num_neurons < INT_MAX - num_threads() );
 
-	backend bak( threadid() + num_threads() * seed );
+	backend bak( threadid() + ( seed << 16 ) );
 
 	for( int i = threadid(); i < info.num_neurons; i += num_threads() )
 	{
@@ -232,7 +231,7 @@ static __global__ void _process_spikes(
     int const delay = 0,
     float const dt = 0 )
 {
-	backend bak( threadid() + seed * num_threads() );
+	backend bak( threadid() + ( seed << 16 ) );
 
 	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
 	     i += gridDim.x )
@@ -289,17 +288,17 @@ static __global__ void _process_spikes_cache_aware(
     int const * spikes = nullptr,
     unsigned const * num_spikes = nullptr )
 {
-	backend bak( threadid() + seed * num_threads() );
+	backend bak( threadid() + ( seed << 16 ) );
 
 	int const S = *num_spikes;
 
-	for( int i = warpid_grid(); i < S * ( adj.width() / WARP_SZ ); i += num_warps() )
+	for( int i = blockIdx.x; i < S * ( adj.width() / WARP_SZ ); i += gridDim.x )
 	{
 		int s = i % S;
 		int o = i / S;
 
 		int src = spikes[s];
-		int dst = adj( src, WARP_SZ * o + laneid() );
+		int dst = adj( src, WARP_SZ * o + threadIdx.x );
 
 		if( dst >= 0 )
 			Model::neuron::template receive(
@@ -382,8 +381,9 @@ void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges )
 	success_or_throw( cudaMemcpyToSymbolAsync(
 	    _desc_genids, tmp_ids.data(), sizeof( int2 ) * desc.connections().size() ) );
 
-	_generate_adj_ids<<<( desc.size() * WARP_SZ + 127 ) / 128, 128>>>(
-	    desc.connections().size(), desc.size(), desc.max_degree(), edges );
+	cudaFuncSetCacheConfig( _generate_adj_ids, cudaFuncCachePreferShared );
+	_generate_adj_ids<<<desc.size(), 32>>>(
+	    _seed++, desc.connections().size(), desc.size(), desc.max_degree(), edges );
 }
 
 template <typename Model>
@@ -550,7 +550,7 @@ void receive(
 		    delay,
 		    dt );
 	else
-		_process_spikes_cache_aware<Model><<<launch, launch>>>(
+		_process_spikes_cache_aware<Model><<<512, 32>>>(
 		    info,
 		    _seed++,
 		    adj,

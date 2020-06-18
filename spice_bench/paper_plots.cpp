@@ -60,11 +60,11 @@ static void plot0_AdjGen( benchmark::State & state )
 		neuron_group desc( {N}, {{0, 0, P}} );
 
 		dev_ptr<int> e( desc.size() * desc.max_degree() );
-		generate_rnd_adj_list( desc, e.data() );
 
 		event start, stop;
 		for( auto _ : state )
 		{
+			generate_rnd_adj_list( desc, e.data() );
 			start.record();
 			for( int i = 0; i < 10; i++ ) generate_rnd_adj_list( desc, e.data() );
 			// cudaMemsetAsync( e.data(), 0, 4 * NSYN );
