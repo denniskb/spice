@@ -20,7 +20,7 @@ struct backend
 		atomicAdd( &var, val );
 	}
 
-	__device__ float rand() { return rng(); }
+	__device__ float rand() { return util::uniform_distr::inclusive( rng ); }
 
 	template <typename T>
 	__device__ static T min( T x, T hi )

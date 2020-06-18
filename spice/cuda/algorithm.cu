@@ -115,7 +115,9 @@ _generate_adj_ids( int const desc_len, int const N, int const max_degree, int * 
 		if( wid < _desc_gendeg[c].x || wid >= _desc_gendeg[c].y ) continue;
 
 		// TODO: binom. distr.! (AND: all threads must draw same number!!!)
-		int degree = min( max_degree - total_degree, (int)( _desc_gendeg[c].z * _desc_p[c] ) );
+		int degree = min(
+		    max_degree - total_degree, binomial_distr::rand( rng, _desc_gendeg[c].z, _desc_p[c] ) );
+		degree = __shfl_sync( MASK_ALL, degree, 0 );
 		total_degree += degree;
 		int first = _desc_genids[c].x;
 		int range = _desc_genids[c].y;
@@ -129,7 +131,7 @@ _generate_adj_ids( int const desc_len, int const N, int const max_degree, int * 
 			float total = 0.0f;
 			for( int i = laneid(); i < d; i += WARP_SZ )
 			{
-				float f = -logf( rng() );
+				float f = exp_distr::rand( rng );
 
 				float sum;
 				f = total + warp::inclusive_scan( f, sum, __activemask() );
@@ -140,7 +142,7 @@ _generate_adj_ids( int const desc_len, int const N, int const max_degree, int * 
 
 			// normalize
 			{
-				total -= logf( rng() );
+				total += exp_distr::rand( rng );
 				total = __shfl_sync( MASK_ALL, total, 0 );
 
 				float const scale = ( r - d ) / total;
@@ -239,7 +241,7 @@ static __global__ void _process_spikes(
 
 		for( unsigned j = threadIdx.x; j < adj.width(); j += blockDim.x )
 		{
-			unsigned const isyn = adj.row( src ) - adj.row( 0 ) + j; // src * max_degree + j;
+			unsigned const isyn = adj.row( src ) - adj.row( 0 ) + j;
 			int const dst = adj( src, j );
 
 			if( dst >= 0 )

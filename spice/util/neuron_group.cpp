@@ -107,7 +107,7 @@ std::size_t neuron_group::max_degree()
 		{
 			if( std::get<0>( c ) != src )
 			{
-				result = std::max( result, narrow_cast<std::size_t>( m + 4.75 * std::sqrt( s2 ) ) );
+				result = std::max( result, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) );
 				src = std::get<0>( c );
 				m = 0.0;
 				s2 = 0.0;
@@ -117,7 +117,7 @@ std::size_t neuron_group::max_degree()
 			s2 += size( std::get<1>( c ) ) * std::get<2>( c ) * ( 1.0 - std::get<2>( c ) );
 		}
 
-		_max_degree = ( std::max( result, narrow_cast<std::size_t>( m + 4.75 * std::sqrt( s2 ) ) ) +
+		_max_degree = ( std::max( result, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) ) +
 		                WARP_SZ - 1 ) /
 		              WARP_SZ * WARP_SZ;
 	}
