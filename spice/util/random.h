@@ -26,6 +26,22 @@ private:
 	unsigned x, y;
 };
 
+class xoroshiro64
+{
+public:
+	using result_type = unsigned;
+
+	explicit xoroshiro64( unsigned long long seed );
+
+	unsigned operator()();
+
+	static unsigned min();
+	static unsigned max();
+
+private:
+	unsigned x, y;
+};
+
 
 #if defined( SPICE_ASSERT_RELEASE ) || !defined( NDEBUG )
 template <typename Prec = int>

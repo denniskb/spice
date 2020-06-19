@@ -52,7 +52,7 @@ void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 {
 	edges.resize( desc.size() * desc.max_degree() );
 
-	xorshift64 gen( _seed++ );
+	xoroshiro64 gen( _seed++ );
 	std::exponential_distribution<float> exp;
 	auto bounded_exp = [&]( auto & gen ) {
 		return std::min( -std::log( 1.0f / gen.max() ), exp( gen ) );

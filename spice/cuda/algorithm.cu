@@ -28,7 +28,7 @@ __constant__ int2 _desc_genids[20];
 
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
-static spice::util::xorshift64 _seed( 1337 );
+static spice::util::xoroshiro64 _seed( 1337 );
 
 
 static int nblocks( int desired, int max, int block_size )
@@ -107,7 +107,7 @@ static __global__ void _generate_adj_ids(
 {
 	__shared__ float rows[768];
 
-	cuda::util::xorshift64 rng( threadid() ^ seed );
+	cuda::util::xoroshiro64 rng( threadid() ^ seed );
 
 	unsigned offset = blockIdx.x * max_degree;
 	int total_degree = 0;

@@ -40,6 +40,32 @@ private:
 	unsigned x, y;
 };
 
+#define rotl( x, k ) ( ( x << k ) | ( x >> ( 32 - k ) ) )
+class xoroshiro64
+{
+public:
+	__device__ explicit xoroshiro64( unsigned long long seed )
+	{
+		auto h = hash( seed + 1 );
+		x = (unsigned)h | 1;
+		y = (unsigned)( h >> 32 ) | 1;
+	}
+
+	__device__ __inline__ unsigned operator()()
+	{
+		unsigned result = x * 0x9E3779BB;
+
+		y ^= x;
+		x = rotl( x, 26 ) ^ y ^ ( y << 9 );
+		y = rotl( y, 13 );
+
+		return result;
+	}
+
+private:
+	unsigned x, y;
+};
+
 class uniform_distr
 {
 public:
@@ -47,14 +73,14 @@ public:
 	template <typename Gen>
 	__device__ __inline__ static float inclusive( Gen & gen )
 	{
-		return ( gen() & 0x00ffffff ) / 16777215.0f;
+		return ( gen() >> 8 ) / 16777215.0f;
 	}
 
 	// @return rand no. in [0, 1)
 	template <typename Gen>
 	__device__ __inline__ static float left_inclusive( Gen & gen )
 	{
-		return ( gen() & 0x00ffffff ) / 16777216.0f;
+		return ( gen() >> 8 ) / 16777216.0f;
 	}
 
 	// @return rand no. in (0, 1]
@@ -62,7 +88,7 @@ public:
 	__device__ __inline__ static float right_inclusive( Gen & gen )
 	{
 		// TODO: add 1 in int or float?
-		return ( ( gen() & 0x00ffffff ) + 1.0f ) / 16777216.0f;
+		return ( ( gen() >> 8 ) + 1.0f ) / 16777216.0f;
 	}
 
 	// @return rand no. in (0, 1)
@@ -70,7 +96,7 @@ public:
 	__device__ __inline__ static float exclusive( Gen & gen )
 	{
 		// TODO: "
-		return ( ( gen() & 0x007fffff ) + 1.0f ) / 8388609.0f;
+		return ( ( gen() >> 9 ) + 1.0f ) / 8388609.0f;
 	}
 };
 

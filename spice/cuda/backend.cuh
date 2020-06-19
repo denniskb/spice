@@ -48,7 +48,7 @@ struct backend
 	}
 
 private:
-	util::xorshift64 rng;
+	util::xoroshiro64 rng;
 };
 } // namespace cuda
 } // namespace spice
