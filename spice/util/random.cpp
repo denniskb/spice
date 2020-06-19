@@ -13,23 +13,49 @@ static unsigned hash( unsigned x )
 
 namespace spice::util
 {
+xorshift::xorshift( unsigned seed /* = 1337 */ )
+    : a( hash( seed + 1 ) | 1 )
+{
+}
+
+unsigned xorshift::operator()()
+{
+	unsigned x = a;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+	return ( a = x );
+}
+
+unsigned xorshift::min() { return 0; }
+unsigned xorshift::max() { return std::numeric_limits<unsigned>::max(); }
+
+
 xorwow::xorwow( unsigned seed /* = 1337 */ )
-    : x( hash( seed ) )
+    : a( hash( seed + 1 ) | 1 )
+    , b( hash( hash( seed + 1 ) ) | 1 )
+    , c( hash( hash( hash( seed + 1 ) ) ) | 1 )
+    , d( hash( hash( hash( hash( seed + 1 ) ) ) ) | 1 )
 {
 }
 
 unsigned xorwow::operator()()
 {
-	unsigned const t = ( x ^ ( x >> 2 ) );
+	unsigned t = d;
+	unsigned s = a;
 
-	d += 362437u;
-	x = y;
-	y = z;
-	z = w;
-	w = v;
-	v = ( v ^ ( v << 4 ) ) ^ ( t ^ ( t << 1 ) );
+	d = c;
+	c = b;
+	b = s;
 
-	return d + v;
+	t ^= t >> 2;
+	t ^= t << 1;
+	t ^= s ^ ( s << 4 );
+	a = t;
+
+	counter += 362437;
+
+	return t + counter;
 }
 
 unsigned xorwow::min() { return 0; }

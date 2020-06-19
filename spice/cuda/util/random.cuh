@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cfloat>
 #include <climits>
 
 
@@ -18,38 +19,68 @@ __device__ inline unsigned hash( unsigned x )
 	return x;
 }
 
+// RNG with single word state and a period of 2^32-1
+class xorshift
+{
+public:
+	__device__ xorshift( unsigned seed = 1337 )
+	    : a( hash( seed + 1 ) | 1 )
+	{
+	}
+
+	__device__ __inline__ unsigned operator()()
+	{
+		unsigned x = a;
+		x ^= x << 13;
+		x ^= x >> 17;
+		x ^= x << 5;
+		return ( a = x );
+	}
+
+private:
+	unsigned a;
+};
+
+// RNG with five words of state and a period of 2^160-2^32
 class xorwow
 {
 public:
 	__device__ xorwow( unsigned seed = 1337 )
-	    : x( hash( seed + 1 ) )
+	    : a( hash( seed + 1 ) | 1 )
+	    , b( hash( hash( seed + 1 ) ) | 1 )
+	    , c( hash( hash( hash( seed + 1 ) ) ) | 1 )
+	    , d( hash( hash( hash( hash( seed + 1 ) ) ) ) | 1 )
 	{
 	}
 
 	__device__ unsigned operator()()
 	{
-		unsigned t = ( x ^ ( x >> 2 ) );
+		unsigned t = d;
+		unsigned s = a;
 
-		x = y;
-		y = z;
-		z = w;
-		w = v;
-		v = ( v ^ ( v << 4 ) ) ^ ( t ^ ( t << 1 ) );
-		d += 362437u;
+		d = c;
+		c = b;
+		b = s;
 
-		return d + v;
+		t ^= t >> 2;
+		t ^= t << 1;
+		t ^= s ^ ( s << 4 );
+		a = t;
+
+		counter += 362437;
+
+		return t + counter;
 	}
 
 	static __device__ __inline__ unsigned min() { return 0; }
 	static __device__ __inline__ unsigned max() { return UINT_MAX; }
 
 private:
-	unsigned x;
-	unsigned y = 362436069u;
-	unsigned z = 521288629u;
-	unsigned w = 88675123u;
-	unsigned v = 5783321u;
-	unsigned d = 6615241u;
+	unsigned a;
+	unsigned b;
+	unsigned c;
+	unsigned d;
+	unsigned counter = 0;
 };
 
 class uniform_distr
@@ -59,28 +90,30 @@ public:
 	template <typename Gen>
 	static __device__ __inline__ float inclusive( Gen & gen )
 	{
-		return gen() / (float)Gen::max();
-	}
-
-	// @return rand no. in (0, 1)
-	template <typename Gen>
-	static __device__ __inline__ float exclusive( Gen & gen )
-	{
-		return ( (float)gen() + 1 ) / ( (float)Gen::max() + 2 );
+		return ( gen() & 0x00ffffff ) / 16777215.0f;
 	}
 
 	// @return rand no. in [0, 1)
 	template <typename Gen>
 	static __device__ __inline__ float left_inclusive( Gen & gen )
 	{
-		return gen() / ( (float)Gen::max() + 1 );
+		return ( gen() & 0x00ffffff ) / 16777216.0f;
 	}
 
 	// @return rand no. in (0, 1]
 	template <typename Gen>
 	static __device__ __inline__ float right_inclusive( Gen & gen )
 	{
-		return ( (float)gen() + 1 ) / ( (float)Gen::max() + 1 );
+		// TODO: add 1 in int or float?
+		return ( ( gen() & 0x00ffffff ) + 1.0f ) / 16777216.0f;
+	}
+
+	// @return rand no. in (0, 1)
+	template <typename Gen>
+	static __device__ __inline__ float exclusive( Gen & gen )
+	{
+		// TODO: "
+		return ( ( gen() & 0x007fffff ) + 1.0f ) / 8388609.0f;
 	}
 };
 
@@ -104,7 +137,7 @@ public:
 	{
 		return fmaf(
 		    sqrtf( -2 * logf( uniform_distr::right_inclusive( gen ) ) ) *
-		        cospif( 2 * uniform_distr::inclusive( gen ) ),
+		        sinpif( 2 * uniform_distr::left_inclusive( gen ) ),
 		    s,
 		    m );
 	}

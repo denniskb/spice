@@ -8,6 +8,22 @@
 
 namespace spice::util
 {
+class xorshift
+{
+public:
+	using result_type = unsigned;
+
+	explicit xorshift( unsigned seed = 1337 );
+
+	unsigned operator()();
+
+	static unsigned min();
+	static unsigned max();
+
+private:
+	unsigned a;
+};
+
 class xorwow
 {
 public:
@@ -21,12 +37,11 @@ public:
 	static unsigned max();
 
 private:
-	unsigned x;
-	unsigned y = 362436069u;
-	unsigned z = 521288629u;
-	unsigned w = 88675123u;
-	unsigned v = 5783321u;
-	unsigned d = 6615241u;
+	unsigned a;
+	unsigned b;
+	unsigned c;
+	unsigned d;
+	unsigned counter = 0;
 };
 
 

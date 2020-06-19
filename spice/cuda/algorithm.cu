@@ -27,7 +27,7 @@ __constant__ int2 _desc_genids[20];
 
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
-static unsigned _seed = 0;
+static unsigned _seed = 1;
 
 
 static int nblocks( int desired, int max, int block_size )
@@ -106,7 +106,7 @@ static __global__ void _generate_adj_ids(
 {
 	__shared__ float rows[768];
 
-	xorwow rng( threadid() + ( seed << 20 ) );
+	xorshift rng( threadid() + ( seed << 20 ) );
 
 	unsigned offset = blockIdx.x * max_degree;
 	int total_degree = 0;

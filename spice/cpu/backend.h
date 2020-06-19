@@ -18,7 +18,8 @@ struct backend
 		var += val;
 	}
 
-	float rand() { return rng() / (float)rng.max(); }
+	// @return random no. in [0, 1)
+	float rand() { return ( rng() & 0x00ffffff ) / 16777216.0f; }
 
 	template <typename T>
 	static T min( T x, T hi )

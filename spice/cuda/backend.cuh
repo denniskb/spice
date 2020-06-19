@@ -20,7 +20,8 @@ struct backend
 		atomicAdd( &var, val );
 	}
 
-	__device__ float rand() { return util::uniform_distr::inclusive( rng ); }
+	// @return rand float in [0, 1)
+	__device__ float rand() { return util::uniform_distr::left_inclusive( rng ); }
 
 	template <typename T>
 	__device__ static T min( T x, T hi )
@@ -47,7 +48,7 @@ struct backend
 	}
 
 private:
-	util::xorwow rng;
+	util::xorshift rng;
 };
 } // namespace cuda
 } // namespace spice
