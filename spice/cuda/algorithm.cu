@@ -384,7 +384,7 @@ void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges )
 
 	cudaFuncSetCacheConfig( _generate_adj_ids, cudaFuncCachePreferShared );
 
-	spice_assert( desc.size() <= 1u << 31 - 1 );
+	spice_assert( desc.size() <= ( 1u << 31 ) - 1 );
 	_generate_adj_ids<<<desc.size(), 32>>>(
 	    _seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
 }
