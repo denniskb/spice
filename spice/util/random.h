@@ -6,14 +6,16 @@
 #include <random>
 
 
-namespace spice::util
+namespace spice
 {
-class xorshift
+namespace util
+{
+class xorshift64
 {
 public:
 	using result_type = unsigned;
 
-	explicit xorshift( unsigned seed = 1337 );
+	explicit xorshift64( unsigned long long seed );
 
 	unsigned operator()();
 
@@ -21,27 +23,7 @@ public:
 	static unsigned max();
 
 private:
-	unsigned a;
-};
-
-class xorwow
-{
-public:
-	using result_type = unsigned;
-
-	explicit xorwow( unsigned seed = 1337 );
-
-	unsigned operator()();
-
-	static unsigned min();
-	static unsigned max();
-
-private:
-	unsigned a;
-	unsigned b;
-	unsigned c;
-	unsigned d;
-	unsigned counter = 0;
+	unsigned x, y;
 };
 
 
@@ -116,4 +98,5 @@ bool operator!=( binomial_distribution<Prec> const & a, binomial_distribution<Pr
 	return a.param() != b.param() || a.param2() != b.param2();
 }
 #endif
-} // namespace spice::util
+} // namespace util
+} // namespace spice

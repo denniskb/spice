@@ -46,6 +46,6 @@ struct backend
 	}
 
 private:
-	util::xorwow rng;
+	util::xorshift64 rng;
 };
 } // namespace spice

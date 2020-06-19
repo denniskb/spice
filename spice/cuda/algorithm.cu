@@ -11,6 +11,7 @@
 #include <spice/models/vogels_abbott.h>
 #include <spice/util/assert.h>
 #include <spice/util/circular_buffer.h>
+#include <spice/util/random.h>
 
 #include <array>
 
@@ -27,7 +28,7 @@ __constant__ int2 _desc_genids[20];
 
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
-static unsigned _seed = 1;
+static spice::util::xorshift64 _seed( 1337 );
 
 
 static int nblocks( int desired, int max, int block_size )
@@ -98,7 +99,7 @@ using const_synapse_iter = iter<Decl, false, true>;
 
 
 static __global__ void _generate_adj_ids(
-    unsigned const seed,
+    unsigned long long const seed,
     int const desc_len,
     int const N,
     unsigned const max_degree,
@@ -106,7 +107,7 @@ static __global__ void _generate_adj_ids(
 {
 	__shared__ float rows[768];
 
-	xorshift rng( threadid() + ( seed << 20 ) );
+	cuda::util::xorshift64 rng( threadid() ^ seed );
 
 	unsigned offset = blockIdx.x * max_degree;
 	int total_degree = 0;
@@ -164,7 +165,7 @@ static __global__ void _generate_adj_ids(
 template <typename Model, bool INIT>
 static __global__ void _process_neurons(
     snn_info const info,
-    unsigned const seed,
+    unsigned long long const seed,
 
     float const dt = 0,
     int * spikes = nullptr,
@@ -181,7 +182,7 @@ static __global__ void _process_neurons(
 {
 	assert( info.num_neurons < INT_MAX - num_threads() );
 
-	backend bak( threadid() + ( seed << 16 ) );
+	backend bak( threadid() ^ seed );
 
 	for( int i = threadid(); i < info.num_neurons; i += num_threads() )
 	{
@@ -218,7 +219,7 @@ enum mode
 template <typename Model, mode MODE>
 static __global__ void _process_spikes(
     snn_info const info,
-    unsigned const seed,
+    unsigned long long const seed,
     span2d<int const> adj,
 
     int const * spikes = nullptr,
@@ -231,7 +232,7 @@ static __global__ void _process_spikes(
     int const delay = 0,
     float const dt = 0 )
 {
-	backend bak( threadid() + ( seed << 16 ) );
+	backend bak( threadid() ^ seed );
 
 	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
 	     i += gridDim.x )
@@ -282,13 +283,13 @@ static __global__ void _process_spikes(
 template <typename Model>
 static __global__ void _process_spikes_cache_aware(
     snn_info const info,
-    unsigned const seed,
+    unsigned long long const seed,
     span2d<int const> adj,
 
     int const * spikes = nullptr,
     unsigned const * num_spikes = nullptr )
 {
-	backend bak( threadid() + ( seed << 16 ) );
+	backend bak( threadid() ^ seed );
 
 	int const S = *num_spikes;
 
@@ -382,8 +383,10 @@ void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges )
 	    _desc_genids, tmp_ids.data(), sizeof( int2 ) * desc.connections().size() ) );
 
 	cudaFuncSetCacheConfig( _generate_adj_ids, cudaFuncCachePreferShared );
+
+	spice_assert( desc.size() <= 1u << 31 - 1 );
 	_generate_adj_ids<<<desc.size(), 32>>>(
-	    _seed++, desc.connections().size(), desc.size(), desc.max_degree(), edges );
+	    _seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
 }
 
 template <typename Model>
@@ -406,10 +409,10 @@ template void upload_meta<::spice::synth>(
 template <typename Model>
 void init( snn_info const info, span2d<int const> adj /* = {} */ )
 {
-	_process_neurons<Model, true><<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, _seed++ );
+	_process_neurons<Model, true><<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, _seed() );
 
 	if( Model::synapse::size > 0 )
-		_process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, _seed++, adj );
+		_process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, _seed(), adj );
 }
 template void init<::spice::vogels_abbott>( snn_info, span2d<int const> );
 template void init<::spice::brunel>( snn_info, span2d<int const> );
@@ -434,7 +437,7 @@ void update(
 {
 	_process_neurons<Model, false><<<nblocks( info.num_neurons, 128, 256 ), 256>>>(
 	    info,
-	    _seed++,
+	    _seed(),
 	    dt,
 	    spikes,
 	    num_spikes,
@@ -450,7 +453,7 @@ void update(
 	if( Model::synapse::size > 0 )
 		_process_spikes<Model, UPDT_SYNS><<<256, 256>>>(
 		    info,
-		    _seed++,
+		    _seed(),
 		    adj,
 
 		    updates,
@@ -537,7 +540,7 @@ void receive(
 	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
 		_process_spikes<Model, HNDL_SPKS><<<launch, launch>>>(
 		    info,
-		    _seed++,
+		    _seed(),
 		    adj,
 
 		    spikes,
@@ -552,7 +555,7 @@ void receive(
 	else
 		_process_spikes_cache_aware<Model><<<512, 32>>>(
 		    info,
-		    _seed++,
+		    _seed(),
 		    adj,
 
 		    spikes,

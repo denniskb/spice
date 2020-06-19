@@ -9,7 +9,7 @@
 #include <random>
 
 
-static int _seed = 1400;
+static unsigned long long _seed = 1337;
 
 
 namespace spice::util
@@ -52,7 +52,7 @@ void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 {
 	edges.resize( desc.size() * desc.max_degree() );
 
-	xorwow gen( _seed++ );
+	xorshift64 gen( _seed++ );
 	std::exponential_distribution<float> exp;
 	auto bounded_exp = [&]( auto & gen ) {
 		return std::min( -std::log( 1.0f / gen.max() ), exp( gen ) );

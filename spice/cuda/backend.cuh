@@ -9,7 +9,7 @@ namespace cuda
 {
 struct backend
 {
-	__device__ explicit backend( unsigned seed = 0 )
+	__device__ explicit backend( unsigned long long seed )
 	    : rng( seed )
 	{
 	}
@@ -48,7 +48,7 @@ struct backend
 	}
 
 private:
-	util::xorshift rng;
+	util::xorshift64 rng;
 };
 } // namespace cuda
 } // namespace spice
