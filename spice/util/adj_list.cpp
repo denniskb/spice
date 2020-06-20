@@ -52,11 +52,8 @@ void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 {
 	edges.resize( desc.size() * desc.max_degree() );
 
-	xoroshiro64 gen( _seed++ );
-	std::exponential_distribution<float> exp;
-	auto bounded_exp = [&]( auto & gen ) {
-		return std::min( -std::log( 1.0f / gen.max() ), exp( gen ) );
-	};
+	xoroshiro256ss gen( _seed++ );
+	exponential_distribution<float> exp;
 
 	std::size_t const N = desc.size();
 
@@ -80,11 +77,11 @@ void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 
 			float * neighbor_ids = reinterpret_cast<float *>( edges.data() + offset );
 
-			float total = bounded_exp( gen );
+			float total = exp( gen );
 			for( std::size_t k = 0; k < degree; k++ )
 			{
 				neighbor_ids[k] = total;
-				total += bounded_exp( gen );
+				total += exp( gen );
 			}
 
 			float const scale = ( range - degree ) / total;

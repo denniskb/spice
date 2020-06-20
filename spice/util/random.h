@@ -1,6 +1,8 @@
 #pragma once
 
 #include <spice/util/assert.h>
+#include <spice/util/host_defines.h>
+#include <spice/util/if_constexpr.h>
 #include <spice/util/type_traits.h>
 
 #include <random>
@@ -10,38 +12,131 @@ namespace spice
 {
 namespace util
 {
-class xorshift64
+HYBRID inline unsigned rotl32( unsigned x, unsigned k ) { return ( x << k ) | ( x >> ( 32 - k ) ); }
+HYBRID
+inline unsigned long long rotl64( unsigned long long x, unsigned long long k )
+{
+	return ( x << k ) | ( x >> ( 64 - k ) );
+}
+HYBRID inline unsigned long long hash( unsigned long long x )
+{
+	spice_assert( x > 0 );
+
+	x = ( x ^ ( x >> 30 ) ) * 0xbf58476d1ce4e5b9llu;
+	x = ( x ^ ( x >> 27 ) ) * 0x94d049bb133111ebllu;
+	x = x ^ ( x >> 31 );
+
+	return x;
+}
+
+// http://prng.di.unimi.it/xoshiro128plus.c
+class xoroshiro128p
 {
 public:
 	using result_type = unsigned;
+	constexpr unsigned min() { return 0; }
+	constexpr unsigned max() { return UINT_MAX; }
 
-	explicit xorshift64( unsigned long long seed );
+	HYBRID inline explicit xoroshiro128p( unsigned long long seed )
+	{
+		spice_assert( seed > 0 );
 
-	unsigned operator()();
+		auto h = hash( seed );
+		s0 = (unsigned)h;
+		s1 = (unsigned)( h >> 32 );
 
-	static unsigned min();
-	static unsigned max();
+		h = hash( h );
+		s2 = (unsigned)h;
+		s3 = (unsigned)( h >> 32 );
+	}
+
+	HYBRID inline unsigned operator()()
+	{
+		auto result = s0 + s3;
+
+		auto t = s1 << 9;
+
+		s2 ^= s0;
+		s3 ^= s1;
+		s1 ^= s2;
+		s0 ^= s3;
+
+		s2 ^= t;
+
+		s3 = rotl32( s3, 11 );
+
+		return result;
+	}
 
 private:
-	unsigned x, y;
+	unsigned s0, s1, s2, s3;
 };
 
-class xoroshiro64
+// http://prng.di.unimi.it/xoshiro256starstar.c
+class xoroshiro256ss
 {
 public:
-	using result_type = unsigned;
+	using result_type = unsigned long long;
+	constexpr result_type min() { return 0; }
+	constexpr result_type max() { return ULLONG_MAX; }
 
-	explicit xoroshiro64( unsigned long long seed );
+	HYBRID inline explicit xoroshiro256ss( unsigned long long seed )
+	{
+		spice_assert( seed > 0 );
 
-	unsigned operator()();
+		s0 = hash( seed );
+		s1 = hash( s0 );
+		s2 = hash( s1 );
+		s3 = hash( s2 );
+	}
 
-	static unsigned min();
-	static unsigned max();
+	HYBRID inline result_type operator()()
+	{
+		auto result = rotl64( s1 * 5, 7 ) * 9;
+
+		auto t = s1 << 17;
+
+		s2 ^= s0;
+		s3 ^= s1;
+		s1 ^= s2;
+		s0 ^= s3;
+
+		s2 ^= t;
+
+		s3 = rotl64( s3, 45 );
+
+		return result;
+	}
 
 private:
-	unsigned x, y;
+	unsigned long long s0, s1, s2, s3;
 };
 
+
+template <typename Prec = double>
+class exponential_distribution
+{
+public:
+	static_assert( std::is_floating_point_v<Prec>, "Prec = precision = {float|double}" );
+
+	using result_type = Prec;
+	using param_type = Prec;
+
+	exponential_distribution() = default;
+
+	template <typename Gen>
+	Prec operator()( Gen & gen )
+	{
+		std::conditional_t<std::is_same_v<Prec, float>, unsigned, unsigned long long> rnd = 0;
+
+		for( int i = 0; i < std::numeric_limits<Prec>::digits;
+		     i += std::numeric_limits<typename Gen::result_type>::digits )
+			rnd |= gen() << i;
+
+		return -std::log(
+		    ( ( rnd >> 8 ) + 1 ) / static_cast<Prec>( 1llu << std::numeric_limits<Prec>::digits ) );
+	}
+};
 
 #if defined( SPICE_ASSERT_RELEASE ) || !defined( NDEBUG )
 template <typename Prec = int>

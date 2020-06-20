@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spice/cuda/util/random.cuh>
+#include <spice/util/random.h>
 
 
 namespace spice
@@ -12,6 +13,7 @@ struct backend
 	__device__ explicit backend( unsigned long long seed )
 	    : rng( seed )
 	{
+		spice_assert( seed > 0 );
 	}
 
 	template <typename T>
@@ -48,7 +50,7 @@ struct backend
 	}
 
 private:
-	util::xoroshiro64 rng;
+	spice::util::xoroshiro128p rng;
 };
 } // namespace cuda
 } // namespace spice

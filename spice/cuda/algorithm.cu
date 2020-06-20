@@ -28,8 +28,16 @@ __constant__ int2 _desc_genids[20];
 
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
-static spice::util::xoroshiro64 _seed( 1337 );
 
+
+static unsigned long long seed()
+{
+	// TODO: replace with xoroshiro256**
+	static spice::util::xoroshiro256ss rng( 1337 );
+
+	auto x = rng();
+	return x > ( 1u << 20 ) ? x : seed();
+}
 
 static int nblocks( int desired, int max, int block_size )
 {
@@ -107,7 +115,7 @@ static __global__ void _generate_adj_ids(
 {
 	__shared__ float rows[768];
 
-	cuda::util::xoroshiro64 rng( threadid() ^ seed );
+	spice::util::xoroshiro128p rng( threadid() ^ seed );
 
 	unsigned offset = blockIdx.x * max_degree;
 	int total_degree = 0;
@@ -232,7 +240,7 @@ static __global__ void _process_spikes(
     int const delay = 0,
     float const dt = 0 )
 {
-	backend bak( threadid() ^ seed );
+	backend bak( 1 ); // threadid() ^ seed | 1 );
 
 	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
 	     i += gridDim.x )
@@ -386,7 +394,7 @@ void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges )
 
 	spice_assert( desc.size() <= ( 1u << 31 ) - 1 );
 	_generate_adj_ids<<<desc.size(), 32>>>(
-	    _seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
+	    seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
 }
 
 template <typename Model>
@@ -409,10 +417,10 @@ template void upload_meta<::spice::synth>(
 template <typename Model>
 void init( snn_info const info, span2d<int const> adj /* = {} */ )
 {
-	_process_neurons<Model, true><<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, _seed() );
+	_process_neurons<Model, true><<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, seed() );
 
 	if( Model::synapse::size > 0 )
-		_process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, _seed(), adj );
+		_process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj );
 }
 template void init<::spice::vogels_abbott>( snn_info, span2d<int const> );
 template void init<::spice::brunel>( snn_info, span2d<int const> );
@@ -437,7 +445,7 @@ void update(
 {
 	_process_neurons<Model, false><<<nblocks( info.num_neurons, 128, 256 ), 256>>>(
 	    info,
-	    _seed(),
+	    seed(),
 	    dt,
 	    spikes,
 	    num_spikes,
@@ -453,7 +461,7 @@ void update(
 	if( Model::synapse::size > 0 )
 		_process_spikes<Model, UPDT_SYNS><<<256, 256>>>(
 		    info,
-		    _seed(),
+		    seed(),
 		    adj,
 
 		    updates,
@@ -540,7 +548,7 @@ void receive(
 	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
 		_process_spikes<Model, HNDL_SPKS><<<launch, launch>>>(
 		    info,
-		    _seed(),
+		    seed(),
 		    adj,
 
 		    spikes,
@@ -555,7 +563,7 @@ void receive(
 	else
 		_process_spikes_cache_aware<Model><<<512, 32>>>(
 		    info,
-		    _seed(),
+		    seed(),
 		    adj,
 
 		    spikes,

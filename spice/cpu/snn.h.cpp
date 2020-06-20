@@ -14,6 +14,9 @@
 #include <random>
 
 
+static unsigned long long seed = 1337;
+
+
 using namespace spice::util;
 
 
@@ -85,6 +88,7 @@ snn<Model>::snn(
 template <typename Model>
 snn<Model>::snn( neuron_group desc, float const dt, int const delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
+    , _backend( seed++ )
 {
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );

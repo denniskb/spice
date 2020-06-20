@@ -7,9 +7,10 @@ namespace spice
 {
 struct backend
 {
-	explicit backend( unsigned seed = 0 )
+	explicit backend( unsigned long long seed )
 	    : rng( seed )
 	{
+		spice_assert( seed > 0 );
 	}
 
 	template <typename T>
@@ -46,6 +47,6 @@ struct backend
 	}
 
 private:
-	util::xorshift64 rng;
+	util::xoroshiro128p rng;
 };
 } // namespace spice
