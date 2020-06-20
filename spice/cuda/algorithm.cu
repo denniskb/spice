@@ -32,11 +32,8 @@ __constant__ void * _synapse_storage[20];
 
 static unsigned long long seed()
 {
-	// TODO: replace with xoroshiro256**
-	static spice::util::xoroshiro256ss rng( 1337 );
-
-	auto x = rng();
-	return x > ( 1u << 20 ) ? x : seed();
+	static unsigned long long x = 1337;
+	return hash( x++ );
 }
 
 static int nblocks( int desired, int max, int block_size )
