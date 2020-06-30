@@ -1,6 +1,5 @@
 #pragma once
 
-#include <spice/cuda/util/random.cuh>
 #include <spice/util/random.h>
 
 
@@ -23,7 +22,7 @@ struct backend
 	}
 
 	// @return rand float in [0, 1)
-	__device__ float rand() { return util::uniform_distr::left_inclusive( rng ); }
+	__device__ float rand() { return util::uniform_left_inc( rng ); }
 
 	template <typename T>
 	__device__ static T min( T x, T hi )

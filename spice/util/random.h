@@ -5,8 +5,6 @@
 #include <spice/util/if_constexpr.h>
 #include <spice/util/type_traits.h>
 
-#include <random>
-
 
 namespace spice
 {
@@ -28,6 +26,9 @@ HYBRID inline unsigned long long hash( unsigned long long x )
 
 	return x;
 }
+#ifndef __CUDA_ARCH__
+inline float sinpif( float x ) { return std::sin( 3.14159265359f * x ); }
+#endif
 
 // http://prng.di.unimi.it/xoshiro128plus.c
 class xoroshiro128p
@@ -112,102 +113,60 @@ private:
 	unsigned long long s0, s1, s2, s3;
 };
 
-
-template <typename Prec = double>
-class exponential_distribution
+// @return rand no. in [0, 1]
+template <typename Gen>
+HYBRID float uniform_inc( Gen & gen )
 {
-public:
-	static_assert( std::is_floating_point_v<Prec>, "Prec = precision = {float|double}" );
-
-	using result_type = Prec;
-	using param_type = Prec;
-
-	exponential_distribution() = default;
-
-	template <typename Gen>
-	Prec operator()( Gen & gen )
-	{
-		std::conditional_t<std::is_same_v<Prec, float>, unsigned, unsigned long long> rnd = 0;
-
-		for( int i = 0; i < std::numeric_limits<Prec>::digits;
-		     i += std::numeric_limits<typename Gen::result_type>::digits )
-			rnd |= gen() << i;
-
-		return -std::log(
-		    ( ( rnd >> 8 ) + 1 ) / static_cast<Prec>( 1llu << std::numeric_limits<Prec>::digits ) );
-	}
-};
-
-#if defined( SPICE_ASSERT_RELEASE ) || !defined( NDEBUG )
-template <typename Prec = int>
-using binomial_distribution = std::binomial_distribution<Prec>;
-#else
-template <typename Prec = int>
-class binomial_distribution
-{
-public:
-	static_assert( std::is_integral_v<Prec>, "Prec = precision = (char, short, int, ....)" );
-
-	using result_type = Prec;
-	using param_type = Prec;
-
-	explicit binomial_distribution( Prec n = 0, double p = 0.5 ) noexcept
-	{
-		spice_assert( n >= 0, "Invalid trial count" );
-		spice_assert( p >= 0.0 && p <= 1.0, "Invalid probability" );
-		param( n, p );
-	}
-
-	void reset() const {}
-	Prec param() const { return _n; }
-	double param2() const { return _p; }
-	void param( Prec n, double p = 0.5 )
-	{
-		spice_assert( n >= 0, "Invalid trial count" );
-		spice_assert( p >= 0.0 && p <= 1.0, "Invalid probability" );
-
-		_n = n;
-		_p = p;
-		_d = {(float)( n * p ), (float)std::sqrt( n * p * ( 1.0 - p ) ) + FLT_EPSILON}; // for edge
-		                                                                                // cases p =
-		                                                                                // {0|1}
-	}
-
-	template <typename Gen>
-	Prec operator()( Gen & g )
-	{
-		auto const result = narrow_cast<Prec>( std::round( _d( g ) ) );
-
-		// If this invariant check fails often, consider using a true binomial distribution!
-		spice_assert( result >= 0 && result <= _n, "binom. distr. approx. fail" );
-
-		return std::max( 0, std::min( _n, result ) );
-	}
-	template <typename Gen>
-	Prec operator()( Gen & g, Prec n, double p = 0.5 )
-	{
-		return binomial_distribution<Prec>( n, p )( g );
-	}
-
-	Prec min() const { return 0; }
-	Prec max() const { return _n; }
-
-private:
-	Prec _n = 0;
-	double _p = 0.5;
-	std::normal_distribution<float> _d;
-};
-
-template <typename Prec>
-bool operator==( binomial_distribution<Prec> const & a, binomial_distribution<Prec> const & b )
-{
-	return a.param() == b.param() && a.param2() == b.param2();
+	return ( (unsigned)gen() >> 8 ) / 16777215.0f;
 }
-template <typename Prec>
-bool operator!=( binomial_distribution<Prec> const & a, binomial_distribution<Prec> const & b )
+
+// @return rand no. in [0, 1)
+template <typename Gen>
+HYBRID float uniform_left_inc( Gen & gen )
 {
-	return a.param() != b.param() || a.param2() != b.param2();
+	return ( (unsigned)gen() >> 8 ) / 16777216.0f;
 }
+
+// @return rand no. in (0, 1]
+template <typename Gen>
+HYBRID float uniform_right_inc( Gen & gen )
+{
+	return ( ( (unsigned)gen() >> 8 ) + 1.0f ) / 16777216.0f;
+}
+
+// @return rand no. in (0, 1)
+template <typename Gen>
+HYBRID float uniform_ex( Gen & gen )
+{
+	return ( ( (unsigned)gen() >> 9 ) + 1.0f ) / 8388609.0f;
+}
+
+template <typename Gen>
+HYBRID float exprnd( Gen & gen )
+{
+	return -logf( uniform_right_inc( gen ) );
+}
+
+// @param m mu
+// @param s sigma (standard deviation)
+template <typename Gen>
+HYBRID static float normrnd( Gen & gen, float m = 0.0f, float s = 1.0f )
+{
+	return fmaf(
+	    sqrtf( -2 * logf( uniform_right_inc( gen ) ) ) * sinpif( 2 * uniform_left_inc( gen ) ),
+	    s,
+	    m );
+}
+
+template <typename Gen>
+HYBRID int binornd( Gen & gen, int N, float p )
+{
+#ifndef __CUDA_ARCH__
+	using std::max;
+	using std::min;
 #endif
+
+	return min( N, max( 0, (int)lrintf( normrnd( gen, N * p, sqrtf( N * p * ( 1 - p ) ) ) ) ) );
+}
 } // namespace util
 } // namespace spice

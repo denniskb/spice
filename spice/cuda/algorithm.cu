@@ -2,7 +2,6 @@
 
 #include <spice/cuda/backend.cuh>
 #include <spice/cuda/util/error.h>
-#include <spice/cuda/util/random.cuh>
 #include <spice/cuda/util/utility.cuh>
 #include <spice/cuda/util/warp.cuh>
 #include <spice/models/brunel.h>
@@ -121,8 +120,8 @@ static __global__ void _generate_adj_ids(
 		if( blockIdx.x < _desc_gendeg[c].x || blockIdx.x >= _desc_gendeg[c].y ) continue;
 
 		// TODO: binom. distr.! (AND: all threads must draw same number!!!)
-		int degree = min(
-		    max_degree - total_degree, binomial_distr::rand( rng, _desc_gendeg[c].z, _desc_p[c] ) );
+		int degree =
+		    min( max_degree - total_degree, binornd( rng, _desc_gendeg[c].z, _desc_p[c] ) );
 		degree = __shfl_sync( MASK_ALL, degree, 0 );
 		total_degree += degree;
 		int first = _desc_genids[c].x;
@@ -137,7 +136,7 @@ static __global__ void _generate_adj_ids(
 			float total = 0.0f;
 			for( int i = threadIdx.x; i < d; i += WARP_SZ )
 			{
-				float f = exp_distr::rand( rng );
+				float f = exprnd( rng );
 
 				float sum;
 				f = total + warp::inclusive_scan( f, sum, __activemask() );
@@ -148,7 +147,7 @@ static __global__ void _generate_adj_ids(
 
 			// normalize
 			{
-				total += exp_distr::rand( rng );
+				total += exprnd( rng );
 				total = __shfl_sync( MASK_ALL, total, 0 );
 
 				float const scale = ( r - d ) / total;

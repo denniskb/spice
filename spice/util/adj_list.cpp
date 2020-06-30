@@ -6,7 +6,6 @@
 
 #include <ctime>
 #include <numeric>
-#include <random>
 
 
 static unsigned long long _seed = 1337;
@@ -53,7 +52,6 @@ void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 	edges.resize( desc.size() * desc.max_degree() );
 
 	xoroshiro256ss gen( _seed++ );
-	exponential_distribution<float> exp;
 
 	std::size_t const N = desc.size();
 
@@ -65,11 +63,11 @@ void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 		{
 			if( i < desc.first( std::get<0>( c ) ) || i >= desc.last( std::get<0>( c ) ) ) continue;
 
-			util::binomial_distribution<> binom(
-			    narrow_int<int>( desc.size( std::get<1>( c ) ) ), std::get<2>( c ) );
+			int const degree = std::min(
+			    narrow_int<int>( desc.max_degree() - total_degree ),
+			    binornd(
+			        gen, narrow_int<int>( desc.size( std::get<1>( c ) ) ), std::get<2>( c ) ) );
 
-			int const degree =
-			    std::min( narrow_int<int>( desc.max_degree() - total_degree ), binom( gen ) );
 			total_degree += degree;
 
 			int const first = narrow_int<int>( desc.first( std::get<1>( c ) ) );
@@ -77,11 +75,11 @@ void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
 
 			float * neighbor_ids = reinterpret_cast<float *>( edges.data() + offset );
 
-			float total = exp( gen );
+			float total = exprnd( gen );
 			for( std::size_t k = 0; k < degree; k++ )
 			{
 				neighbor_ids[k] = total;
-				total += exp( gen );
+				total += exprnd( gen );
 			}
 
 			float const scale = ( range - degree ) / total;
