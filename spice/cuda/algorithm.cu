@@ -322,37 +322,6 @@ static __global__ void _zero_async( T * t )
 }
 
 
-template <typename Model>
-static void
-_upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple_t const & synapse )
-{
-	static_assert(
-	    Model::neuron::size <= 20,
-	    "spice doesn't support models with more than 20 neuron attributes" );
-	static_assert(
-	    Model::synapse::size <= 20,
-	    "spice doesn't support models with more than 20 synapse attributes" );
-
-	if( Model::neuron::size > 0 )
-	{
-		std::array<void *, Model::neuron::size> tmp;
-		spice::util::for_each_i( neuron, [&]( auto p, int i ) { tmp[i] = p; } );
-
-		success_or_throw(
-		    cudaMemcpyToSymbolAsync( _neuron_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
-	}
-
-	if( Model::synapse::size > 0 )
-	{
-		std::array<void *, Model::synapse::size> tmp;
-		spice::util::for_each_i( synapse, [&]( auto p, int i ) { tmp[i] = p; } );
-
-		success_or_throw( cudaMemcpyToSymbolAsync(
-		    _synapse_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
-	}
-}
-
-
 namespace spice
 {
 namespace cuda
@@ -396,7 +365,30 @@ void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges )
 template <typename Model>
 void upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple_t const & synapse )
 {
-	_upload_meta<Model>( neuron, synapse );
+	static_assert(
+	    Model::neuron::size <= 20,
+	    "spice doesn't support models with more than 20 neuron attributes" );
+	static_assert(
+	    Model::synapse::size <= 20,
+	    "spice doesn't support models with more than 20 synapse attributes" );
+
+	if( Model::neuron::size > 0 )
+	{
+		std::array<void *, Model::neuron::size> tmp;
+		spice::util::for_each_i( neuron, [&]( auto p, int i ) { tmp[i] = p; } );
+
+		success_or_throw(
+		    cudaMemcpyToSymbolAsync( _neuron_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
+	}
+
+	if( Model::synapse::size > 0 )
+	{
+		std::array<void *, Model::synapse::size> tmp;
+		spice::util::for_each_i( synapse, [&]( auto p, int i ) { tmp[i] = p; } );
+
+		success_or_throw( cudaMemcpyToSymbolAsync(
+		    _synapse_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
+	}
 }
 template void upload_meta<::spice::vogels_abbott>(
     ::spice::vogels_abbott::neuron::ptuple_t const &,
