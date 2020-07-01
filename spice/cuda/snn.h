@@ -24,13 +24,6 @@ public:
 	void init( std::size_t num_neurons, float p_connect, float dt, int delay = 1 );
 	void init( spice::util::neuron_group desc, float dt, int delay = 1 );
 
-	/**
-	 * Sets this network as active. Only one network can be active at any given time. Calling step()
-	 * is only legal on the active network, and results in undefined behavior otherwise. By default,
-	 * the most recently instantiated network is set as active.
-	 */
-	void set();
-
 	spice::util::adj_list const & graph() const override;
 	typename Model::neuron::tuple_t get_neuron( std::size_t i ) const override;
 	typename Model::synapse::tuple_t get_synapse( std::size_t i ) const override;

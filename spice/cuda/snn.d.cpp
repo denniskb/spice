@@ -107,7 +107,7 @@ snn<Model>::snn( spice::cpu::snn<Model> const & net )
 				dptr[i] = elem;
 			} );
 
-	set();
+	upload_meta<Model>( _neurons.data(), _synapses.data() );
 	cudaDeviceSynchronize();
 }
 
@@ -129,16 +129,9 @@ void snn<Model>::init( spice::util::neuron_group desc, float dt, int delay /* = 
 	generate_rnd_adj_list( desc, _graph.edges.data() );
 	_graph.edges.read_mostly();
 
-	set();
+	upload_meta<Model>( _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
 	    this->info(), {_graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() )} );
-}
-
-
-template <typename Model>
-void snn<Model>::set()
-{
-	upload_meta<Model>( _neurons.data(), _synapses.data() );
 }
 
 
