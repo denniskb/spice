@@ -18,7 +18,7 @@ nonstd::span<device> device::devices()
 	static int const n = [] {
 		int i = 0;
 		success_or_throw( cudaGetDeviceCount( &i ) );
-		spice_assert( i <= _devices.size() );
+		spice_assert( i <= _devices.size(), "spice does not support more than 8 gpus per node." );
 		return i;
 	}();
 
@@ -29,7 +29,7 @@ device & device::devices( std::size_t i ) { return devices()[i]; }
 
 device & device::active()
 {
-	int d = -3;
+	int d;
 	success_or_throw( cudaGetDevice( &d ) );
 
 	return devices( d );

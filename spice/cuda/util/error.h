@@ -13,27 +13,41 @@ namespace cuda
 {
 namespace util
 {
+namespace detail
+{
+inline std::exception err2ex( cudaError_t err )
+{
+	return std::exception( cudaGetErrorString( err ) );
+}
+
 template <typename Ex>
 cudaError_t success_or_throw(
     cudaError_t result,
-    Ex exception,
-    std::initializer_list<cudaError_t> valid_results = {static_cast<cudaError_t>( 0 )} )
+    Ex && exception,
+    std::initializer_list<cudaError_t> valid_results = {cudaSuccess} )
 {
 	if( std::find( valid_results.begin(), valid_results.end(), result ) != valid_results.end() )
 		return result;
 
-	throw exception;
+	throw std::forward<Ex>( exception );
+}
+} // namespace detail
+
+inline cudaError_t success_or_throw( cudaError_t result )
+{
+	return detail::success_or_throw( result, detail::err2ex( result ), {cudaSuccess} );
 }
 
-template <typename cudaError_t>
-inline cudaError_t success_or_throw(
-    cudaError_t result,
-    std::initializer_list<cudaError_t> valid_results = {static_cast<cudaError_t>( 0 )} )
+template <typename Ex>
+cudaError_t success_or_throw( cudaError_t result, Ex && exception )
 {
-	if( std::find( valid_results.begin(), valid_results.end(), result ) != valid_results.end() )
-		return result;
+	return detail::success_or_throw( result, std::forward<Ex>( exception ), {cudaSuccess} );
+}
 
-	throw std::exception( cudaGetErrorString( result ) );
+inline cudaError_t
+success_or_throw( cudaError_t result, std::initializer_list<cudaError_t> valid_results )
+{
+	return detail::success_or_throw( result, detail::err2ex( result ), valid_results );
 }
 } // namespace util
 } // namespace cuda

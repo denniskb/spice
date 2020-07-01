@@ -15,31 +15,35 @@ TEST( Device, Devices )
 
 	int d;
 	cudaGetDevice( &d );
-	ASSERT_TRUE( d == device::active() );
+	ASSERT_EQ( d, device::active() );
 
-	ASSERT_TRUE( cudaCpuDeviceId == device::cpu );
+	ASSERT_EQ( device::cpu, cudaCpuDeviceId );
 
-	if( device::devices().size() == 1 )
-		ASSERT_TRUE( device::active() == device::devices( 0 ) );
+	if( device::devices().size() == 1 ) ASSERT_EQ( device::active(), device::devices( 0 ) );
 
-	ASSERT_FALSE( device::cpu == device::none );
-	ASSERT_FALSE( device::active() == device::none );
+	ASSERT_NE( device::cpu, device::none );
+
+	for( device & dev : device::devices() )
+	{
+		ASSERT_NE( dev, device::none );
+		ASSERT_NE( dev, device::cpu );
+	}
 }
 
 TEST( Device, SetActive )
 {
-	if( device::devices().size() > 1 )
-	{
-		for( device & dev : device::devices() )
-		{
-			dev.set();
+	auto & prev = device::active();
 
-			int d;
-			cudaGetDevice( &d );
-			ASSERT_TRUE( d == dev );
-			ASSERT_TRUE( d == device::active() );
-			ASSERT_EQ( &dev, &device::active() );
-			ASSERT_FALSE( dev == device::none );
-		}
+	for( device & dev : device::devices() )
+	{
+		dev.set();
+
+		int d;
+		cudaGetDevice( &d );
+		ASSERT_EQ( d, dev );
+		ASSERT_EQ( d, device::active() );
+		ASSERT_EQ( &dev, &device::active() );
 	}
+
+	prev.set();
 }

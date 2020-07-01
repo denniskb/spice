@@ -9,19 +9,11 @@ using namespace spice::cuda::util;
 TEST( Error, ThrowOnError )
 {
 	ASSERT_THROW( success_or_throw( cudaSuccess, {} ), std::exception );
-	ASSERT_THROW(
-	    success_or_throw( cudaSuccess, std::invalid_argument( "" ), {} ), std::invalid_argument );
 
 	ASSERT_NO_THROW( success_or_throw( cudaSuccess ) );
 	ASSERT_THROW(
 	    success_or_throw( cudaSuccess, {cudaErrorNoDevice, cudaErrorAddressOfConstant} ),
 	    std::exception );
-	ASSERT_THROW(
-	    success_or_throw(
-	        cudaSuccess,
-	        std::invalid_argument( "" ),
-	        {cudaErrorNoDevice, cudaErrorAddressOfConstant} ),
-	    std::invalid_argument );
 
 	for( std::size_t i = 0; i < 100; i++ )
 	{
