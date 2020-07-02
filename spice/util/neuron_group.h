@@ -30,14 +30,12 @@ public:
 	nonstd::span<edge const> connections() const;
 	nonstd::span<edge const> neighbors( std::size_t i ) const;
 
-	std::size_t max_degree();
+	std::size_t max_degree() const;
 
 private:
 	std::vector<std::size_t> _group_sizes;
 	std::vector<edge> _connectivity;
 	std::size_t _max_degree;
-
-	static bool cmp( edge const & a, edge const & b );
 };
 } // namespace util
 } // namespace spice

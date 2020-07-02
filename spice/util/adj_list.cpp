@@ -47,7 +47,7 @@ std::size_t adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
 }
 
 // static
-void adj_list::generate( neuron_group & desc, std::vector<int> & edges )
+void adj_list::generate( neuron_group const & desc, std::vector<int> & edges )
 {
 	edges.resize( desc.size() * desc.max_degree() );
 

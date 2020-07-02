@@ -20,7 +20,7 @@ public:
 	nonstd::span<int const> neighbors( std::size_t i_node ) const;
 	std::size_t edge_index( std::size_t i_src, std::size_t i_dst ) const;
 
-	static void generate( neuron_group & desc, std::vector<int> & edges );
+	static void generate( neuron_group const & desc, std::vector<int> & edges );
 
 	int const * edges() const;
 

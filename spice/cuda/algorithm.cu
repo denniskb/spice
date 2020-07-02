@@ -325,9 +325,7 @@ namespace spice
 {
 namespace cuda
 {
-// ..but only with outgoing connections in [a, b)
-void generate_rnd_adj_list(
-    spice::util::neuron_group & desc, int * edges, int a /* = 0 */, int b /* = 0 */ )
+void generate_rnd_adj_list( spice::util::neuron_group const & desc, int * edges )
 {
 	spice_assert(
 	    desc.connections().size() <= 20,

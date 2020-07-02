@@ -85,7 +85,7 @@ snn<Model>::snn(
 }
 
 template <typename Model>
-snn<Model>::snn( neuron_group desc, float const dt, int const delay /* = 1 */ )
+snn<Model>::snn( neuron_group const & desc, float const dt, int const delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
     , _backend( seed++ )
 {
