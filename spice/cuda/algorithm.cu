@@ -109,7 +109,7 @@ static __global__ void _generate_adj_ids(
     unsigned const max_degree,
     int * const out_edges )
 {
-	__shared__ float rows[768];
+	__shared__ float row[768];
 
 	spice::util::xoroshiro128p rng( threadid() ^ seed );
 
@@ -119,7 +119,6 @@ static __global__ void _generate_adj_ids(
 	{
 		if( blockIdx.x < _desc_gendeg[c].x || blockIdx.x >= _desc_gendeg[c].y ) continue;
 
-		// TODO: binom. distr.! (AND: all threads must draw same number!!!)
 		int degree =
 		    min( max_degree - total_degree, binornd( rng, _desc_gendeg[c].z, _desc_p[c] ) );
 		degree = __shfl_sync( MASK_ALL, degree, 0 );
@@ -142,7 +141,7 @@ static __global__ void _generate_adj_ids(
 				f = total + warp::inclusive_scan( f, sum, __activemask() );
 				total += sum;
 
-				rows[i] = f;
+				row[i] = f;
 			}
 
 			// normalize
@@ -152,7 +151,7 @@ static __global__ void _generate_adj_ids(
 
 				float const scale = ( r - d ) / total;
 				for( int i = threadIdx.x; i < d; i += WARP_SZ )
-					( out_edges + offset )[i] = first + static_cast<int>( rows[i] * scale ) + i;
+					( out_edges + offset )[i] = first + static_cast<int>( row[i] * scale ) + i;
 			}
 
 			offset += d;
@@ -184,7 +183,7 @@ static __global__ void _process_neurons(
     int const max_history = 0,
     unsigned * delayed_history = nullptr )
 {
-	assert( info.num_neurons < INT_MAX - num_threads() );
+	spice_assert( info.num_neurons < INT_MAX - num_threads() );
 
 	backend bak( threadid() ^ seed );
 
@@ -236,7 +235,7 @@ static __global__ void _process_spikes(
     int const delay = 0,
     float const dt = 0 )
 {
-	backend bak( 1 ); // threadid() ^ seed | 1 );
+	backend bak( threadid() ^ seed );
 
 	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
 	     i += gridDim.x )
@@ -326,7 +325,9 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::neuron_group & desc, int * edges )
+// ..but only with outgoing connections in [a, b)
+void generate_rnd_adj_list(
+    spice::util::neuron_group & desc, int * edges, int a /* = 0 */, int b /* = 0 */ )
 {
 	spice_assert(
 	    desc.connections().size() <= 20,
@@ -530,24 +531,23 @@ void receive(
     int const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	int const launch = Model::synapse::size > 0 ? 256 : 128;
-
-	// TODO: Fine-tune boundary for final paper!
 	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
-		_process_spikes<Model, HNDL_SPKS><<<launch, launch>>>(
-		    info,
-		    seed(),
-		    adj,
+		_process_spikes<Model, HNDL_SPKS>
+		    <<<Model::synapse::size> 0 ? 256 : 128, info.num_neurons / adj.width()> 40 ? 128 :
+		                                                                                 256>>>
+		    ( info,
+		      seed(),
+		      adj,
 
-		    spikes,
-		    num_spikes,
+		      spikes,
+		      num_spikes,
 
-		    ages,
-		    history,
-		    max_history,
-		    iter,
-		    delay,
-		    dt );
+		      ages,
+		      history,
+		      max_history,
+		      iter,
+		      delay,
+		      dt );
 	else
 		_process_spikes_cache_aware<Model><<<512, 32>>>(
 		    info,
