@@ -1,10 +1,33 @@
 #include <gtest/gtest.h>
 
 #include <spice/cuda/util/device.h>
+#include <spice/cuda/util/error.h>
 
 
 using namespace spice::cuda::util;
 
+
+// We rely on UVA (letting cuda infer location of memory via ptr address)
+// make sure it's supported by all devices.
+TEST( Device, UVA )
+{
+	for( auto & g : device::devices() ) ASSERT_TRUE( g.props().unifiedAddressing );
+}
+
+// We rely on managed memory which, on Windows, requires peer access
+// Make sure peer access between all devices is possible.
+TEST( Device, PeerAccess )
+{
+	for( device & src : device::devices() )
+		for( device & dst : device::devices() )
+		{
+			if( src == dst ) continue;
+
+			int result;
+			ASSERT_NO_THROW( success_or_throw( cudaDeviceCanAccessPeer( &result, src, dst ) ) );
+			ASSERT_TRUE( result );
+		}
+}
 
 TEST( Device, Devices )
 {

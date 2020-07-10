@@ -5,7 +5,7 @@ project(spice LANGUAGES CXX CUDA)
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "/std:c++17 /EHsc /W4 /WX /fp:fast")
 endif()
-set(CMAKE_CUDA_FLAGS "--expt-extended-lambda -gencode=arch=compute_61,code=sm_61 --use_fast_math")
+set(CMAKE_CUDA_FLAGS "--expt-extended-lambda --generate-code=arch=compute_50,code=sm_50 --use_fast_math")
 
 set(with_samples TRUE CACHE BOOL "Build samples (optional, recommended)")
 set(with_release_asserts TRUE CACHE BOOL "Use for dev/testing. Turn off for bench/production.")
