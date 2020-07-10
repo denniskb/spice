@@ -113,12 +113,6 @@ private:
 	unsigned long long s0, s1, s2, s3;
 };
 
-// @return rand no. in [0, 1]
-template <typename Gen>
-HYBRID float uniform_inc( Gen & gen )
-{
-	return ( (unsigned)gen() >> 8 ) / 16777215.0f;
-}
 
 // @return rand no. in [0, 1)
 template <typename Gen>
@@ -132,13 +126,6 @@ template <typename Gen>
 HYBRID float uniform_right_inc( Gen & gen )
 {
 	return ( ( (unsigned)gen() >> 8 ) + 1.0f ) / 16777216.0f;
-}
-
-// @return rand no. in (0, 1)
-template <typename Gen>
-HYBRID float uniform_ex( Gen & gen )
-{
-	return ( ( (unsigned)gen() >> 9 ) + 1.0f ) / 8388609.0f;
 }
 
 template <typename Gen>

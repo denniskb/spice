@@ -22,12 +22,6 @@ unsigned long long seed()
 
 TEST( Random, uniform )
 {
-	ASSERT_EQ( uniform_inc( zerorng ), 0.0f );
-	ASSERT_EQ( uniform_inc( maxrng ), 1.0f );
-
-	ASSERT_GT( uniform_ex( zerorng ), 0.0f );
-	ASSERT_LT( uniform_ex( maxrng ), 1.0f );
-
 	ASSERT_EQ( uniform_left_inc( zerorng ), 0.0f );
 	ASSERT_LT( uniform_left_inc( maxrng ), 1.0f );
 
