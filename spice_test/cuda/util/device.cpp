@@ -19,14 +19,18 @@ TEST( Device, UVA )
 TEST( Device, PeerAccess )
 {
 	for( device & src : device::devices() )
+	{
+		ASSERT_TRUE( src.props().concurrentManagedAccess ) << src;
+
 		for( device & dst : device::devices() )
 		{
 			if( src == dst ) continue;
 
 			int result;
 			ASSERT_NO_THROW( success_or_throw( cudaDeviceCanAccessPeer( &result, src, dst ) ) );
-			ASSERT_TRUE( result );
+			ASSERT_TRUE( result ) << "(" << src << ", " << dst << ")";
 		}
+	}
 }
 
 TEST( Device, Devices )
