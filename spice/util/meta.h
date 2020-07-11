@@ -92,6 +92,7 @@ struct type_list
 {
 	using tuple_t = std::tuple<T...>;
 	using ptuple_t = std::tuple<T *...>;
+	using cptuple_t = std::tuple<const T *...>;
 	static constexpr std::size_t size = sizeof...( T );
 };
 
@@ -116,12 +117,12 @@ struct soa_t : public Base
 {
 	using Base::Base;
 
-	explicit soa_t( typename Cont<int>::difference_type n )
+	explicit soa_t( std::size_t n )
 	{
 		for_each( *this, [n]( auto & cont ) { cont.resize( n ); } );
 	}
 
-	void resize( typename Cont<int>::difference_type n )
+	void resize( std::size_t n )
 	{
 		for_each( *this, [n]( auto & cont ) { cont.resize( n ); } );
 	}
@@ -130,12 +131,13 @@ struct soa_t : public Base
 	{
 		return map( *this, []( auto & cont ) { return cont.data(); } );
 	}
-	typename TypeList::tuple_t operator[]( typename Cont<int>::difference_type i ) const
+
+	typename TypeList::cptuple_t data() const
 	{
-		return map( *this, [i]( auto & cont ) { return cont[i]; } );
+		return map( *this, []( auto & cont ) { return cont.data(); } );
 	}
 
-	decltype( Cont<int>().size() ) size() const { return std::get<0>( *this ).size(); }
+	std::size_t size() const { return std::get<0>( *this ).size(); }
 };
 } // namespace util
 } // namespace spice

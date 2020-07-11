@@ -27,7 +27,8 @@ TEST( dAlgorithm, AdjList )
 	generate_rnd_adj_list( desc, d_e.data() );
 	cudaDeviceSynchronize();
 
-	adj_list adj( 60, deg, d_e.data() );
+	std::vector<int> h_e( d_e );
+	adj_list adj( 60, deg, h_e.data() );
 
 	for( std::size_t i = 0; i < 10; i++ )
 	{
@@ -52,16 +53,4 @@ TEST( dAlgorithm, AdjList )
 	}
 
 	for( std::size_t i = 30; i < 60; i++ ) ASSERT_EQ( adj.neighbors( i ).size(), 0 );
-}
-
-
-void ballot_kernel( int i, unsigned * out );
-
-TEST( dAlgorithm, bitfield )
-{
-	dev_ptr<unsigned> out( 1 );
-	ballot_kernel( 7, out.data() );
-	cudaDeviceSynchronize();
-
-	ASSERT_EQ( out[0], 128u );
 }

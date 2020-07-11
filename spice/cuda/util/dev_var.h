@@ -24,16 +24,21 @@ public:
 	explicit dev_var( T val )
 	    : dev_var()
 	{
-		( *this )[0] = val;
+		*this = val;
 	}
 
 	dev_var & operator=( T val )
 	{
-		( *this )[0] = val;
+		cudaMemcpy( data(), &val, sizeof( T ), cudaMemcpyDefault );
 		return *this;
 	}
 
-	operator T() const { return ( *this )[0]; }
+	operator T() const
+	{
+		T result;
+		cudaMemcpy( &result, data(), sizeof( T ), cudaMemcpyDefault );
+		return result;
+	}
 
 
 	template <typename U = T>
