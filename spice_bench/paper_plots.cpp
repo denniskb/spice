@@ -4,7 +4,7 @@
 
 #include <spice/cuda/algorithm.h>
 #include <spice/cuda/snn.h>
-#include <spice/cuda/util/dev_ptr.h>
+#include <spice/cuda/util/dbuffer.h>
 #include <spice/cuda/util/event.h>
 #include <spice/models/brunel.h>
 #include <spice/models/brunel_with_plasticity.h>
@@ -59,7 +59,7 @@ static void plot0_AdjGen( benchmark::State & state )
 	{
 		neuron_group desc( {N}, {{0, 0, P}} );
 
-		dev_ptr<int> e( desc.size() * desc.max_degree() );
+		dbuffer<int> e( desc.size() * desc.max_degree() );
 
 		event start, stop;
 		for( auto _ : state )

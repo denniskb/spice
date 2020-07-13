@@ -26,9 +26,11 @@ public:
 	int delay() const;
 	snn_info info() const;
 
-	[[deprecated]] virtual util::adj_list const & graph() const = 0;
-	[[deprecated]] virtual typename Model::neuron::tuple_t get_neuron( std::size_t i ) const = 0;
-	[[deprecated]] virtual typename Model::synapse::tuple_t get_synapse( std::size_t i ) const = 0;
+	// deprecated: TODO: Don't expose raw memory!
+	// It's sufficient to access adj, neurons, syns!
+	virtual util::adj_list const & graph() const = 0;
+	virtual typename Model::neuron::tuple_t get_neuron( std::size_t i ) const = 0;
+	virtual typename Model::synapse::tuple_t get_synapse( std::size_t i ) const = 0;
 
 protected:
 	explicit snn( float dt, int delay = 1 );

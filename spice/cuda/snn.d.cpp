@@ -167,7 +167,6 @@ typename Model::synapse::tuple_t snn<Model>::get_synapse( std::size_t const i ) 
 template <typename Model>
 void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spikes )
 {
-	// zero_async( &_spikes.counts[circidx( i, this->delay() )] );
 	zero_async( _spikes.counts.data() + circidx( i, this->delay() ) );
 
 	if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();

@@ -2,7 +2,7 @@
 
 #include <spice/cuda/util/stream.h>
 
-#include <spice/cuda/util/dev_var.h>
+#include <spice/cuda/util/dvar.h>
 #include <spice/cuda/util/event.h>
 #include <spice/cuda/util/memory.h>
 
@@ -10,7 +10,6 @@
 #include <memory>
 
 
-using namespace spice::util;
 using namespace spice::cuda::util;
 
 

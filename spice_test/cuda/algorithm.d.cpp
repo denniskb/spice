@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <spice/cuda/algorithm.h>
-#include <spice/cuda/util/dev_ptr.h>
+#include <spice/cuda/util/dbuffer.h>
 #include <spice/util/adj_list.h>
 
 
@@ -22,7 +22,7 @@ TEST( dAlgorithm, AdjList )
 	// A->C = 50%
 	// B->A = 100%
 	// B->C = 50%
-	dev_ptr<int> d_e( 60 * desc.max_degree() );
+	dbuffer<int> d_e( 60 * desc.max_degree() );
 	auto deg = desc.max_degree();
 	generate_rnd_adj_list( desc, d_e.data() );
 	cudaDeviceSynchronize();

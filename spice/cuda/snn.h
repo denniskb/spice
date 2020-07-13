@@ -1,8 +1,8 @@
 #pragma once
 
 #include <spice/cpu/snn.h>
-#include <spice/cuda/util/dev_ptr.h>
-#include <spice/cuda/util/dev_var.h>
+#include <spice/cuda/util/dbuffer.h>
+#include <spice/cuda/util/dvar.h>
 #include <spice/snn.h>
 #include <spice/util/circular_buffer.h>
 #include <spice/util/meta.h>
@@ -29,28 +29,28 @@ public:
 	typename Model::synapse::tuple_t get_synapse( std::size_t i ) const override;
 
 private:
-	spice::util::soa_t<util::dev_ptr, typename Model::neuron> _neurons;
-	spice::util::soa_t<util::dev_ptr, typename Model::synapse> _synapses;
+	spice::util::soa_t<util::dbuffer, typename Model::neuron> _neurons;
+	spice::util::soa_t<util::dbuffer, typename Model::synapse> _synapses;
 
 	struct
 	{
-		util::dev_ptr<int> edges;
+		util::dbuffer<int> edges;
 		spice::util::adj_list adj;
-		util::dev_ptr<int> ages;
+		util::dbuffer<int> ages;
 	} _graph;
 
 	struct
 	{
 		// TODO: Optimize memory consumption (low-priority)
-		util::dev_ptr<int> ids_data;
+		util::dbuffer<int> ids_data;
 		spice::util::span2d<int> ids;
-		util::dev_ptr<unsigned> counts;
+		util::dbuffer<unsigned> counts;
 
-		util::dev_ptr<unsigned> history_data;
+		util::dbuffer<unsigned> history_data;
 		spice::util::span2d<unsigned> history;
 
-		util::dev_ptr<int> updates;
-		util::dev_var<unsigned> num_updates;
+		util::dbuffer<int> updates;
+		util::dvar<unsigned> num_updates;
 	} _spikes;
 
 	int MAX_HISTORY() const;
