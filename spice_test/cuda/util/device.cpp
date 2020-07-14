@@ -14,25 +14,6 @@ TEST( Device, UVA )
 	for( auto & g : device::devices() ) ASSERT_TRUE( g.props().unifiedAddressing );
 }
 
-// We rely on managed memory which, on Windows, requires peer access
-// Make sure peer access between all devices is possible.
-TEST( Device, PeerAccess )
-{
-	for( device & src : device::devices() )
-	{
-		ASSERT_TRUE( src.props().concurrentManagedAccess ) << src;
-
-		for( device & dst : device::devices() )
-		{
-			if( src == dst ) continue;
-
-			int result;
-			ASSERT_NO_THROW( success_or_throw( cudaDeviceCanAccessPeer( &result, src, dst ) ) );
-			ASSERT_TRUE( result ) << "(" << src << ", " << dst << ")";
-		}
-	}
-}
-
 TEST( Device, Devices )
 {
 	int n;

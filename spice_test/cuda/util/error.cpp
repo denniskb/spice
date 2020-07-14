@@ -32,3 +32,11 @@ TEST( Error, ThrowOnError )
 	ASSERT_NO_THROW( success_or_throw( cudaSuccess, {cudaSuccess, cudaErrorNoDevice} ) );
 	ASSERT_NO_THROW( success_or_throw( cudaSuccess, {cudaErrorNoDevice, cudaSuccess} ) );
 }
+
+TEST( Error, ClearAfterThrow )
+{
+	ASSERT_EQ( cudaGetLastError(), cudaSuccess );
+	int * p;
+	ASSERT_THROW( success_or_throw( cudaMalloc( &p, 1'000'000'000'000 ) ), std::exception );
+	ASSERT_EQ( cudaGetLastError(), cudaSuccess );
+}

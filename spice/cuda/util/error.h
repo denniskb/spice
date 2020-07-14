@@ -29,6 +29,7 @@ cudaError_t success_or_throw(
 	if( std::find( valid_results.begin(), valid_results.end(), result ) != valid_results.end() )
 		return result;
 
+	cudaGetLastError();
 	throw std::forward<Ex>( exception );
 }
 } // namespace detail

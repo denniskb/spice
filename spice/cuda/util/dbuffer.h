@@ -1,6 +1,5 @@
 #pragma once
 
-#include <spice/cuda/util/device.h>
 #include <spice/cuda/util/error.h>
 #include <spice/cuda/util/memory.h>
 
@@ -83,6 +82,8 @@ private:
 	template <typename Cont>
 	void copy_from( Cont const & cont )
 	{
+		if( data() == cont.data() && size() == cont.size() ) return;
+
 		resize( cont.size() );
 		cudaMemcpy( data(), cont.data(), size_in_bytes(), cudaMemcpyDefault );
 	}
