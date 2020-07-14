@@ -14,7 +14,7 @@ unsigned maxrng() { return UINT_MAX; }
 unsigned long long seed()
 {
 	unsigned long long result;
-	std::random_device rd;
+	static std::random_device rd;
 	result = rd() | (unsigned long long)rd() << 32;
 	std::cerr << "seed: " << result << std::endl;
 	return result;
@@ -38,19 +38,19 @@ TEST( Random, Normal )
 	{
 		double m = 0.0;
 		for( int i = 0; i < 10000; i++ ) m += normrnd( rng );
-		EXPECT_NEAR( m / 10000, 0.0, 0.02 );
+		EXPECT_NEAR( m / 10000, 0.0, 0.02 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		double m = 0.0;
 		for( int i = 0; i < 10000; i++ ) m += normrnd( rng, 5 );
-		EXPECT_NEAR( m / 10000, 5, 0.02 );
+		EXPECT_NEAR( m / 10000, 5, 0.02 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		double m = 0.0;
 		for( int i = 0; i < 10000; i++ ) m += normrnd( rng, -5 );
-		EXPECT_NEAR( m / 10000, -5, 0.02 );
+		EXPECT_NEAR( m / 10000, -5, 0.02 ) << "Test depends on rng, repeat it.";
 	}
 }
 
@@ -71,24 +71,24 @@ TEST( Random, Binom )
 	{
 		unsigned m = 0;
 		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 1, 0.5f );
-		EXPECT_NEAR( m / 10000.0, 0.5, 0.01 );
+		EXPECT_NEAR( m / 10000.0, 0.5, 0.01 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		unsigned m = 0;
 		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 100, 0.1f );
-		EXPECT_NEAR( m / 10000.0, 10, 0.1 );
+		EXPECT_NEAR( m / 10000.0, 10, 0.1 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		unsigned m = 0;
 		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 100, 0.5f );
-		EXPECT_NEAR( m / 10000.0, 50, 0.1 );
+		EXPECT_NEAR( m / 10000.0, 50, 0.1 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		unsigned m = 0;
 		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 100, 0.9f );
-		EXPECT_NEAR( m / 10000.0, 90, 0.1 );
+		EXPECT_NEAR( m / 10000.0, 90, 0.1 ) << "Test depends on rng, repeat it.";
 	}
 }
