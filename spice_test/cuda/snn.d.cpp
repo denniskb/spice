@@ -21,43 +21,23 @@ bool set_equal( Cont1 const & lhs, Cont2 const & rhs )
 }
 
 #pragma warning( push )
-#pragma warning( disable : 4127 ) // "conditional expression is constant"
-template <typename Model>
-static bool neurons_close( snn<Model> const & lhs, snn<Model> const & rhs, double thres )
+#pragma warning( disable : 4127 4723 ) // "conditional expression is constant"
+template <typename Pop>
+static bool close( Pop const & lhs, Pop const & rhs, double thres )
 {
-	if( Model::neuron::size == 0 ) return true;
+	auto const sz = std::tuple_size_v<Pop::value_type>;
+	if( sz == 0 ) return true;
 
-	if( lhs.num_neurons() != rhs.num_neurons() ) return false;
+	if( lhs.size() != rhs.size() ) return false;
 
-	for( std::size_t i = 0; i < lhs.num_neurons(); i++ )
+	for( std::size_t i = 0; i < lhs.size(); i++ )
 		if( util::transform_reduce(
-		        lhs.get_neuron( i ),
-		        rhs.get_neuron( i ),
+		        lhs[i],
+		        rhs[i],
 		        0.0f,
 		        []( auto x, auto y ) { return std::abs( x - y ); },
 		        []( auto x, auto y ) -> float { return x + y; } ) /
-		        Model::neuron::size >
-		    thres )
-			return false;
-
-	return true;
-}
-
-template <typename Model>
-static bool synapses_close( snn<Model> const & lhs, snn<Model> const & rhs, double thres )
-{
-	if( Model::synapse::size == 0 ) return true;
-
-	if( lhs.num_synapses() != rhs.num_synapses() ) return false;
-
-	for( std::size_t i = 0; i < lhs.num_synapses(); i++ )
-		if( util::transform_reduce(
-		        lhs.get_synapse( i ),
-		        rhs.get_synapse( i ),
-		        0.0f,
-		        []( float x, float y ) { return std::abs( x - y ); },
-		        []( float x, float y ) -> float { return x + y; } ) /
-		        Model::neuron::size >
+		        sz >
 		    thres )
 			return false;
 
@@ -66,19 +46,25 @@ static bool synapses_close( snn<Model> const & lhs, snn<Model> const & rhs, doub
 #pragma warning( pop )
 
 template <typename Model>
-static bool graphs_equal( snn<Model> const &, snn<Model> const & )
+static bool graphs_equal( snn<Model> const & lhs, snn<Model> const & rhs )
 {
-	/*for( std::size_t i = 0; i < lhs.num_neurons(); i++ )
-	    if( lhs.graph().neighbors( i ) != rhs.graph().neighbors( i ) ) return false;*/
+	if( lhs.num_neurons() != rhs.num_neurons() || lhs.num_synapses() != rhs.num_synapses() )
+		return false;
 
-	return true;
+	// TOOD: Rewrite to be more generic by wrapping lhs/rhs into adj_list
+	auto _lhs = lhs.graph();
+	auto _rhs = rhs.graph();
+
+	if( _lhs.second != _rhs.second ) return false;
+
+	return _lhs.first == _rhs.first;
 }
 
 template <typename Model>
 static bool close( snn<Model> const & lhs, snn<Model> const & rhs, double thres )
 {
-	return graphs_equal( lhs, rhs ) && neurons_close( lhs, rhs, thres ) &&
-	       synapses_close( lhs, rhs, thres );
+	return graphs_equal( lhs, rhs ) && close( lhs.neurons(), rhs.neurons(), thres ) &&
+	       close( lhs.synapses(), rhs.synapses(), thres );
 }
 
 
@@ -100,7 +86,7 @@ TYPED_TEST( dSNN, Ctor )
 		ASSERT_EQ( d.delay(), 15 );
 
 		cpu::snn<TypeParam> h( 100, 0.1f, 0.0001f );
-		ASSERT_TRUE( neurons_close( h, d, 0.0 ) );
+		ASSERT_TRUE( close( h.neurons(), d.neurons(), 0.0 ) );
 	}
 
 	{ // Conv. Ctor

@@ -18,16 +18,6 @@ void snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 
 
 template <typename Model>
-std::size_t snn<Model>::num_neurons() const
-{
-	return graph().num_nodes();
-}
-template <typename Model>
-std::size_t snn<Model>::num_synapses() const
-{
-	return graph().num_edges();
-}
-template <typename Model>
 float snn<Model>::dt() const
 {
 	return _dt;

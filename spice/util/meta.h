@@ -137,7 +137,91 @@ struct soa_t : public Base
 		return map( *this, []( auto & cont ) { return cont.data(); } );
 	}
 
-	std::size_t size() const { return std::get<0>( *this ).size(); }
+	template <std::size_t sz = TypeList::size, std::enable_if_t<sz != 0> * = nullptr>
+	std::size_t size() const
+	{
+		return std::get<0>( *this ).size();
+	}
+
+	template <std::size_t sz = TypeList::size, std::enable_if_t<sz == 0, int> * = nullptr>
+	std::size_t size() const
+	{
+		return 0;
+	}
+
+	std::vector<typename TypeList::tuple_t> to_aos() const
+	{
+		std::vector<typename TypeList::tuple_t> result( size() );
+		_to_aos( result );
+		return result;
+	}
+
+	void from_aos( std::vector<typename TypeList::tuple_t> const & src ) { _from_aos( src ); }
+
+private:
+	// Recursive helper for 'to_aos()'.
+	// Only defined if tuple size > 0
+	template <
+	    std::size_t I = 0,
+	    std::size_t sz = TypeList::size,
+	    std::enable_if_t<sz != 0> * = nullptr>
+	void _to_aos( std::vector<typename TypeList::tuple_t> & out ) const
+	{
+		std::vector<typename std::tuple_element<I, typename TypeList::tuple_t>::type> tmp =
+		    std::get<I>( *this );
+		for( std::size_t i = 0; i < out.size(); i++ ) std::get<I>( out[i] ) = tmp[i];
+
+		_to_aos<I + 1>( out );
+	}
+
+	// Specialization of (above). Terminates recursion
+	template <>
+	void _to_aos<TypeList::size, TypeList::size, nullptr>(
+	    std::vector<typename TypeList::tuple_t> & ) const
+	{
+	}
+
+	// Noop-version of '_to_aos()' in case of tuple size == 0.
+	template <
+	    std::size_t I = 0,
+	    std::size_t sz = TypeList::size,
+	    std::enable_if_t<sz == 0, int> * = nullptr>
+	void _to_aos( std::vector<typename TypeList::tuple_t> & ) const
+	{
+	}
+
+
+	// Recursive helper for 'to_aos()'.
+	// Only defined if tuple size > 0
+	template <
+	    std::size_t I = 0,
+	    std::size_t sz = TypeList::size,
+	    std::enable_if_t<sz != 0> * = nullptr>
+	void _from_aos( std::vector<typename TypeList::tuple_t> const & src )
+	{
+		std::vector<std::tuple_element_t<I, typename TypeList::tuple_t>> tmp( src.size() );
+		for( std::size_t i = 0; i < tmp.size(); i++ ) tmp[i] = std::get<I>( src[i] );
+
+		std::get<I>( *this ) = tmp;
+
+		_from_aos<I + 1>( src );
+	}
+
+	// Specialization of (above). Terminates recursion
+	template <>
+	void _from_aos<TypeList::size, TypeList::size, nullptr>(
+	    std::vector<typename TypeList::tuple_t> const & )
+	{
+	}
+
+	// Noop-version of '_from_aos()' in case of tuple size == 0.
+	template <
+	    std::size_t I = 0,
+	    std::size_t sz = TypeList::size,
+	    std::enable_if_t<sz == 0, int> * = nullptr>
+	void _from_aos( std::vector<typename TypeList::tuple_t> const & )
+	{
+	}
 };
 } // namespace util
 } // namespace spice

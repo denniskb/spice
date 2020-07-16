@@ -20,17 +20,17 @@ public:
 
 	void step( std::vector<int> * out_spikes = nullptr );
 
-	std::size_t num_neurons() const;
-	std::size_t num_synapses() const;
+	virtual std::size_t num_neurons() const = 0;
+	virtual std::size_t num_synapses() const = 0;
 	float dt() const;
 	int delay() const;
 	snn_info info() const;
 
-	// deprecated: TODO: Don't expose raw memory!
-	// It's sufficient to access adj, neurons, syns!
-	virtual util::adj_list const & graph() const = 0;
-	virtual typename Model::neuron::tuple_t get_neuron( std::size_t i ) const = 0;
-	virtual typename Model::synapse::tuple_t get_synapse( std::size_t i ) const = 0;
+	// TODO: return variants instead (cpu::snn returns span, gpu::snn returns vector)
+	// (edges, width)
+	virtual std::pair<std::vector<int>, std::size_t> graph() const = 0;
+	virtual std::vector<typename Model::neuron::tuple_t> neurons() const = 0;
+	virtual std::vector<typename Model::synapse::tuple_t> synapses() const = 0;
 
 protected:
 	explicit snn( float dt, int delay = 1 );

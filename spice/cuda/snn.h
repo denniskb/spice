@@ -24,9 +24,11 @@ public:
 	void init( std::size_t num_neurons, float p_connect, float dt, int delay = 1 );
 	void init( spice::util::neuron_group desc, float dt, int delay = 1 );
 
-	spice::util::adj_list const & graph() const override;
-	typename Model::neuron::tuple_t get_neuron( std::size_t i ) const override;
-	typename Model::synapse::tuple_t get_synapse( std::size_t i ) const override;
+	std::size_t num_neurons() const override;
+	std::size_t num_synapses() const override;
+	std::pair<std::vector<int>, std::size_t> graph() const override;
+	std::vector<typename Model::neuron::tuple_t> neurons() const override;
+	std::vector<typename Model::synapse::tuple_t> synapses() const override;
 
 private:
 	spice::util::soa_t<util::dbuffer, typename Model::neuron> _neurons;

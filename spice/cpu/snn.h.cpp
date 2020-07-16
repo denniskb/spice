@@ -124,24 +124,31 @@ snn<Model>::snn( neuron_group const & desc, float const dt, int const delay /* =
 }
 
 
+// TODO: Remove code duplication
 template <typename Model>
-adj_list const & snn<Model>::graph() const
+std::size_t snn<Model>::num_neurons() const
 {
-	return _graph.adj;
+	return _graph.adj.num_nodes();
 }
-
 template <typename Model>
-// typename Model::neuron::tuple_t snn<Model>::get_neuron( std::size_t const i )
-// const
-typename Model::neuron::tuple_t snn<Model>::get_neuron( std::size_t const i ) const
+std::size_t snn<Model>::num_synapses() const
 {
-	return _neurons->at( i );
+	return _graph.adj.num_edges();
 }
-
 template <typename Model>
-typename Model::synapse::tuple_t snn<Model>::get_synapse( std::size_t const i ) const
+std::pair<std::vector<int>, std::size_t> snn<Model>::graph() const
 {
-	return _synapses->at( i );
+	return {_graph.edges, _graph.adj.max_degree()};
+}
+template <typename Model>
+std::vector<typename Model::neuron::tuple_t> snn<Model>::neurons() const
+{
+	return _neurons.value_or( std::vector<typename Model::neuron::tuple_t>{} );
+}
+template <typename Model>
+std::vector<typename Model::synapse::tuple_t> snn<Model>::synapses() const
+{
+	return _synapses.value_or( std::vector<typename Model::synapse::tuple_t>{} );
 }
 
 

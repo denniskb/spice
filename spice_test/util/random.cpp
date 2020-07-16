@@ -27,6 +27,30 @@ TEST( Random, uniform )
 
 	ASSERT_GT( uniform_right_inc( zerorng ), 0.0f );
 	ASSERT_EQ( uniform_right_inc( maxrng ), 1.0f );
+
+	xoroshiro256ss rng( seed() );
+
+	{
+		double m = 0.0;
+		for( int i = 0; i < 10000; i++ )
+		{
+			auto x = uniform_left_inc( rng );
+			ASSERT_LT( x, 1.0f );
+			m += x;
+		}
+		EXPECT_NEAR( m / 10000, 0.5, 0.01 ) << "Test depends on rng, repeat it.";
+	}
+
+	{
+		double m = 0.0;
+		for( int i = 0; i < 10000; i++ )
+		{
+			auto x = uniform_right_inc( rng );
+			ASSERT_GT( x, 0.0f );
+			m += x;
+		}
+		EXPECT_NEAR( m / 10000, 0.5, 0.01 ) << "Test depends on rng, repeat it.";
+	}
 }
 
 TEST( Random, Exp ) { ASSERT_LT( exprnd( zerorng ), std::numeric_limits<float>::infinity() ); }
@@ -70,25 +94,49 @@ TEST( Random, Binom )
 
 	{
 		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 1, 0.5f );
+		for( int i = 0; i < 10000; i++ )
+		{
+			auto x = binornd( rng, 1, 0.5f );
+			ASSERT_GE( x, 0 );
+			ASSERT_LE( x, 1 );
+			m += x;
+		}
 		EXPECT_NEAR( m / 10000.0, 0.5, 0.01 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 100, 0.1f );
+		for( int i = 0; i < 10000; i++ )
+		{
+			auto x = binornd( rng, 100, 0.1f );
+			ASSERT_GE( x, 0 );
+			ASSERT_LE( x, 100 );
+			m += x;
+		}
 		EXPECT_NEAR( m / 10000.0, 10, 0.1 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 100, 0.5f );
+		for( int i = 0; i < 10000; i++ )
+		{
+			auto x = binornd( rng, 100, 0.5f );
+			ASSERT_GE( x, 0 );
+			ASSERT_LE( x, 100 );
+			m += x;
+		}
 		EXPECT_NEAR( m / 10000.0, 50, 0.1 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ ) m += binornd( rng, 100, 0.9f );
+		for( int i = 0; i < 10000; i++ )
+		{
+			auto x = binornd( rng, 100, 0.9f );
+			ASSERT_GE( x, 0 );
+			ASSERT_LE( x, 100 );
+			m += x;
+		}
 		EXPECT_NEAR( m / 10000.0, 90, 0.1 ) << "Test depends on rng, repeat it.";
 	}
 }

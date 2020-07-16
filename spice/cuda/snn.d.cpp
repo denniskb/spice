@@ -93,20 +93,9 @@ snn<Model>::snn( spice::cpu::snn<Model> const & net )
 {
 	reserve( net.num_neurons(), net.num_synapses(), net.delay() );
 
-	cudaMemcpy(
-	    _graph.edges.data(), net.graph().edges(), net.num_synapses() * 4, cudaMemcpyHostToDevice );
-
-	if constexpr( Model::neuron::size > 0 )
-		for( std::size_t i = 0; i < net.num_neurons(); i++ )
-			map( _neurons, net.get_neuron( i ), [i]( auto & dptr, auto elem ) {
-				cudaMemcpy( dptr.data() + i, &elem, sizeof( elem ), cudaMemcpyDefault );
-			} );
-
-	if constexpr( Model::synapse::size > 0 )
-		for( std::size_t i = 0; i < net.num_synapses(); i++ )
-			map( _synapses, net.get_synapse( i ), [i]( auto & dptr, auto elem ) {
-				cudaMemcpy( dptr.data() + i, &elem, sizeof( elem ), cudaMemcpyDefault );
-			} );
+	_graph.edges = net.graph().first;
+	_neurons.from_aos( net.neurons() );
+	_synapses.from_aos( net.synapses() );
 
 	upload_meta<Model>( _neurons.data(), _synapses.data() );
 	cudaDeviceSynchronize();
@@ -136,31 +125,29 @@ void snn<Model>::init( spice::util::neuron_group desc, float dt, int delay /* = 
 
 
 template <typename Model>
-adj_list const & snn<Model>::graph() const
+std::size_t snn<Model>::num_neurons() const
 {
-	return _graph.adj;
+	return _graph.adj.num_nodes();
 }
 template <typename Model>
-typename Model::neuron::tuple_t snn<Model>::get_neuron( std::size_t const i ) const
+std::size_t snn<Model>::num_synapses() const
 {
-	typename Model::neuron::tuple_t result;
-
-	spice::util::map( result, _neurons.data(), [i]( auto & dst, auto psrc ) {
-		cudaMemcpy( &dst, psrc + i, sizeof( dst ), cudaMemcpyDefault );
-	} );
-
-	return result;
+	return _graph.adj.num_edges();
 }
 template <typename Model>
-typename Model::synapse::tuple_t snn<Model>::get_synapse( std::size_t const i ) const
+std::pair<std::vector<int>, std::size_t> snn<Model>::graph() const
 {
-	typename Model::synapse::tuple_t result;
-
-	spice::util::map( result, _synapses.data(), [i]( auto & dst, auto psrc ) {
-		cudaMemcpy( &dst, psrc + i, sizeof( dst ), cudaMemcpyDefault );
-	} );
-
-	return result;
+	return {_graph.edges, _graph.adj.max_degree()};
+}
+template <typename Model>
+std::vector<typename Model::neuron::tuple_t> snn<Model>::neurons() const
+{
+	return _neurons.to_aos();
+}
+template <typename Model>
+std::vector<typename Model::synapse::tuple_t> snn<Model>::synapses() const
+{
+	return _synapses.to_aos();
 }
 
 
