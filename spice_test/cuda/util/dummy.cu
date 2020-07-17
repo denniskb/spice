@@ -12,8 +12,7 @@ __global__ void ballot( int const i, unsigned * out )
 {
 	int flags = __ballot_sync( 0xFFFFFFFF, threadIdx.x == i );
 
-	if( threadIdx.x == 0 )
-		*out = flags;
+	if( threadIdx.x == 0 ) *out = flags;
 }
 
 void ballot_kernel( int i, unsigned * out ) { ballot<<<1, 32>>>( i, out ); }

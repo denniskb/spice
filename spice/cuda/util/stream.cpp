@@ -35,7 +35,7 @@ stream::operator cudaStream_t() { return _stream; }
 
 cudaError_t stream::query()
 {
-	return success_or_throw( cudaStreamQuery( _stream ), {cudaSuccess, cudaErrorNotReady} );
+	return success_or_throw( cudaStreamQuery( _stream ), { cudaSuccess, cudaErrorNotReady } );
 }
 
 void stream::synchronize() { success_or_throw( cudaStreamSynchronize( _stream ) ); }

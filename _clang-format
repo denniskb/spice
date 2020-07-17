@@ -38,9 +38,10 @@ SpaceBeforeParens: Never
 SpaceInEmptyParentheses: 'false'
 SpacesBeforeTrailingComments: '1'
 SpacesInAngles: 'false'
+SpacesInContainerLiterals: 'false'
 SpacesInCStyleCastParentheses: 'false'
 SpacesInParentheses: 'true'
-Standard: Cpp11
+Standard: 'Cpp11'
 TabWidth: '4'
 UseTab: ForIndentation
 

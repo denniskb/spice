@@ -53,7 +53,7 @@ public:
 	}
 
 private:
-	dbuffer<T> _data{1};
+	dbuffer<T> _data{ 1 };
 	void copy_from( T x ) { cudaMemcpy( _data.data(), &x, sizeof( T ), cudaMemcpyDefault ); }
 };
 } // namespace spice::cuda::util

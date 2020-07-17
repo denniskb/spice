@@ -42,13 +42,13 @@ TEST( DBuffer, CopyCtor )
 	}
 
 	{
-		auto y = vec( {1, 2, 3, 4, 5} );
+		auto y = vec( { 1, 2, 3, 4, 5 } );
 		dbuffer<int> z( y );
 		dbuffer<int> x( z );
 		y.clear();
 		y = x;
 
-		ASSERT_EQ( y, vec( {1, 2, 3, 4, 5} ) );
+		ASSERT_EQ( y, vec( { 1, 2, 3, 4, 5 } ) );
 	}
 }
 
@@ -67,29 +67,29 @@ TEST( DBuffer, CopyAssign )
 	}
 
 	{
-		auto y = vec( {1, 2, 3, 4, 5} );
+		auto y = vec( { 1, 2, 3, 4, 5 } );
 		dbuffer<int> z( y );
 		dbuffer<int> x;
 		x = z;
 		y.clear();
 		y = x;
 
-		ASSERT_EQ( y, vec( {1, 2, 3, 4, 5} ) );
+		ASSERT_EQ( y, vec( { 1, 2, 3, 4, 5 } ) );
 	}
 
 	{ // self-assign
-		dbuffer<int> x( vec( {1, 2, 3} ) );
+		dbuffer<int> x( vec( { 1, 2, 3 } ) );
 		auto const p = x.data();
 		x = x;
 
 		ASSERT_EQ( x.data(), p );
-		ASSERT_EQ( (std::vector<int>)x, vec( {1, 2, 3} ) );
+		ASSERT_EQ( (std::vector<int>)x, vec( { 1, 2, 3 } ) );
 	}
 }
 
 TEST( DBuffer, ConvCtor )
 {
-	auto y = vec( {1, 2, -7} );
+	auto y = vec( { 1, 2, -7 } );
 	dbuffer<int> x( y );
 
 	ASSERT_NE( x.data(), nullptr );
@@ -100,7 +100,7 @@ TEST( DBuffer, ConvCtor )
 
 TEST( DBuffer, ConvAssign )
 {
-	auto y = vec( {1, 2, -7} );
+	auto y = vec( { 1, 2, -7 } );
 	dbuffer<int> x;
 
 	x = y;
@@ -114,24 +114,24 @@ TEST( DBuffer, ConvAssign )
 TEST( DBuffer, ConvFunc )
 {
 	{ // via copy ctor
-		auto y = vec( {1, 2, -7} );
+		auto y = vec( { 1, 2, -7 } );
 		dbuffer<int> x( y );
 
 		y.clear();
 		y = x;
 
-		ASSERT_EQ( y, vec( {1, 2, -7} ) );
+		ASSERT_EQ( y, vec( { 1, 2, -7 } ) );
 	}
 
 	{ // via copy assign
-		auto y = vec( {1, 2, -7} );
+		auto y = vec( { 1, 2, -7 } );
 		dbuffer<int> x;
 
 		x = y;
 		y.clear();
 		y = x;
 
-		ASSERT_EQ( y, vec( {1, 2, -7} ) );
+		ASSERT_EQ( y, vec( { 1, 2, -7 } ) );
 	}
 }
 
@@ -147,7 +147,7 @@ TEST( DBuffer, Resize )
 
 	// downsizing maintains contents
 	auto const p = x.data();
-	auto y = vec( {1, 2, 3, 4, 5} );
+	auto y = vec( { 1, 2, 3, 4, 5 } );
 	x = y;
 
 	ASSERT_EQ( x.data(), p );
@@ -161,7 +161,7 @@ TEST( DBuffer, Resize )
 	y.clear();
 	y = x;
 
-	ASSERT_EQ( y, vec( {1, 2, 3} ) );
+	ASSERT_EQ( y, vec( { 1, 2, 3 } ) );
 
 	// upsizing invalidates contents
 	x.resize( 13 );
@@ -178,7 +178,7 @@ TEST( DBuffer, Resize )
 
 TEST( DBuffer, Zero )
 {
-	auto y = vec( {1, 2, 3, 4, 5} );
+	auto y = vec( { 1, 2, 3, 4, 5 } );
 	dbuffer<int> x( y );
 	x.zero();
 
@@ -187,12 +187,12 @@ TEST( DBuffer, Zero )
 	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int ) );
 
 	y = x;
-	ASSERT_EQ( y, vec( {0, 0, 0, 0, 0} ) );
+	ASSERT_EQ( y, vec( { 0, 0, 0, 0, 0 } ) );
 }
 
 TEST( DBuffer, ZeroAsync )
 {
-	auto y = vec( {1, 2, 3, 4, 5} );
+	auto y = vec( { 1, 2, 3, 4, 5 } );
 	dbuffer<int> x( y );
 	x.zero_async();
 	cudaDeviceSynchronize();
@@ -202,7 +202,7 @@ TEST( DBuffer, ZeroAsync )
 	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int ) );
 
 	y = x;
-	ASSERT_EQ( y, vec( {0, 0, 0, 0, 0} ) );
+	ASSERT_EQ( y, vec( { 0, 0, 0, 0, 0 } ) );
 }
 
 TEST( DBuffer, MultiGPU )
@@ -213,7 +213,7 @@ TEST( DBuffer, MultiGPU )
 
 		// alloc on gpu0
 		cudaSetDevice( 0 );
-		dbuffer<int> y( vec( {1, 2, 3} ) );
+		dbuffer<int> y( vec( { 1, 2, 3 } ) );
 
 		// gpu1 pushing
 		cudaSetDevice( 1 );
@@ -221,14 +221,14 @@ TEST( DBuffer, MultiGPU )
 			dbuffer<int> x( y );
 
 			ASSERT_NE( x.data(), y.data() );
-			ASSERT_EQ( (std::vector<int>)x, vec( {1, 2, 3} ) );
+			ASSERT_EQ( (std::vector<int>)x, vec( { 1, 2, 3 } ) );
 		}
 		{ // copy assign
 			dbuffer<int> x( 3 );
 			x = y;
 
 			ASSERT_NE( x.data(), y.data() );
-			ASSERT_EQ( (std::vector<int>)x, vec( {1, 2, 3} ) );
+			ASSERT_EQ( (std::vector<int>)x, vec( { 1, 2, 3 } ) );
 		}
 
 		dbuffer<int> x( 3 );
@@ -236,7 +236,7 @@ TEST( DBuffer, MultiGPU )
 		x = y;
 
 		ASSERT_NE( x.data(), y.data() );
-		ASSERT_EQ( (std::vector<int>)x, vec( {1, 2, 3} ) );
+		ASSERT_EQ( (std::vector<int>)x, vec( { 1, 2, 3 } ) );
 
 		d.set();
 	}

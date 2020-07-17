@@ -11,9 +11,14 @@ TEST( NeuronGroup, Ctor )
 {
 	{
 		std::vector<neuron_group::edge> const C{
-		    {0, 1, 0.1f}, {0, 2, 0.2f}, {1, 1, 0.3f}, {1, 2, 0.4f}, {2, 1, 0.5f}, {2, 2, 0.6f}};
+		    { 0, 1, 0.1f },
+		    { 0, 2, 0.2f },
+		    { 1, 1, 0.3f },
+		    { 1, 2, 0.4f },
+		    { 2, 1, 0.5f },
+		    { 2, 2, 0.6f } };
 
-		neuron_group x( {5, 2, 3}, C );
+		neuron_group x( { 5, 2, 3 }, C );
 
 		ASSERT_EQ( 3, x.num_groups() );
 

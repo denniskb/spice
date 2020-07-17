@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(spice LANGUAGES CXX CUDA)
 
 if(MSVC)
-	set(CMAKE_CXX_FLAGS "/std:c++latest /EHsc /W4 /WX /fp:fast")
+	set(CMAKE_CXX_FLAGS "/std:c++17 /EHsc /W4 /WX /fp:fast")
 endif()
 set(CMAKE_CUDA_FLAGS "--expt-extended-lambda --generate-code=arch=compute_50,code=sm_50 --use_fast_math")
 set(CUDA_ARCH 50)

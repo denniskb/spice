@@ -24,7 +24,7 @@ template <typename Ex>
 cudaError_t success_or_throw(
     cudaError_t result,
     Ex && exception,
-    std::initializer_list<cudaError_t> valid_results = {cudaSuccess} )
+    std::initializer_list<cudaError_t> valid_results = { cudaSuccess } )
 {
 	if( std::find( valid_results.begin(), valid_results.end(), result ) != valid_results.end() )
 		return result;
@@ -36,13 +36,13 @@ cudaError_t success_or_throw(
 
 inline cudaError_t success_or_throw( cudaError_t result )
 {
-	return detail::success_or_throw( result, detail::err2ex( result ), {cudaSuccess} );
+	return detail::success_or_throw( result, detail::err2ex( result ), { cudaSuccess } );
 }
 
 template <typename Ex>
 cudaError_t success_or_throw( cudaError_t result, Ex && exception )
 {
-	return detail::success_or_throw( result, std::forward<Ex>( exception ), {cudaSuccess} );
+	return detail::success_or_throw( result, std::forward<Ex>( exception ), { cudaSuccess } );
 }
 
 inline cudaError_t

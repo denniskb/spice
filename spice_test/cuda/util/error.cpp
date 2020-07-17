@@ -12,14 +12,14 @@ TEST( Error, ThrowOnError )
 
 	ASSERT_NO_THROW( success_or_throw( cudaSuccess ) );
 	ASSERT_THROW(
-	    success_or_throw( cudaSuccess, {cudaErrorNoDevice, cudaErrorAddressOfConstant} ),
+	    success_or_throw( cudaSuccess, { cudaErrorNoDevice, cudaErrorAddressOfConstant } ),
 	    std::exception );
 
 	for( std::size_t i = 0; i < 100; i++ )
 	{
 		auto err = static_cast<cudaError>( i );
 
-		ASSERT_NO_THROW( success_or_throw( err, {err} ) );
+		ASSERT_NO_THROW( success_or_throw( err, { err } ) );
 
 		if( err != cudaSuccess )
 		{
@@ -29,8 +29,8 @@ TEST( Error, ThrowOnError )
 		}
 	}
 
-	ASSERT_NO_THROW( success_or_throw( cudaSuccess, {cudaSuccess, cudaErrorNoDevice} ) );
-	ASSERT_NO_THROW( success_or_throw( cudaSuccess, {cudaErrorNoDevice, cudaSuccess} ) );
+	ASSERT_NO_THROW( success_or_throw( cudaSuccess, { cudaSuccess, cudaErrorNoDevice } ) );
+	ASSERT_NO_THROW( success_or_throw( cudaSuccess, { cudaErrorNoDevice, cudaSuccess } ) );
 }
 
 TEST( Error, ClearAfterThrow )

@@ -25,7 +25,7 @@ static void cache_synth( benchmark::State & state )
 
 	try
 	{
-		cuda::snn<synth> net( {{N}, {{0, 0, P}}}, 1, 1 );
+		cuda::snn<synth> net( { { N }, { { 0, 0, P } } }, 1, 1 );
 
 		net.step();
 
@@ -62,7 +62,8 @@ static void cache_brunel( benchmark::State & state )
 
 	try
 	{
-		cuda::snn<brunel> net( {{N / 2, N / 2}, {{0, 1, 0.1f}, {1, 1, 0.1f}}}, 0.0001f, 15 );
+		cuda::snn<brunel> net(
+		    { { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 15 );
 
 		std::vector<int> spikes;
 		net.step( &spikes );

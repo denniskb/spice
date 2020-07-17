@@ -20,7 +20,7 @@ struct backend
 	}
 
 	// @return random no. in [0, 1)
-	float rand() { return ( rng() & 0x00ffffff ) / 16777216.0f; }
+	float rand() { return util::uniform_left_inc( rng ); }
 
 	template <typename T>
 	static T min( T x, T hi )

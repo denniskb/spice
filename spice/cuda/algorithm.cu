@@ -531,21 +531,21 @@ void receive(
 {
 	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
 		_process_spikes<Model, HNDL_SPKS>
-		    <<<Model::synapse::size> 0 ? 256 : 128, info.num_neurons / adj.width()> 40 ? 128 :
-		                                                                                 256>>>
-		    ( info,
-		      seed(),
-		      adj,
+		    <<<( Model::synapse::size > 0 ? 256 : 128 ),
+		       ( info.num_neurons / adj.width() > 40 ? 128 : 256 )>>>(
+		        info,
+		        seed(),
+		        adj,
 
-		      spikes,
-		      num_spikes,
+		        spikes,
+		        num_spikes,
 
-		      ages,
-		      history,
-		      max_history,
-		      iter,
-		      delay,
-		      dt );
+		        ages,
+		        history,
+		        max_history,
+		        iter,
+		        delay,
+		        dt );
 	else
 		_process_spikes_cache_aware<Model><<<512, 32>>>(
 		    info,

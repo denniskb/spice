@@ -13,7 +13,8 @@ using namespace spice::cuda::util;
 TEST( dAlgorithm, AdjList )
 {
 	auto desc = neuron_group(
-	    {10, 20, 30}, {{0, 0, 0.5f}, {0, 1, 0.1f}, {0, 2, 0.5f}, {1, 0, 1.0f}, {1, 2, 0.5f}} );
+	    { 10, 20, 30 },
+	    { { 0, 0, 0.5f }, { 0, 1, 0.1f }, { 0, 2, 0.5f }, { 1, 0, 1.0f }, { 1, 2, 0.5f } } );
 	// A(10)
 	// B(20)
 	// C(30)

@@ -137,12 +137,7 @@ auto make_soa( type_list<Fields...> )
 template <template <typename> typename Cont, typename TypeList>
 struct soa_t
 {
-	soa_t() = default;
-
-	explicit soa_t( std::size_t n )
-	{
-		for_each( _data, [n]( auto & cont ) { cont.resize( n ); } );
-	}
+	explicit soa_t( std::size_t n = 0 ) { resize( n ); }
 
 	void resize( std::size_t n )
 	{

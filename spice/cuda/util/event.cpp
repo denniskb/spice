@@ -32,7 +32,7 @@ float event::elapsed_time( cudaEvent_t since )
 
 cudaError_t event::query()
 {
-	return success_or_throw( cudaEventQuery( _event ), {cudaSuccess, cudaErrorNotReady} );
+	return success_or_throw( cudaEventQuery( _event ), { cudaSuccess, cudaErrorNotReady } );
 }
 
 void event::record( cudaStream_t s ) { success_or_throw( cudaEventRecord( _event, s ) ); }

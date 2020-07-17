@@ -76,7 +76,7 @@ public:
 	}
 
 private:
-	std::unique_ptr<T, cudaError_t ( * )( void * )> _data{nullptr, cudaFree};
+	std::unique_ptr<T, cudaError_t ( * )( void * )> _data{ nullptr, cudaFree };
 	std::size_t _size = 0;
 
 	template <typename Cont>

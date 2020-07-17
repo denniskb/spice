@@ -29,7 +29,7 @@ static void gen( benchmark::State & state )
 
 	try
 	{
-		neuron_group desc( {N}, {{0, 0, 0.1f}} );
+		neuron_group desc( { N }, { { 0, 0, 0.1f } } );
 
 		std::vector<int> l;
 		adj_list::generate( desc, l );
@@ -57,7 +57,7 @@ static void plot0_AdjGen( benchmark::State & state )
 
 	try
 	{
-		neuron_group desc( {N}, {{0, 0, P}} );
+		neuron_group desc( { N }, { { 0, 0, P } } );
 
 		dbuffer<int> e( desc.size() * desc.max_degree() );
 
@@ -99,14 +99,15 @@ static void plot1_SetupTime( benchmark::State & state )
 
 	try
 	{
-		cuda::snn<brunel> net( {{N / 2, N / 2}, {{0, 1, 0.1f}, {1, 1, 0.1f}}}, 0.0001f, 8 );
+		cuda::snn<brunel> net(
+		    { { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 8 );
 
 		event start, stop;
 		for( auto _ : state )
 		{
 			start.record();
 			for( int i = 0; i < 10; i++ )
-				net.init( {{N / 2, N / 2}, {{0, 1, 0.1f}, {1, 1, 0.1f}}}, 0.0001f, 8 );
+				net.init( { { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 8 );
 			// cudaMemset( const_cast<int *>( net.graph().edges() ), 0, NSYN * 4 );
 			stop.record();
 			stop.synchronize();
@@ -147,7 +148,9 @@ static void plot2_RunTime( benchmark::State & state )
 			net.reset( new cuda::snn<Model>( N, 0.02f, 0.0001f, 8 ) );
 		else
 			net.reset( new cuda::snn<Model>(
-			    neuron_group( {N / 2, N / 2}, {{0, 1, 0.1f}, {1, 1, 0.1f}} ), 0.0001f, 15 ) );
+			    neuron_group( { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
+			    0.0001f,
+			    15 ) );
 
 		event start, stop;
 		for( auto _ : state )

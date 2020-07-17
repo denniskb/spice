@@ -18,7 +18,7 @@ static bool cmp( neuron_group::edge const & a, neuron_group::edge const & b )
 
 
 neuron_group::neuron_group( std::size_t const num_neurons, float const connectivity )
-    : neuron_group( {num_neurons}, {{0, 0, connectivity}} )
+    : neuron_group( { num_neurons }, { { 0, 0, connectivity } } )
 {
 }
 
@@ -68,8 +68,9 @@ neuron_group::neuron_group(
 				s2 = 0.0;
 			}
 
-			m += size( std::get<1>( c ) ) * std::get<2>( c );
-			s2 += size( std::get<1>( c ) ) * std::get<2>( c ) * ( 1.0 - std::get<2>( c ) );
+			m += size( std::get<1>( c ) ) * static_cast<double>( std::get<2>( c ) );
+			s2 += size( std::get<1>( c ) ) * static_cast<double>( std::get<2>( c ) ) *
+			      ( 1.0 - std::get<2>( c ) );
 		}
 
 		_max_degree =
@@ -124,8 +125,9 @@ nonstd::span<neuron_group::edge const> neuron_group::neighbors( std::size_t cons
 	    edge( i, std::numeric_limits<std::size_t>::max(), 0.0f ),
 	    cmp );
 
-	return {_connectivity.data() + ( first - _connectivity.begin() ),
-	        static_cast<std::size_t>( last - first )};
+	return {
+	    _connectivity.data() + ( first - _connectivity.begin() ),
+	    static_cast<std::size_t>( last - first ) };
 }
 
 std::size_t neuron_group::max_degree() const { return _max_degree; }

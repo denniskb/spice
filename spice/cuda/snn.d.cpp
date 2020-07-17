@@ -37,10 +37,10 @@ void snn<Model>::reserve(
 
 	// TODO: Hysteresis
 	_graph.edges.resize( num_synapses );
-	_graph.adj = {num_neurons, num_synapses / num_neurons, _graph.edges.data()};
+	_graph.adj = { num_neurons, num_synapses / num_neurons, _graph.edges.data() };
 
 	_spikes.ids_data.resize( delay * num_neurons );
-	_spikes.ids = {_spikes.ids_data.data(), narrow_int<int>( num_neurons )};
+	_spikes.ids = { _spikes.ids_data.data(), narrow_int<int>( num_neurons ) };
 	_spikes.counts.resize( delay );
 
 	if constexpr( Model::neuron::size > 0 ) _neurons.resize( num_neurons );
@@ -50,8 +50,8 @@ void snn<Model>::reserve(
 		_synapses.resize( num_synapses );
 
 		_spikes.history_data.resize( MAX_HISTORY() * ( ( num_neurons + 31 ) / 32 ) );
-		_spikes.history = {_spikes.history_data.data(),
-		                   narrow_int<int>( ( num_neurons + 31 ) / 32 )};
+		_spikes.history = {
+		    _spikes.history_data.data(), narrow_int<int>( ( num_neurons + 31 ) / 32 ) };
 		_spikes.updates.resize( num_neurons );
 
 		_graph.ages.resize( num_neurons );
@@ -120,7 +120,7 @@ void snn<Model>::init( spice::util::neuron_group desc, float dt, int delay /* = 
 
 	upload_meta<Model>( _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
-	    this->info(), {_graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() )} );
+	    this->info(), { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
 }
 
 
@@ -137,7 +137,7 @@ std::size_t snn<Model>::num_synapses() const
 template <typename Model>
 std::pair<std::vector<int>, std::size_t> snn<Model>::graph() const
 {
-	return {_graph.edges, _graph.adj.max_degree()};
+	return { _graph.edges, _graph.adj.max_degree() };
 }
 template <typename Model>
 std::vector<typename Model::neuron::tuple_t> snn<Model>::neurons() const
@@ -171,13 +171,13 @@ void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spik
 	    i,
 	    this->delay(),
 	    MAX_HISTORY(),
-	    {_graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() )} );
+	    { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
 
 	if( i >= this->delay() - 1 )
 	{
 		receive<Model>(
 		    this->info(),
-		    {_graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() )},
+		    { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) },
 
 		    _spikes.ids.row( circidx( i - this->delay() + 1, this->delay() ) ),
 		    _spikes.counts.data() + circidx( i - this->delay() + 1, this->delay() ),

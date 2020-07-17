@@ -14,7 +14,7 @@ namespace spice::cuda::util
 {
 nonstd::span<device> device::devices()
 {
-	static std::array<device, 8> _devices{0, 1, 2, 3, 4, 5, 6, 7};
+	static std::array<device, 8> _devices{ 0, 1, 2, 3, 4, 5, 6, 7 };
 	static int const n = [] {
 		int i = 0;
 		success_or_throw( cudaGetDeviceCount( &i ) );

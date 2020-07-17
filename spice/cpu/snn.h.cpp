@@ -31,6 +31,8 @@ public:
 
 	unsigned id() const { return _i; }
 
+#pragma warning( push )
+#pragma warning( disable : 6011 ) // deref. null ptr - asserted not null
 	template <int I, bool C = Const>
 	auto const & get( typename std::enable_if_t<C> * dummy = 0 )
 	{
@@ -44,6 +46,7 @@ public:
 		spice_assert( _data );
 		return std::get<I>( _data[_i] );
 	}
+#pragma warning( pop )
 
 private:
 	T * _data = nullptr;
@@ -94,7 +97,7 @@ snn<Model>::snn( neuron_group const & desc, float const dt, int const delay /* =
 
 	{
 		adj_list::generate( desc, _graph.edges );
-		_graph.adj = {desc.size(), desc.max_degree(), _graph.edges.data()};
+		_graph.adj = { desc.size(), desc.max_degree(), _graph.edges.data() };
 	}
 
 	// Init neurons
@@ -138,7 +141,7 @@ std::size_t snn<Model>::num_synapses() const
 template <typename Model>
 std::pair<std::vector<int>, std::size_t> snn<Model>::graph() const
 {
-	return {_graph.edges, _graph.adj.max_degree()};
+	return { _graph.edges, _graph.adj.max_degree() };
 }
 template <typename Model>
 std::vector<typename Model::neuron::tuple_t> snn<Model>::neurons() const

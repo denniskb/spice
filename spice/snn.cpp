@@ -30,7 +30,7 @@ int snn<Model>::delay() const
 template <typename Model>
 snn_info snn<Model>::info() const
 {
-	return {util::narrow_cast<int>( num_neurons() )};
+	return { util::narrow_cast<int>( num_neurons() ) };
 }
 
 template <typename Model>

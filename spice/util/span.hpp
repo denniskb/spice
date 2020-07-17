@@ -1030,10 +1030,7 @@ public:
 #if span_CONFIG( NO_EXCEPTIONS )
 		return this->operator[]( idx );
 #else
-		if( idx < 0 || size() <= idx )
-		{
-			detail::throw_out_of_range( idx, size() );
-		}
+		if( idx < 0 || size() <= idx ) { detail::throw_out_of_range( idx, size() ); }
 		return *( data() + idx );
 #endif
 	}
@@ -1076,7 +1073,7 @@ public:
 	span_constexpr iterator begin() const span_noexcept
 	{
 #if span_CPP11_OR_GREATER
-		return {data()};
+		return { data() };
 #else
 		return iterator( data() );
 #endif
@@ -1085,7 +1082,7 @@ public:
 	span_constexpr iterator end() const span_noexcept
 	{
 #if span_CPP11_OR_GREATER
-		return {data() + size()};
+		return { data() + size() };
 #else
 		return iterator( data() + size() );
 #endif
@@ -1094,7 +1091,7 @@ public:
 	span_constexpr const_iterator cbegin() const span_noexcept
 	{
 #if span_CPP11_OR_GREATER
-		return {data()};
+		return { data() };
 #else
 		return const_iterator( data() );
 #endif
@@ -1103,7 +1100,7 @@ public:
 	span_constexpr const_iterator cend() const span_noexcept
 	{
 #if span_CPP11_OR_GREATER
-		return {data() + size()};
+		return { data() + size() };
 #else
 		return const_iterator( data() + size() );
 #endif
@@ -1139,19 +1136,19 @@ private:
 #if span_HAVE( DEDUCTION_GUIDES ) // span_CPP17_OR_GREATER
 
 template <class T, size_t N>
-span( T ( & )[N] )->span<T, static_cast<extent_t>( N )>;
+span( T ( & )[N] ) -> span<T, static_cast<extent_t>( N )>;
 
 template <class T, size_t N>
-span( std::array<T, N> & )->span<T, static_cast<extent_t>( N )>;
+span( std::array<T, N> & ) -> span<T, static_cast<extent_t>( N )>;
 
 template <class T, size_t N>
-span( std::array<T, N> const & )->span<const T, static_cast<extent_t>( N )>;
+span( std::array<T, N> const & ) -> span<const T, static_cast<extent_t>( N )>;
 
 template <class Container>
-span( Container & )->span<typename Container::value_type>;
+span( Container & ) -> span<typename Container::value_type>;
 
 template <class Container>
-span( Container const & )->span<const typename Container::value_type>;
+span( Container const & ) -> span<const typename Container::value_type>;
 
 #endif // span_HAVE( DEDUCTION_GUIDES )
 

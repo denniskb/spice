@@ -35,7 +35,7 @@ nonstd::span<int const> adj_list::neighbors( std::size_t i_node ) const
 	std::ptrdiff_t d = narrow_int<ptrdiff_t>( max_degree() ) - 1;
 	while( d >= 0 && first[d] < 0 ) --d;
 
-	return {first, static_cast<std::size_t>( d + 1 )};
+	return { first, static_cast<std::size_t>( d + 1 ) };
 }
 
 std::size_t adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
