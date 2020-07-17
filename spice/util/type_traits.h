@@ -1,7 +1,5 @@
 #pragma once
 
-#include <spice/util/if_constexpr.h>
-
 #include <limits>
 #include <type_traits>
 #include <typeinfo>
@@ -49,26 +47,24 @@ To narrow_int( From x )
 	    "narrow_int() can only be performed on integral types" );
 
 	// narrow_int<T, T>()
-	if_constexpr( std::is_same_v<From, To> ) return x;
+	if constexpr( std::is_same_v<From, To> ) return x;
 
 	// signed -> unsigned
-	if_constexpr(
-	    std::is_signed_v<From> &&
-	    std::is_unsigned_v<To> ) if( x < From( 0 ) ) throw std::bad_cast();
+	if constexpr( std::is_signed_v<From> && std::is_unsigned_v<To> )
+		if( x < From( 0 ) ) throw std::bad_cast();
 
 	// fast-path:
 	// signed   -> signed
 	// signed+  -> unsigned
 	// unsigned -> unsigned
 	// unsigned -> signed
-	if_constexpr(
-	    std::numeric_limits<To>::max() >=
-	    std::numeric_limits<From>::max() ) return narrow_cast<To>( x );
+	if constexpr( std::numeric_limits<To>::max() >= std::numeric_limits<From>::max() )
+		return narrow_cast<To>( x );
 
 	// value inspection:
 	// signed  -> signed
 	// signed+ -> unsigned
-	if_constexpr( std::is_signed_v<From> )
+	if constexpr( std::is_signed_v<From> )
 	{
 		if( x <= std::numeric_limits<To>::max() && x >= std::numeric_limits<To>::min() )
 			return narrow_cast<To>( x );
@@ -77,8 +73,7 @@ To narrow_int( From x )
 	// unsigned -> signed
 	else
 	{
-		if( x <= std::numeric_limits<To>::max() )
-			return narrow_cast<To>( x );
+		if( x <= std::numeric_limits<To>::max() ) return narrow_cast<To>( x );
 	}
 
 	throw std::bad_cast();

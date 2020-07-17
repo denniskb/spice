@@ -6,6 +6,6 @@
 int main( int argc, char ** argv )
 {
 	::testing::InitGoogleTest( &argc, argv );
-	// cudaSetDevice( 0 );
+	// cudaSetDevice( 1 );
 	return RUN_ALL_TESTS();
 }

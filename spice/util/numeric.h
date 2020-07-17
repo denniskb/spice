@@ -3,6 +3,8 @@
 
 namespace spice::util
 {
+#pragma float_control( push )
+#pragma float_control( precise, on )
 template <typename Prec>
 class kahan_sum
 {
@@ -25,4 +27,5 @@ private:
 	Prec _c = 0;
 	Prec _sum = 0;
 };
+#pragma float_control( pop )
 } // namespace spice::util

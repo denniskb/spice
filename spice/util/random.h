@@ -2,8 +2,9 @@
 
 #include <spice/util/assert.h>
 #include <spice/util/host_defines.h>
-#include <spice/util/if_constexpr.h>
 #include <spice/util/type_traits.h>
+
+#include <cmath>
 
 
 namespace spice

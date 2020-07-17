@@ -374,7 +374,7 @@ void upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple
 	if( Model::neuron::size > 0 )
 	{
 		std::array<void *, Model::neuron::size> tmp;
-		spice::util::for_each_i( neuron, [&]( auto p, int i ) { tmp[i] = p; } );
+		spice::util::for_each_i( neuron, [&]( auto p, auto i ) { tmp[i] = p; } );
 
 		success_or_throw(
 		    cudaMemcpyToSymbolAsync( _neuron_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
@@ -383,7 +383,7 @@ void upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple
 	if( Model::synapse::size > 0 )
 	{
 		std::array<void *, Model::synapse::size> tmp;
-		spice::util::for_each_i( synapse, [&]( auto p, int i ) { tmp[i] = p; } );
+		spice::util::for_each_i( synapse, [&]( auto p, auto i ) { tmp[i] = p; } );
 
 		success_or_throw( cudaMemcpyToSymbolAsync(
 		    _synapse_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );

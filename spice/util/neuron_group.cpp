@@ -4,6 +4,7 @@
 #include <spice/util/assert.h>
 #include <spice/util/type_traits.h>
 
+#include <cmath>
 #include <numeric>
 
 

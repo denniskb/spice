@@ -25,18 +25,16 @@ bool set_equal( Cont1 const & lhs, Cont2 const & rhs )
 template <typename Pop>
 static bool close( Pop const & lhs, Pop const & rhs, double thres )
 {
-	auto const sz = std::tuple_size_v<Pop::value_type>;
+	constexpr auto sz = std::tuple_size_v<Pop::value_type>;
 	if( sz == 0 ) return true;
 
 	if( lhs.size() != rhs.size() ) return false;
 
 	for( std::size_t i = 0; i < lhs.size(); i++ )
-		if( util::transform_reduce(
-		        lhs[i],
-		        rhs[i],
-		        0.0f,
-		        []( auto x, auto y ) { return std::abs( x - y ); },
-		        []( auto x, auto y ) -> float { return x + y; } ) /
+		if( util::reduce(
+		        util::map( lhs[i], rhs[i], []( auto x, auto y ) { return std::abs( x - y ); } ),
+		        0,
+		        []( auto x, auto y ) { return x + y; } ) /
 		        sz >
 		    thres )
 			return false;
