@@ -357,7 +357,7 @@ void generate_rnd_adj_list( spice::util::neuron_group const & desc, int * edges 
 	cudaFuncSetCacheConfig( _generate_adj_ids, cudaFuncCachePreferShared );
 
 	spice_assert( desc.size() <= ( 1u << 31 ) - 1 );
-	call( [&]() {
+	call( [&] {
 		_generate_adj_ids<<<desc.size(), 32>>>(
 		    seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
 	} );
@@ -406,13 +406,13 @@ template void upload_meta<::spice::synth>(
 template <typename Model>
 void init( snn_info const info, span2d<int const> adj /* = {} */ )
 {
-	call( [&]() {
+	call( [&] {
 		_process_neurons<Model, true>
 		    <<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, seed() );
 	} );
 
 	if constexpr( Model::synapse::size > 0 )
-		call( [&]() { _process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj ); } );
+		call( [&] { _process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj ); } );
 }
 template void init<::spice::vogels_abbott>( snn_info, span2d<int const> );
 template void init<::spice::brunel>( snn_info, span2d<int const> );
@@ -435,7 +435,7 @@ void update(
     int const max_history /* = 0 */,
     span2d<int const> adj /* = {} */ )
 {
-	call( [&]() {
+	call( [&] {
 		_process_neurons<Model, false><<<nblocks( info.num_neurons, 128, 256 ), 256>>>(
 		    info,
 		    seed(),
@@ -453,7 +453,7 @@ void update(
 	} );
 
 	if constexpr( Model::synapse::size > 0 )
-		call( [&]() {
+		call( [&] {
 			_process_spikes<Model, UPDT_SYNS><<<256, 256>>>(
 			    info,
 			    seed(),
@@ -539,7 +539,7 @@ void receive(
     float const dt /* = 0 */ )
 {
 	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
-		call( [&]() {
+		call( [&] {
 			_process_spikes<Model, HNDL_SPKS>
 			    <<<( Model::synapse::size > 0 ? 256 : 128 ),
 			       ( info.num_neurons / adj.width() > 40 ? 128 : 256 )>>>(
@@ -558,7 +558,7 @@ void receive(
 			        dt );
 		} );
 	else
-		call( [&]() {
+		call( [&] {
 			_process_spikes_cache_aware<Model><<<512, 32>>>(
 			    info,
 			    seed(),
@@ -624,7 +624,7 @@ template void receive<::spice::synth>(
 template <typename T>
 void zero_async( T * t, cudaStream_t s /* = nullptr */ )
 {
-	call( [&]() { _zero_async<T><<<1, 1, 0, s>>>( t ); } );
+	call( [&] { _zero_async<T><<<1, 1, 0, s>>>( t ); } );
 }
 template void zero_async<int>( int *, cudaStream_t );
 template void zero_async<int64_t>( int64_t *, cudaStream_t );
