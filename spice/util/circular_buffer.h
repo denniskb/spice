@@ -1,8 +1,8 @@
 #pragma once
 
+#include <spice/util/assert.h>
 #include <spice/util/host_defines.h>
 
-#include <cassert>
 #include <vector>
 
 
@@ -13,8 +13,8 @@ namespace util
 template <typename Int>
 HYBRID Int circidx( Int i, Int size )
 {
-	assert( size > 0 );
-	assert( i >= -size );
+	spice_assert( size > 0 );
+	spice_assert( i >= -size );
 
 	return ( i + size ) % size;
 }

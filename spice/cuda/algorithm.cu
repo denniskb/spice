@@ -191,7 +191,7 @@ static __global__ void _process_neurons(
 	{
 		neuron_iter<typename Model::neuron> it( i );
 
-		if( INIT )
+		if constexpr( INIT )
 			Model::neuron::template init( it, info, bak );
 		else // udpate
 		{
@@ -249,10 +249,10 @@ static __global__ void _process_spikes(
 
 			if( dst >= 0 )
 			{
-				if( MODE == INIT_SYNS )
+				if constexpr( MODE == INIT_SYNS )
 					Model::synapse::template init(
 					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
-				else if( Model::synapse::size > 0 )
+				else if constexpr( Model::synapse::size > 0 )
 					for( int k = ages[src]; k <= iter; k++ )
 						Model::synapse::template update(
 						    synapse_iter<typename Model::synapse>( isyn ),
@@ -264,7 +264,7 @@ static __global__ void _process_spikes(
 						    info,
 						    bak );
 
-				if( MODE == HNDL_SPKS )
+				if constexpr( MODE == HNDL_SPKS )
 					Model::neuron::template receive(
 					    src,
 					    neuron_iter<typename Model::neuron>( dst ),
@@ -357,8 +357,10 @@ void generate_rnd_adj_list( spice::util::neuron_group const & desc, int * edges 
 	cudaFuncSetCacheConfig( _generate_adj_ids, cudaFuncCachePreferShared );
 
 	spice_assert( desc.size() <= ( 1u << 31 ) - 1 );
-	_generate_adj_ids<<<desc.size(), 32>>>(
-	    seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
+	call( [&]() {
+		_generate_adj_ids<<<desc.size(), 32>>>(
+		    seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
+	} );
 }
 
 template <typename Model>
@@ -371,7 +373,7 @@ void upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple
 	    Model::synapse::size <= 20,
 	    "spice doesn't support models with more than 20 synapse attributes" );
 
-	if( Model::neuron::size > 0 )
+	if constexpr( Model::neuron::size > 0 )
 	{
 		std::array<void *, Model::neuron::size> tmp;
 		spice::util::for_each_i( neuron, [&]( auto p, auto i ) { tmp[i] = p; } );
@@ -380,7 +382,7 @@ void upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple
 		    cudaMemcpyToSymbolAsync( _neuron_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
 	}
 
-	if( Model::synapse::size > 0 )
+	if constexpr( Model::synapse::size > 0 )
 	{
 		std::array<void *, Model::synapse::size> tmp;
 		spice::util::for_each_i( synapse, [&]( auto p, auto i ) { tmp[i] = p; } );
@@ -404,10 +406,13 @@ template void upload_meta<::spice::synth>(
 template <typename Model>
 void init( snn_info const info, span2d<int const> adj /* = {} */ )
 {
-	_process_neurons<Model, true><<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, seed() );
+	call( [&]() {
+		_process_neurons<Model, true>
+		    <<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, seed() );
+	} );
 
-	if( Model::synapse::size > 0 )
-		_process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj );
+	if constexpr( Model::synapse::size > 0 )
+		call( [&]() { _process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj ); } );
 }
 template void init<::spice::vogels_abbott>( snn_info, span2d<int const> );
 template void init<::spice::brunel>( snn_info, span2d<int const> );
@@ -430,36 +435,40 @@ void update(
     int const max_history /* = 0 */,
     span2d<int const> adj /* = {} */ )
 {
-	_process_neurons<Model, false><<<nblocks( info.num_neurons, 128, 256 ), 256>>>(
-	    info,
-	    seed(),
-	    dt,
-	    spikes,
-	    num_spikes,
-	    history.row( circidx( iter, max_history ) ),
-	    ages,
-	    updates,
-	    num_updates,
-	    iter,
-	    delay,
-	    max_history,
-	    history.row( circidx( iter - delay, max_history ) ) );
-
-	if( Model::synapse::size > 0 )
-		_process_spikes<Model, UPDT_SYNS><<<256, 256>>>(
+	call( [&]() {
+		_process_neurons<Model, false><<<nblocks( info.num_neurons, 128, 256 ), 256>>>(
 		    info,
 		    seed(),
-		    adj,
-
+		    dt,
+		    spikes,
+		    num_spikes,
+		    history.row( circidx( iter, max_history ) ),
+		    ages,
 		    updates,
 		    num_updates,
-
-		    ages,
-		    history,
-		    max_history,
 		    iter,
 		    delay,
-		    dt );
+		    max_history,
+		    history.row( circidx( iter - delay, max_history ) ) );
+	} );
+
+	if constexpr( Model::synapse::size > 0 )
+		call( [&]() {
+			_process_spikes<Model, UPDT_SYNS><<<256, 256>>>(
+			    info,
+			    seed(),
+			    adj,
+
+			    updates,
+			    num_updates,
+
+			    ages,
+			    history,
+			    max_history,
+			    iter,
+			    delay,
+			    dt );
+		} );
 }
 template void update<::spice::vogels_abbott>(
     snn_info,
@@ -530,30 +539,34 @@ void receive(
     float const dt /* = 0 */ )
 {
 	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
-		_process_spikes<Model, HNDL_SPKS>
-		    <<<( Model::synapse::size > 0 ? 256 : 128 ),
-		       ( info.num_neurons / adj.width() > 40 ? 128 : 256 )>>>(
-		        info,
-		        seed(),
-		        adj,
+		call( [&]() {
+			_process_spikes<Model, HNDL_SPKS>
+			    <<<( Model::synapse::size > 0 ? 256 : 128 ),
+			       ( info.num_neurons / adj.width() > 40 ? 128 : 256 )>>>(
+			        info,
+			        seed(),
+			        adj,
 
-		        spikes,
-		        num_spikes,
+			        spikes,
+			        num_spikes,
 
-		        ages,
-		        history,
-		        max_history,
-		        iter,
-		        delay,
-		        dt );
+			        ages,
+			        history,
+			        max_history,
+			        iter,
+			        delay,
+			        dt );
+		} );
 	else
-		_process_spikes_cache_aware<Model><<<512, 32>>>(
-		    info,
-		    seed(),
-		    adj,
+		call( [&]() {
+			_process_spikes_cache_aware<Model><<<512, 32>>>(
+			    info,
+			    seed(),
+			    adj,
 
-		    spikes,
-		    num_spikes );
+			    spikes,
+			    num_spikes );
+		} );
 }
 template void receive<::spice::vogels_abbott>(
     snn_info const,
@@ -611,7 +624,7 @@ template void receive<::spice::synth>(
 template <typename T>
 void zero_async( T * t, cudaStream_t s /* = nullptr */ )
 {
-	_zero_async<T><<<1, 1, 0, s>>>( t );
+	call( [&]() { _zero_async<T><<<1, 1, 0, s>>>( t ); } );
 }
 template void zero_async<int>( int *, cudaStream_t );
 template void zero_async<int64_t>( int64_t *, cudaStream_t );
