@@ -1,4 +1,4 @@
-#include <spice/util/neuron_group.h>
+#include <spice/util/layout.h>
 
 #include <spice/cuda/util/defs.h>
 #include <spice/util/assert.h>
@@ -10,21 +10,21 @@
 
 namespace spice::util
 {
-static bool cmp( neuron_group::edge const & a, neuron_group::edge const & b )
+static bool cmp( layout::edge const & a, layout::edge const & b )
 {
 	return std::get<0>( a ) < std::get<0>( b ) ||
 	       std::get<0>( a ) == std::get<0>( b ) && std::get<1>( a ) < std::get<1>( b );
 }
 
 
-neuron_group::neuron_group( std::size_t const num_neurons, float const connectivity )
-    : neuron_group( { num_neurons }, { { 0, 0, connectivity } } )
+layout::layout( std::size_t const num_neurons, float const connectivity )
+    : layout( { num_neurons }, { { 0, 0, connectivity } } )
 {
 }
 
 #pragma warning( push )
 #pragma warning( disable : 4189 ) // unreferenced variable 'gs' in assert
-neuron_group::neuron_group(
+layout::layout(
     std::vector<std::size_t> const & group_sizes, std::vector<edge> const & connectivity )
     : _group_sizes( group_sizes )
     , _connectivity( connectivity )
@@ -82,39 +82,39 @@ neuron_group::neuron_group(
 #pragma warning( pop )
 
 
-std::size_t neuron_group::num_groups() const
+std::size_t layout::num_groups() const
 {
 	return narrow_int<std::size_t>( _group_sizes.size() );
 }
 
-std::size_t neuron_group::size() const
+std::size_t layout::size() const
 {
 	return std::accumulate( _group_sizes.begin(), _group_sizes.end(), std::size_t( 0 ) );
 }
-std::size_t neuron_group::size( std::size_t i ) const
+std::size_t layout::size( std::size_t i ) const
 {
 	spice_assert( i < num_groups(), "index out of range" );
 	return _group_sizes[i];
 }
 
-std::size_t neuron_group::first( std::size_t i ) const
+std::size_t layout::first( std::size_t i ) const
 {
 	spice_assert( i < num_groups(), "index out of range" );
 	return std::accumulate( _group_sizes.begin(), _group_sizes.begin() + i, std::size_t( 0 ) );
 }
-std::size_t neuron_group::last( std::size_t i ) const
+std::size_t layout::last( std::size_t i ) const
 {
 	spice_assert( i < num_groups(), "index out of range" );
 	return std::accumulate( _group_sizes.begin(), _group_sizes.begin() + i + 1, std::size_t( 0 ) );
 }
-std::size_t neuron_group::range( std::size_t i ) const
+std::size_t layout::range( std::size_t i ) const
 {
 	spice_assert( i < num_groups(), "index out of range" );
 	return last( i ) - first( i );
 }
 
-nonstd::span<neuron_group::edge const> neuron_group::connections() const { return _connectivity; }
-nonstd::span<neuron_group::edge const> neuron_group::neighbors( std::size_t const i ) const
+nonstd::span<layout::edge const> layout::connections() const { return _connectivity; }
+nonstd::span<layout::edge const> layout::neighbors( std::size_t const i ) const
 {
 	auto const first =
 	    std::lower_bound( _connectivity.begin(), _connectivity.end(), edge( i, 0, 0.0f ), cmp );
@@ -130,5 +130,5 @@ nonstd::span<neuron_group::edge const> neuron_group::neighbors( std::size_t cons
 	    static_cast<std::size_t>( last - first ) };
 }
 
-std::size_t neuron_group::max_degree() const { return _max_degree; }
+std::size_t layout::max_degree() const { return _max_degree; }
 } // namespace spice::util

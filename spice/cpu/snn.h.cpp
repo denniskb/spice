@@ -74,21 +74,7 @@ static void for_each( F && f, int const count, ID && id, adj_list const & adj )
 namespace spice::cpu
 {
 template <typename Model>
-snn<Model>::snn(
-    std::size_t const num_neurons,
-    float const p_connect,
-    float const dt,
-    int const delay /* = 1 */ )
-    : snn( neuron_group( num_neurons, p_connect ), dt, delay )
-{
-	spice_assert( num_neurons <= std::numeric_limits<int>::max() );
-	spice_assert( p_connect >= 0.0f && p_connect <= 1.0f );
-	spice_assert( dt > 0.0f );
-	spice_assert( delay >= 1 );
-}
-
-template <typename Model>
-snn<Model>::snn( neuron_group const & desc, float const dt, int const delay /* = 1 */ )
+snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
     , _backend( seed++ )
 {

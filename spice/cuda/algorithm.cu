@@ -325,7 +325,7 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::neuron_group const & desc, int * edges )
+void generate_rnd_adj_list( spice::util::layout const & desc, int * edges )
 {
 	spice_assert(
 	    desc.connections().size() <= 20,

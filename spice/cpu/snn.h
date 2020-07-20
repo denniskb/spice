@@ -18,8 +18,7 @@ template <typename Model>
 class snn : public ::spice::snn<Model>
 {
 public:
-	snn( std::size_t num_neurons, float p_connect, float dt, int delay = 1 );
-	snn( util::neuron_group const & desc, float dt, int delay = 1 );
+	snn( util::layout const & desc, float dt, int delay = 1 );
 
 	std::size_t num_neurons() const override;
 	std::size_t num_synapses() const override;

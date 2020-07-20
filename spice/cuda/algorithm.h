@@ -2,7 +2,7 @@
 
 #include <spice/snn_info.h>
 #include <spice/util/adj_list.h>
-#include <spice/util/neuron_group.h>
+#include <spice/util/layout.h>
 #include <spice/util/span2d.h>
 
 #include <cuda_runtime.h>
@@ -12,7 +12,7 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::neuron_group const & desc, int * edges );
+void generate_rnd_adj_list( spice::util::layout const & desc, int * edges );
 
 template <typename Model>
 void upload_meta(

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <spice/util/adj_list.h>
-#include <spice/util/neuron_group.h>
+#include <spice/util/layout.h>
 
 
 using namespace spice::util;
@@ -10,7 +10,7 @@ using namespace spice::util;
 TEST( NeuronGroup, Ctor )
 {
 	{
-		std::vector<neuron_group::edge> const C{
+		std::vector<layout::edge> const C{
 		    { 0, 1, 0.1f },
 		    { 0, 2, 0.2f },
 		    { 1, 1, 0.3f },
@@ -18,7 +18,7 @@ TEST( NeuronGroup, Ctor )
 		    { 2, 1, 0.5f },
 		    { 2, 2, 0.6f } };
 
-		neuron_group x( { 5, 2, 3 }, C );
+		layout x( { 5, 2, 3 }, C );
 
 		ASSERT_EQ( 3, x.num_groups() );
 
@@ -66,7 +66,7 @@ TEST( NeuronGroup, Ctor )
 	}
 
 	{
-		neuron_group x( 100, 0.1f );
+		layout x( 100, 0.1f );
 
 		ASSERT_EQ( 1, x.num_groups() );
 

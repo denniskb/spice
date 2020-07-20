@@ -19,7 +19,7 @@ TEST( AdjList, Ctor )
 
 	{
 		std::vector<int> e;
-		neuron_group desc( 100, 0 );
+		layout desc( 100, 0 );
 		auto const deg = desc.max_degree();
 		adj_list::generate( desc, e );
 
@@ -34,7 +34,7 @@ TEST( AdjList, Ctor )
 
 	{
 		std::vector<int> e;
-		neuron_group desc( 100, 1 );
+		layout desc( 100, 1 );
 		auto const deg = desc.max_degree();
 		adj_list::generate( desc, e );
 
@@ -60,7 +60,7 @@ TEST( AdjList, Ctor )
 
 	{
 		std::vector<int> e;
-		neuron_group desc( 100, 0.5f );
+		layout desc( 100, 0.5f );
 		auto const deg = desc.max_degree();
 		adj_list::generate( desc, e );
 
@@ -85,7 +85,7 @@ TEST( AdjList, Ctor )
 	}
 
 	{
-		auto desc = neuron_group(
+		auto desc = layout(
 		    { 10, 20, 30 },
 		    { { 0, 0, 0.5f }, { 0, 1, 0.1f }, { 0, 2, 0.5f }, { 1, 0, 1.0f }, { 1, 2, 0.5f } } );
 		// A(10)

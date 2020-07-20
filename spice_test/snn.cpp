@@ -19,7 +19,7 @@ TEST_ALL_MODELS( SNN );
 TYPED_TEST( SNN, Ctor )
 {
 	{
-		cpu::snn<TypeParam> x( N, P, DT );
+		cpu::snn<TypeParam> x( { N, P }, DT );
 
 		ASSERT_EQ( x.num_neurons(), N );
 		ASSERT_EQ( x.dt(), DT );
@@ -27,7 +27,7 @@ TYPED_TEST( SNN, Ctor )
 	}
 
 	{
-		cpu::snn<TypeParam> x( N, P, DT, DELAY );
+		cpu::snn<TypeParam> x( { N, P }, DT, DELAY );
 
 		ASSERT_EQ( x.num_neurons(), N );
 		ASSERT_EQ( x.dt(), DT );

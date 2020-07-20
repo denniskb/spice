@@ -53,7 +53,7 @@ cudaDeviceProp device::props() const
 void device::set() { success_or_throw( cudaSetDevice( _id ) ); }
 
 
-constexpr device::device( int id ) noexcept
+device::device( int id ) noexcept
     : _id( id )
 {
 }

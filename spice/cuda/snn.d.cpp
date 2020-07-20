@@ -62,28 +62,20 @@ void snn<Model>::reserve(
 }
 #pragma warning( pop )
 
-template <typename Model>
-snn<Model>::snn(
-    std::size_t const num_neurons,
-    float const p_connect,
-    float const dt,
-    int const delay /* = 1 */ )
-    : snn( spice::util::neuron_group( num_neurons, p_connect ), dt, delay )
-{
-	spice_assert( num_neurons >= 0 && num_neurons < std::numeric_limits<int>::max() );
-	spice_assert( p_connect >= 0.0f && p_connect <= 1.0f );
-	spice_assert( dt > 0.0f );
-	spice_assert( delay >= 1 );
-}
 
 template <typename Model>
-snn<Model>::snn( spice::util::neuron_group desc, float const dt, int const delay /* = 1 */ )
+snn<Model>::snn( spice::util::layout desc, float const dt, int const delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
 {
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
 
-	init( desc, dt, delay );
+	reserve( desc.size(), desc.size() * desc.max_degree(), delay );
+	generate_rnd_adj_list( desc, _graph.edges.data() );
+
+	upload_meta<Model>( _neurons.data(), _synapses.data() );
+	spice::cuda::init<Model>(
+	    this->info(), { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
 	cudaDeviceSynchronize();
 }
 
@@ -99,28 +91,6 @@ snn<Model>::snn( spice::cpu::snn<Model> const & net )
 
 	upload_meta<Model>( _neurons.data(), _synapses.data() );
 	cudaDeviceSynchronize();
-}
-
-
-template <typename Model>
-void snn<Model>::init( std::size_t num_neurons, float p_connect, float dt, int delay /* = 1 */ )
-{
-	init( neuron_group( num_neurons, p_connect ), dt, delay );
-}
-template <typename Model>
-void snn<Model>::init( spice::util::neuron_group desc, float dt, int delay /* = 1 */ )
-{
-	spice_assert( dt > 0.0f );
-	spice_assert( delay >= 1 );
-
-	spice::snn<Model>::init( dt, delay );
-
-	reserve( desc.size(), desc.size() * desc.max_degree(), delay );
-	generate_rnd_adj_list( desc, _graph.edges.data() );
-
-	upload_meta<Model>( _neurons.data(), _synapses.data() );
-	spice::cuda::init<Model>(
-	    this->info(), { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
 }
 
 

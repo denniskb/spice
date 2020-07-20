@@ -66,20 +66,20 @@ int main( int const argc, char const ** argv )
 		// Initialize a snn with the brunel model
 		if( !strcmp( argv[1], "brunel" ) )
 			run_sim( cuda::snn<brunel>(
-			    neuron_group( { NNEURON / 2, NNEURON / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
+			    layout( { NNEURON / 2, NNEURON / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
 			    0.0001f,
 			    15 ) );
 		// Initialize a snn with the brunel model (with plasticity turned on)
 		else if( !strcmp( argv[1], "brunel+" ) )
 			run_sim( cuda::snn<brunel_with_plasticity>(
-			    neuron_group( { NNEURON / 2, NNEURON / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
+			    layout( { NNEURON / 2, NNEURON / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
 			    0.0001f,
 			    15 ) );
 		// Initialize a snn with the vogels&abbott model
 		else if( !strcmp( argv[1], "vogels" ) )
-			run_sim( cuda::snn<vogels_abbott>( NNEURON, 0.02f, 0.0001f, 8 ) );
+			run_sim( cuda::snn<vogels_abbott>( { NNEURON, 0.02f }, 0.0001f, 8 ) );
 		else if( !strcmp( argv[1], "synth" ) )
-			run_sim( cuda::snn<synth>( NNEURON, 0.1f, 0.0001f, 1 ) );
+			run_sim( cuda::snn<synth>( { NNEURON, 0.1f }, 0.0001f, 1 ) );
 	}
 	catch( std::exception & e )
 	{

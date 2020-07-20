@@ -33,7 +33,7 @@ public:
 private:
 	int _id;
 
-	constexpr device( int id ) noexcept;
+	device( int id ) noexcept;
 };
 } // namespace util
 } // namespace cuda

@@ -35,20 +35,11 @@ snn_info snn<Model>::info() const
 
 template <typename Model>
 snn<Model>::snn( float dt, int delay /* = 1 */ )
+    : _dt( dt )
+    , _delay( delay )
 {
 	spice_assert( dt >= 0.0f );
 	spice_assert( delay >= 1 );
-
-	init( dt, delay );
-}
-template <typename Model>
-void snn<Model>::init( float dt, int delay )
-{
-	spice_assert( dt >= 0.0f );
-	spice_assert( delay >= 1 );
-
-	_dt = dt;
-	_delay = delay;
 }
 
 

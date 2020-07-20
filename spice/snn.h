@@ -2,7 +2,7 @@
 
 #include <spice/snn_info.h>
 #include <spice/util/adj_list.h>
-#include <spice/util/neuron_group.h>
+#include <spice/util/layout.h>
 #include <spice/util/numeric.h>
 
 #include <vector>
@@ -34,11 +34,10 @@ public:
 
 protected:
 	explicit snn( float dt, int delay = 1 );
-	void init( float dt, int delay = 1 );
 
 private:
-	float _dt = 0.0f;
-	int _delay = 1;
+	float const _dt;
+	int const _delay;
 	int _i = 0;
 	util::kahan_sum<float> _simtime;
 

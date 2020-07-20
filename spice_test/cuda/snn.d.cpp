@@ -71,24 +71,24 @@ TEST_ALL_MODELS( dSNN );
 TYPED_TEST( dSNN, Ctor )
 {
 	{ // Ctor
-		cuda::snn<TypeParam> d( 100, 0.1f, 0.0001f );
+		cuda::snn<TypeParam> d( { 100, 0.1f }, 0.0001f );
 		ASSERT_EQ( d.num_neurons(), 100 );
 		ASSERT_EQ( d.dt(), 0.0001f );
 		ASSERT_EQ( d.delay(), 1 );
 	}
 
 	{ // Ctor
-		cuda::snn<TypeParam> d( 100, 0.1f, 0.0001f, 15 );
+		cuda::snn<TypeParam> d( { 100, 0.1f }, 0.0001f, 15 );
 		ASSERT_EQ( d.num_neurons(), 100 );
 		ASSERT_EQ( d.dt(), 0.0001f );
 		ASSERT_EQ( d.delay(), 15 );
 
-		cpu::snn<TypeParam> h( 100, 0.1f, 0.0001f );
+		cpu::snn<TypeParam> h( { 100, 0.1f }, 0.0001f );
 		ASSERT_TRUE( close( h.neurons(), d.neurons(), 0.0 ) );
 	}
 
 	{ // Conv. Ctor
-		cpu::snn<TypeParam> h( 100, 0.1f, 0.0001f, 15 );
+		cpu::snn<TypeParam> h( { 100, 0.1f }, 0.0001f, 15 );
 		cuda::snn d( h );
 		ASSERT_EQ( d.num_neurons(), 100 );
 		ASSERT_EQ( d.dt(), 0.0001f );
@@ -102,7 +102,7 @@ TYPED_TEST( dSNN, Ctor )
 // draw same numbers on CPU and GPU/deactivate rng for testing purposes..
 TEST( dSNN, Step )
 {
-	cpu::snn<vogels_abbott> h( 4000, 0.02f, 0.0001f );
+	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f );
 	cuda::snn d( h );
 	ASSERT_TRUE( close( h, d, 0.0 ) );
 
@@ -120,7 +120,7 @@ TEST( dSNN, Step )
 
 TEST( dSNN, StepWithDelay )
 {
-	cpu::snn<vogels_abbott> h( 4000, 0.02f, 0.0001f, 8 );
+	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f, 8 );
 	cuda::snn d( h );
 	ASSERT_TRUE( close( h, d, 0.0 ) );
 
