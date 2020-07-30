@@ -21,9 +21,8 @@ using namespace spice::cuda;
 using namespace spice::cuda::util;
 
 
-__constant__ int3 _desc_gendeg[20];
+__constant__ int4 _desc_range[20];
 __constant__ float _desc_p[20];
-__constant__ int2 _desc_genids[20];
 
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
@@ -117,14 +116,13 @@ static __global__ void _generate_adj_ids(
 	int total_degree = 0;
 	for( int c = 0; c < desc_len; c++ )
 	{
-		if( blockIdx.x < _desc_gendeg[c].x || blockIdx.x >= _desc_gendeg[c].y ) continue;
+		if( blockIdx.x < _desc_range[c].x || blockIdx.x >= _desc_range[c].y ) continue;
 
-		int degree =
-		    min( max_degree - total_degree, binornd( rng, _desc_gendeg[c].z, _desc_p[c] ) );
+		int first = _desc_range[c].z;
+		int range = _desc_range[c].w - first;
+		int degree = min( max_degree - total_degree, binornd( rng, range, _desc_p[c] ) );
 		degree = __shfl_sync( MASK_ALL, degree, 0 );
 		total_degree += degree;
-		int first = _desc_genids[c].x;
-		int range = _desc_genids[c].y;
 
 		while( degree > 0 )
 		{
@@ -332,27 +330,22 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int * edges )
 	    "spice doesn't support models with more than 20 connections between neuron populations" );
 	spice_assert( edges );
 
-	std::array<int3, 20> tmp_deg;
+	std::array<int4, 20> tmp_range;
 	std::array<float, 20> tmp_p;
-	std::array<int2, 20> tmp_ids;
 	for( std::size_t i = 0; i < desc.connections().size(); i++ )
 	{
-		tmp_deg[i].x = desc.first( std::get<0>( desc.connections().at( i ) ) );
-		tmp_deg[i].y = desc.last( std::get<0>( desc.connections().at( i ) ) );
-		tmp_deg[i].z = desc.size( std::get<1>( desc.connections().at( i ) ) );
+		tmp_range[i].x = std::get<0>( desc.connections().at( i ) );
+		tmp_range[i].y = std::get<1>( desc.connections().at( i ) );
+		tmp_range[i].z = std::get<2>( desc.connections().at( i ) );
+		tmp_range[i].w = std::get<3>( desc.connections().at( i ) );
 
-		tmp_p[i] = std::get<2>( desc.connections().at( i ) );
-
-		tmp_ids[i].x = desc.first( std::get<1>( desc.connections().at( i ) ) );
-		tmp_ids[i].y = desc.range( std::get<1>( desc.connections().at( i ) ) );
+		tmp_p[i] = std::get<4>( desc.connections().at( i ) );
 	}
 
 	success_or_throw( cudaMemcpyToSymbolAsync(
-	    _desc_gendeg, tmp_deg.data(), sizeof( int3 ) * desc.connections().size() ) );
+	    _desc_range, tmp_range.data(), sizeof( int4 ) * desc.connections().size() ) );
 	success_or_throw( cudaMemcpyToSymbolAsync(
 	    _desc_p, tmp_p.data(), sizeof( float ) * desc.connections().size() ) );
-	success_or_throw( cudaMemcpyToSymbolAsync(
-	    _desc_genids, tmp_ids.data(), sizeof( int2 ) * desc.connections().size() ) );
 
 	cudaFuncSetCacheConfig( _generate_adj_ids, cudaFuncCachePreferShared );
 

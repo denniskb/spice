@@ -8,127 +8,126 @@
 #include <numeric>
 
 
-namespace spice::util
+static constexpr std::size_t operator"" _sz( std::size_t n ) { return n; }
+
+static std::size_t estimate_max_deg( std::vector<spice::util::layout::edge> const & connections )
 {
-static bool cmp( layout::edge const & a, layout::edge const & b )
+	using namespace spice::util;
+
+	std::size_t src = connections.empty() ? 0 : std::get<0>( connections.front() );
+
+	std::size_t result = 0;
+	double m = 0.0, s2 = 0.0;
+	for( auto c : connections )
+	{
+		if( std::get<0>( c ) != src )
+		{
+			result = std::max( result, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) );
+			src = std::get<0>( c );
+			m = 0.0;
+			s2 = 0.0;
+		}
+
+		auto const dst_range = std::get<3>( c ) - std::get<2>( c );
+		m += dst_range * static_cast<double>( std::get<4>( c ) );
+		s2 += static_cast<double>( dst_range ) * std::get<4>( c ) * ( 1.0 - std::get<4>( c ) );
+	}
+
+	return ( std::max( result, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) ) + WARP_SZ -
+	         1 ) /
+	       WARP_SZ * WARP_SZ;
+}
+
+static std::vector<std::tuple<std::size_t, std::size_t, float>> p2connect( float p )
 {
-	return std::get<0>( a ) < std::get<0>( b ) ||
-	       std::get<0>( a ) == std::get<0>( b ) && std::get<1>( a ) < std::get<1>( b );
+	if( p )
+		return { { 0, 0, p } };
+	else
+		return {};
 }
 
 
-layout::layout( std::size_t const num_neurons, float const connectivity )
-    : layout( { num_neurons }, { { 0, 0, connectivity } } )
+namespace spice::util
 {
+layout::layout( std::size_t const num_neurons, float const connections )
+    : layout( { num_neurons }, p2connect( connections ) )
+{
+	spice_assert( num_neurons > 0, "layout must contain at least 1 neuron" );
 }
 
 #pragma warning( push )
-#pragma warning( disable : 4189 ) // unreferenced variable 'gs' in assert
+#pragma warning( disable : 4189 4457 ) // unreferenced variable 'gs' in assert, hidden variable
 layout::layout(
-    std::vector<std::size_t> const & group_sizes, std::vector<edge> const & connectivity )
-    : _group_sizes( group_sizes )
-    , _connectivity( connectivity )
+    std::vector<std::size_t> const & pops,
+    std::vector<std::tuple<std::size_t, std::size_t, float>> connections )
 {
-	for( auto gs : group_sizes )
-		spice_assert( gs <= std::numeric_limits<int>::max(), "invalid group size" );
+	spice_assert( pops.size() > 0, "layout must contain at least 1 (non-empty) population" );
 
-	for( auto c : connectivity )
+	// Validate
+	for( auto pop : pops )
+		spice_assert(
+		    pop > 0 && pop <= std::numeric_limits<int>::max(), "invalid population size" );
+
+	for( auto c : connections )
 	{
 		spice_assert(
-		    std::get<0>( c ) < group_sizes.size() && std::get<1>( c ) < group_sizes.size(),
-		    "invalid index in connectivity matrix" );
+		    std::get<0>( c ) < pops.size() && std::get<1>( c ) < pops.size(),
+		    "invalid index in connections matrix" );
 		spice_assert(
-		    std::get<2>( c ) >= 0.0f && std::get<2>( c ) <= 1.0f, "invalid connect. prob." );
+		    std::get<2>( c ) > 0.0f && std::get<2>( c ) <= 1.0f, "invalid connect. prob." );
 	}
 
-	std::sort( _connectivity.begin(), _connectivity.end(), cmp );
-
-	edge e( -1, -1, 0.0f );
-	for( auto c : _connectivity )
 	{
-		spice_assert(
-		    std::get<0>( c ) != std::get<0>( e ) || std::get<1>( c ) != std::get<1>( e ),
-		    "no duplicate edges in connectivity list allowed" );
-		e = c;
-	}
+		auto const cmp = []( std::tuple<std::size_t, std::size_t, float> const & a,
+		                     std::tuple<std::size_t, std::size_t, float> const & b ) {
+			return std::get<0>( a ) < std::get<0>( b ) ||
+			       std::get<0>( a ) == std::get<0>( b ) && std::get<1>( a ) < std::get<1>( b );
+		};
+		std::sort( connections.begin(), connections.end(), cmp );
 
-	{ // pre-compute max. degree
-		std::size_t src = std::get<0>( connections().at( 0 ) );
-
-		_max_degree = 0;
-		double m = 0.0, s2 = 0.0;
-		for( auto c : connections() )
+		for( std::size_t i = 1; i < connections.size(); i++ )
 		{
-			if( std::get<0>( c ) != src )
-			{
-				_max_degree =
-				    std::max( _max_degree, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) );
-				src = std::get<0>( c );
-				m = 0.0;
-				s2 = 0.0;
-			}
-
-			m += size( std::get<1>( c ) ) * static_cast<double>( std::get<2>( c ) );
-			s2 += size( std::get<1>( c ) ) * static_cast<double>( std::get<2>( c ) ) *
-			      ( 1.0 - std::get<2>( c ) );
+			spice_assert(
+			    std::get<0>( connections[i] ) != std::get<0>( connections[i - 1] ) ||
+			        std::get<1>( connections[i] ) != std::get<1>( connections[i - 1] ),
+			    "no duplicate edges in connections list allowed" );
 		}
 
-		_max_degree =
-		    ( std::max( _max_degree, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) ) +
-		      WARP_SZ - 1 ) /
-		    WARP_SZ * WARP_SZ;
+		// Initialize
+		auto const first = [&]( std::size_t i ) {
+			spice_assert( i < pops.size(), "index out of range" );
+			return std::accumulate( pops.begin(), pops.begin() + i, 0_sz );
+		};
+		auto const last = [&]( std::size_t i ) {
+			spice_assert( i < pops.size(), "index out of range" );
+			return std::accumulate( pops.begin(), pops.begin() + i + 1, 0_sz );
+		};
+
+		_n = std::accumulate( pops.begin(), pops.end(), 0_sz );
+
+		for( auto c : connections )
+		{
+			_connections.push_back(
+			    { narrow_int<int>( first( std::get<0>( c ) ) ),
+			      narrow_int<int>( last( std::get<0>( c ) ) ),
+			      narrow_int<int>( first( std::get<1>( c ) ) ),
+			      narrow_int<int>( last( std::get<1>( c ) ) ),
+			      std::get<2>( c ) } );
+		}
+
+		_max_degree = estimate_max_deg( _connections );
 	}
 }
 #pragma warning( pop )
 
-
-std::size_t layout::num_groups() const
-{
-	return narrow_int<std::size_t>( _group_sizes.size() );
-}
-
-std::size_t layout::size() const
-{
-	return std::accumulate( _group_sizes.begin(), _group_sizes.end(), std::size_t( 0 ) );
-}
-std::size_t layout::size( std::size_t i ) const
-{
-	spice_assert( i < num_groups(), "index out of range" );
-	return _group_sizes[i];
-}
-
-std::size_t layout::first( std::size_t i ) const
-{
-	spice_assert( i < num_groups(), "index out of range" );
-	return std::accumulate( _group_sizes.begin(), _group_sizes.begin() + i, std::size_t( 0 ) );
-}
-std::size_t layout::last( std::size_t i ) const
-{
-	spice_assert( i < num_groups(), "index out of range" );
-	return std::accumulate( _group_sizes.begin(), _group_sizes.begin() + i + 1, std::size_t( 0 ) );
-}
-std::size_t layout::range( std::size_t i ) const
-{
-	spice_assert( i < num_groups(), "index out of range" );
-	return last( i ) - first( i );
-}
-
-nonstd::span<layout::edge const> layout::connections() const { return _connectivity; }
-nonstd::span<layout::edge const> layout::neighbors( std::size_t const i ) const
-{
-	auto const first =
-	    std::lower_bound( _connectivity.begin(), _connectivity.end(), edge( i, 0, 0.0f ), cmp );
-
-	auto const last = std::upper_bound(
-	    _connectivity.begin(),
-	    _connectivity.end(),
-	    edge( i, std::numeric_limits<std::size_t>::max(), 0.0f ),
-	    cmp );
-
-	return {
-	    _connectivity.data() + ( first - _connectivity.begin() ),
-	    static_cast<std::size_t>( last - first ) };
-}
-
+std::size_t layout::size() const { return _n; }
+nonstd::span<layout::edge const> layout::connections() const { return _connections; }
 std::size_t layout::max_degree() const { return _max_degree; }
+
+layout::layout( std::size_t n, std::vector<edge> flat )
+    : _n( n )
+    , _connections( flat )
+    , _max_degree( estimate_max_deg( flat ) )
+{
+}
 } // namespace spice::util

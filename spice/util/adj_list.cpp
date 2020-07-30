@@ -61,17 +61,16 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 		int total_degree = 0;
 		for( auto const c : desc.connections() )
 		{
-			if( i < desc.first( std::get<0>( c ) ) || i >= desc.last( std::get<0>( c ) ) ) continue;
+			if( i < std::get<0>( c ) || i >= std::get<1>( c ) ) continue;
+
+			int const first = std::get<2>( c );
+			int const range = std::get<3>( c ) - first;
 
 			int const degree = std::min(
 			    narrow_int<int>( desc.max_degree() - total_degree ),
-			    binornd(
-			        gen, narrow_int<int>( desc.size( std::get<1>( c ) ) ), std::get<2>( c ) ) );
+			    binornd( gen, range, std::get<4>( c ) ) );
 
 			total_degree += degree;
-
-			int const first = narrow_int<int>( desc.first( std::get<1>( c ) ) );
-			int const range = narrow_int<int>( desc.range( std::get<1>( c ) ) );
 
 			float * neighbor_ids = reinterpret_cast<float *>( edges.data() + offset );
 

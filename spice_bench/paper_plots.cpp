@@ -130,12 +130,12 @@ static void plot2_RunTime( benchmark::State & state )
 BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 512'000'000 );
+    ->ExpRange( 125'000, 2048'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 512'000'000 );
+    ->ExpRange( 125'000, 2048'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 128'000'000 );
+    ->ExpRange( 125'000, 512'000'000 );

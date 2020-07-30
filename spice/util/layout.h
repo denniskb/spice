@@ -13,30 +13,24 @@ namespace util
 class layout
 {
 public:
-	// (src_id, dst_id, p_connect)
-	using edge = std::tuple<std::size_t, std::size_t, float>;
+	// ([first1, last2), [first2, last2), p)
+	using edge = std::tuple<int, int, int, int, float>;
 
-	layout( std::size_t num_neurons, float connectivity );
-	layout( std::vector<std::size_t> const & group_sizes, std::vector<edge> const & connectivity );
+	layout( std::size_t num_neurons, float connections );
+	layout(
+	    std::vector<std::size_t> const & group_sizes,
+	    std::vector<std::tuple<std::size_t, std::size_t, float>> connectivity );
 
-	// TODO: Replace num_groups and size(int) with (std::vector<int> const &)groups()
-	std::size_t num_groups() const;
 	std::size_t size() const;
-	std::size_t size( std::size_t i ) const;
-	std::size_t first( std::size_t i ) const;
-	// exclusive:
-	std::size_t last( std::size_t i ) const;
-	std::size_t range( std::size_t i ) const;
-
 	nonstd::span<edge const> connections() const;
-	nonstd::span<edge const> neighbors( std::size_t i ) const;
-
 	std::size_t max_degree() const;
 
 private:
-	std::vector<std::size_t> _group_sizes;
-	std::vector<edge> _connectivity;
+	std::size_t _n;
+	std::vector<edge> _connections;
 	std::size_t _max_degree;
+
+	layout( std::size_t n, std::vector<edge> flat );
 };
 } // namespace util
 } // namespace spice
