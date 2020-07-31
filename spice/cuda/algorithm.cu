@@ -351,7 +351,7 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int * edges )
 
 	spice_assert( desc.size() <= ( 1u << 31 ) - 1 );
 	call( [&] {
-		_generate_adj_ids<<<desc.size(), 32>>>(
+		_generate_adj_ids<<<desc.size(), WARP_SZ>>>(
 		    seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
 	} );
 }
@@ -552,7 +552,7 @@ void receive(
 		} );
 	else
 		call( [&] {
-			_process_spikes_cache_aware<Model><<<512, 32>>>(
+			_process_spikes_cache_aware<Model><<<512, WARP_SZ>>>(
 			    info,
 			    seed(),
 			    adj,
