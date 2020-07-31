@@ -28,9 +28,9 @@ static std::size_t estimate_max_deg( std::vector<spice::util::layout::edge> cons
 			s2 = 0.0;
 		}
 
-		auto const dst_range = std::get<3>( c ) - std::get<2>( c );
-		m += dst_range * static_cast<double>( std::get<4>( c ) );
-		s2 += static_cast<double>( dst_range ) * std::get<4>( c ) * ( 1.0 - std::get<4>( c ) );
+		auto const dst_range = static_cast<double>( std::get<3>( c ) - std::get<2>( c ) );
+		m += dst_range * std::get<4>( c );
+		s2 += dst_range * std::get<4>( c ) * ( 1.0 - std::get<4>( c ) );
 	}
 
 	return ( std::max( result, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) ) + WARP_SZ -

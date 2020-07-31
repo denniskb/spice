@@ -3,11 +3,12 @@
 #include <spice_bench/exp_range.h>
 
 #include <spice/cuda/algorithm.h>
-#include <spice/cuda/snn.h>
+#include <spice/cuda/multi_snn.h>
 #include <spice/cuda/util/dbuffer.h>
 #include <spice/cuda/util/event.h>
 #include <spice/models/brunel.h>
 #include <spice/models/brunel_with_plasticity.h>
+#include <spice/models/synth.h>
 #include <spice/models/vogels_abbott.h>
 #include <spice/util/adj_list.h>
 #include <spice/util/type_traits.h>
@@ -92,9 +93,9 @@ BENCHMARK( plot0_AdjGen )
 template <typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	float const MUL = std::is_same_v<Model, vogels_abbott> ? 0.02f : 0.05f;
+	float const P = 0.1f;
 	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / MUL ) );
+	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
 	std::size_t const ITER = 1000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
@@ -102,23 +103,20 @@ static void plot2_RunTime( benchmark::State & state )
 
 	try
 	{
-		std::unique_ptr<cuda::snn<Model>> net;
-		if( std::is_same_v<Model, vogels_abbott> )
-			net.reset( new cuda::snn<Model>( { N, 0.02f }, 0.0001f, 8 ) );
-		else
-			net.reset( new cuda::snn<Model>(
-			    layout( { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ), 0.0001f, 15 ) );
+		cuda::multi_snn<Model> net( { N, P }, 0.0001f, 10 );
 
 		event start, stop;
 		for( auto _ : state )
 		{
-			for( int i = 0; i < 150; i++ ) net->step();
-			start.record();
-			for( int i = 0; i < ITER; i++ ) net->step();
-			stop.record();
-			stop.synchronize();
+			// for( int i = 0; i < 150; i++ ) net->step();
+			// start.record();
+			for( int i = 0; i < ITER; i++ ) net.step();
+			// stop.record();
+			// stop.synchronize();
 
-			state.SetIterationTime( stop.elapsed_time( start ) * 0.001 / ITER );
+			// state.SetIterationTime( stop.elapsed_time( start ) * 0.001 / ITER );
+			net.sync();
+			// cudaDeviceSynchronize();
 		}
 	}
 	catch( std::exception & e )
@@ -127,15 +125,15 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 2048'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 2048'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
-    ->UseManualTime()
+BENCHMARK_TEMPLATE( plot2_RunTime, synth )
+    //->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 125'000, 512'000'000 );
+/*BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
+    //->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 125'000, 512'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
+    //->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 125'000, 128'000'000 );*/

@@ -165,6 +165,8 @@ static __global__ void _generate_adj_ids(
 
 template <typename Model, bool INIT>
 static __global__ void _process_neurons(
+    int const first,
+    int const last,
     snn_info const info,
     unsigned long long const seed,
 
@@ -185,7 +187,7 @@ static __global__ void _process_neurons(
 
 	backend bak( threadid() ^ seed );
 
-	for( int i = threadid(); i < info.num_neurons; i += num_threads() )
+	for( int i = first + threadid(); i < last; i += num_threads() )
 	{
 		neuron_iter<typename Model::neuron> it( i );
 
@@ -328,7 +330,7 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int * edges )
 	spice_assert(
 	    desc.connections().size() <= 20,
 	    "spice doesn't support models with more than 20 connections between neuron populations" );
-	spice_assert( edges );
+	spice_assert( edges || desc.connections().size() == 0 );
 
 	std::array<int4, 20> tmp_range;
 	std::array<float, 20> tmp_p;
@@ -397,23 +399,25 @@ template void upload_meta<::spice::synth>(
 
 // TOOD: Fuse these two into one function using conditional compilation ('if constexpr')
 template <typename Model>
-void init( snn_info const info, span2d<int const> adj /* = {} */ )
+void init( int first, int last, snn_info const info, span2d<int const> adj /* = {} */ )
 {
 	call( [&] {
 		_process_neurons<Model, true>
-		    <<<nblocks( info.num_neurons, 128, 256 ), 256>>>( info, seed() );
+		    <<<nblocks( last - first, 128, 256 ), 256>>>( first, last, info, seed() );
 	} );
 
 	if constexpr( Model::synapse::size > 0 )
 		call( [&] { _process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj ); } );
 }
-template void init<::spice::vogels_abbott>( snn_info, span2d<int const> );
-template void init<::spice::brunel>( snn_info, span2d<int const> );
-template void init<::spice::brunel_with_plasticity>( snn_info, span2d<int const> );
-template void init<::spice::synth>( snn_info, span2d<int const> );
+template void init<::spice::vogels_abbott>( int, int, snn_info, span2d<int const> );
+template void init<::spice::brunel>( int, int, snn_info, span2d<int const> );
+template void init<::spice::brunel_with_plasticity>( int, int, snn_info, span2d<int const> );
+template void init<::spice::synth>( int, int, snn_info, span2d<int const> );
 
 template <typename Model>
 void update(
+    int first,
+    int last,
     snn_info const info,
     float const dt,
     int * spikes,
@@ -429,7 +433,9 @@ void update(
     span2d<int const> adj /* = {} */ )
 {
 	call( [&] {
-		_process_neurons<Model, false><<<nblocks( info.num_neurons, 128, 256 ), 256>>>(
+		_process_neurons<Model, false><<<nblocks( last - first, 128, 256 ), 256>>>(
+		    first,
+		    last,
 		    info,
 		    seed(),
 		    dt,
@@ -464,6 +470,8 @@ void update(
 		} );
 }
 template void update<::spice::vogels_abbott>(
+    int,
+    int,
     snn_info,
     float,
     int *,
@@ -477,6 +485,8 @@ template void update<::spice::vogels_abbott>(
     int const,
     span2d<int const> );
 template void update<::spice::brunel>(
+    int,
+    int,
     snn_info,
     float,
     int *,
@@ -490,6 +500,8 @@ template void update<::spice::brunel>(
     int const,
     span2d<int const> );
 template void update<::spice::brunel_with_plasticity>(
+    int,
+    int,
     snn_info,
     float,
     int *,
@@ -503,6 +515,8 @@ template void update<::spice::brunel_with_plasticity>(
     int const,
     span2d<int const> );
 template void update<::spice::synth>(
+    int,
+    int,
     snn_info,
     float,
     int *,
@@ -535,7 +549,7 @@ void receive(
 		call( [&] {
 			_process_spikes<Model, HNDL_SPKS>
 			    <<<( Model::synapse::size > 0 ? 256 : 128 ),
-			       ( info.num_neurons / adj.width() > 40 ? 128 : 256 )>>>(
+			       ( (float)info.num_neurons / adj.width() > 40 ? 128 : 256 )>>>(
 			        info,
 			        seed(),
 			        adj,

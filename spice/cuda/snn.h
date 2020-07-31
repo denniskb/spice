@@ -16,7 +16,7 @@ template <typename Model>
 class snn : public ::spice::snn<Model>
 {
 public:
-	snn( spice::util::layout desc, float dt, int delay = 1 );
+	snn( spice::util::layout const & desc, float dt, int delay = 1, int n = 1, int i = 0 );
 	snn( spice::cpu::snn<Model> const & net );
 
 	std::size_t num_neurons() const override;
@@ -49,6 +49,11 @@ private:
 		util::dbuffer<int> updates;
 		util::dvar<unsigned> num_updates;
 	} _spikes;
+
+	int const _n = 1;
+	int const _i = 0;
+	int first() const;
+	int last() const;
 
 	int MAX_HISTORY() const;
 

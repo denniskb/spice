@@ -8,10 +8,23 @@
 
 namespace spice
 {
+namespace cuda
+{
+template <typename T>
+class multi_snn;
+} // namespace cuda
+} // namespace spice
+
+
+namespace spice
+{
 namespace util
 {
 class layout
 {
+	template <typename T>
+	friend class ::spice::cuda::multi_snn;
+
 public:
 	// ([first1, last2), [first2, last2), p)
 	using edge = std::tuple<int, int, int, int, float>;

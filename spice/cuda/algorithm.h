@@ -20,10 +20,12 @@ void upload_meta(
     typename Model::synapse::ptuple_t const & synapse );
 
 template <typename Model>
-void init( snn_info info, spice::util::span2d<int const> adj = {} );
+void init( int first, int last, snn_info info, spice::util::span2d<int const> adj = {} );
 
 template <typename Model>
 void update(
+    int first,
+    int last,
     snn_info info,
     float dt,
     int * spikes,

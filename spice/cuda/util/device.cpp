@@ -25,7 +25,11 @@ nonstd::span<device> device::devices()
 	return nonstd::span( _devices.data(), n );
 }
 
-device & device::devices( std::size_t i ) { return devices()[i]; }
+device & device::devices( std::size_t i )
+{
+	spice_assert( i < devices().size() );
+	return devices()[i];
+}
 
 device & device::active()
 {

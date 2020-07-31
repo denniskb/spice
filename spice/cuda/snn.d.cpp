@@ -21,6 +21,18 @@ using namespace spice::cuda::util;
 namespace spice::cuda
 {
 template <typename Model>
+int snn<Model>::first() const
+{
+	return narrow_int<int>( _i * num_neurons() / _n );
+}
+
+template <typename Model>
+int snn<Model>::last() const
+{
+	return narrow_int<int>( ( _i + 1 ) * num_neurons() / _n );
+}
+
+template <typename Model>
 int snn<Model>::MAX_HISTORY() const
 {
 	return std::max( this->delay() + 1, 48 );
@@ -64,8 +76,15 @@ void snn<Model>::reserve(
 
 
 template <typename Model>
-snn<Model>::snn( spice::util::layout desc, float const dt, int const delay /* = 1 */ )
+snn<Model>::snn(
+    spice::util::layout const & desc,
+    float const dt,
+    int const delay /* = 1 */,
+    int n /* = 1 */,
+    int i /* = 0 */ )
     : ::spice::snn<Model>( dt, delay )
+    , _n( n )
+    , _i( i )
 {
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
@@ -75,7 +94,10 @@ snn<Model>::snn( spice::util::layout desc, float const dt, int const delay /* = 
 
 	upload_meta<Model>( _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
-	    this->info(), { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
+	    first(),
+	    last(),
+	    this->info(),
+	    { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
 	cudaDeviceSynchronize();
 }
 
@@ -129,6 +151,8 @@ void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spik
 	if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();
 
 	update<Model>(
+	    first(),
+	    last(),
 	    this->info(),
 	    dt,
 	    _spikes.ids.row( circidx( i, this->delay() ) ),
