@@ -13,11 +13,27 @@
 #include <spice/util/adj_list.h>
 #include <spice/util/type_traits.h>
 
+#include <chrono>
 
 using namespace spice;
 using namespace spice::cuda;
 using namespace spice::cuda::util;
 using namespace spice::util;
+
+using namespace std::chrono;
+
+
+class timer
+{
+	time_point<high_resolution_clock> s;
+
+public:
+	timer() { s = high_resolution_clock::now(); }
+	double time()
+	{
+		return duration_cast<microseconds>( high_resolution_clock::now() - s ).count() * 1e-6;
+	}
+};
 
 
 static void gen( benchmark::State & state )
@@ -105,18 +121,12 @@ static void plot2_RunTime( benchmark::State & state )
 	{
 		cuda::multi_snn<Model> net( { N, P }, 0.0001f, 10 );
 
-		event start, stop;
 		for( auto _ : state )
 		{
-			// for( int i = 0; i < 150; i++ ) net->step();
-			// start.record();
+			timer t;
 			for( int i = 0; i < ITER; i++ ) net.step();
-			// stop.record();
-			// stop.synchronize();
-
-			// state.SetIterationTime( stop.elapsed_time( start ) * 0.001 / ITER );
 			net.sync();
-			// cudaDeviceSynchronize();
+			state.SetIterationTime( t.time() / ITER );
 		}
 	}
 	catch( std::exception & e )
@@ -126,9 +136,9 @@ static void plot2_RunTime( benchmark::State & state )
 	}
 }
 BENCHMARK_TEMPLATE( plot2_RunTime, synth )
-    //->UseManualTime()
+    ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 512'000'000 );
+    ->ExpRange( 3'000'000, 1536'000'000 );
 /*BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
     //->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
