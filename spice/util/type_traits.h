@@ -63,19 +63,17 @@ constexpr To narrow( From x )
 			return static_cast<To>( x );
 		else if( ( from_unsigned || x >= to_min ) && x <= to_max )
 			return static_cast<To>( x );
-		else
-			throw std::bad_cast();
 	}
 
-	// real -> real
-	if constexpr( from_real && to_real )
-		if constexpr( to_size > from_size ) return static_cast<To>( x );
-
-	// int -> real
-	if constexpr( from_int && to_real )
-		if constexpr( sizeof( To ) > sizeof( From ) ) return static_cast<To>( x );
-
-	if( x == static_cast<From>( static_cast<To>( x ) ) ) return static_cast<To>( x );
+	// * -> real
+	// real -> *
+	if constexpr( from_real || to_real )
+	{
+		// * -> real
+		if constexpr( to_real && to_size >= from_size ) return static_cast<To>( x );
+		// TODO: Handle int overflow!
+		if( x == static_cast<From>( static_cast<To>( x ) ) ) return static_cast<To>( x );
+	}
 
 	throw std::bad_cast();
 }
