@@ -35,7 +35,7 @@ public:
 	    std::vector<std::tuple<std::size_t, std::size_t, float>> connectivity );
 
 	std::size_t size() const;
-	nonstd::span<edge const> connections() const;
+	std::vector<edge> const & connections() const;
 	std::size_t max_degree() const;
 
 	layout slice( std::size_t n, std::size_t i );

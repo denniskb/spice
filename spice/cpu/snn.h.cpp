@@ -66,7 +66,7 @@ static void for_each( F && f, int const count, ID && id, adj_list const & adj )
 
 		int j = 0;
 		for( int dst : adj.neighbors( src ) )
-			std::forward<F>( f )( narrow_int<unsigned>( adj.edge_index( src, j++ ) ), src, dst );
+			std::forward<F>( f )( narrow<unsigned>( adj.edge_index( src, j++ ) ), src, dst );
 	}
 }
 
@@ -103,7 +103,7 @@ snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ 
 			    Model::synapse::template init(
 			        iter( _synapses->data(), syn ), src, dst, this->info(), _backend );
 		    },
-		    narrow_int<int>( desc.size() ),
+		    narrow<int>( desc.size() ),
 		    []( int x ) { return x; },
 		    _graph.adj );
 
@@ -185,7 +185,7 @@ void snn<Model>::_step( int const istep, float const dt, std::vector<int> * out_
 			        this->info(),
 			        _backend );
 		    },
-		    narrow_int<int>( this->num_neurons() ),
+		    narrow<int>( this->num_neurons() ),
 		    []( int x ) { return x; },
 		    _graph.adj );
 	}
@@ -202,7 +202,7 @@ void snn<Model>::_step( int const istep, float const dt, std::vector<int> * out_
 			        this->info(),
 			        _backend );
 		    },
-		    narrow_int<int>( _spikes.counts.front() ),
+		    narrow<int>( _spikes.counts.front() ),
 		    [&]( int x ) { return _spikes.ids[x]; },
 		    _graph.adj );
 

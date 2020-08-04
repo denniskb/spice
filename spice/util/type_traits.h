@@ -9,76 +9,76 @@ namespace spice
 {
 namespace util
 {
-#pragma warning( push )
-#pragma warning( disable : 26472 ) // "Don't use static_cast for arithmetic conversion" (the whole
-                                   // point is to provide an explicit narrowing cast so the
-                                   // programmer can communicate his intent)
 template <typename To, typename From>
 To narrow_cast( From x )
 {
 	return static_cast<To>( x );
 }
-#pragma warning( pop )
 
-/**
- * Disable
- * - 4018 "signed/unsigned mismatch" (integer promotion rules actually do the right thing here
- *                                   given our prior checks)
- * - 4100 "unreferenced formal parameter" (code removed via constexpr if)
- * - 4702 "unreachable code" (code removed via constexpr if)
- * - 26472 "Don't use static_cast for arithmetic conversion" (we have asserted that no narrowing can
- *                                                            occur, static_cast is actually what we
- *                                                            want here)
- */
 #pragma warning( push )
-#pragma warning( disable : 4018 4100 4702 )
-
+#pragma warning( disable : 4702 ) // "unreachable code" (code removed via constexpr if)
 /**
- * Attempts to cast one integral type (singed or unsigned) into another (signed or unsigned).
- * If @x can be represented as an @To, this function is equivalent to static_cast<@To>(@x).
- * Otherwise throws a std::bad_cast.
+ * Attempts to convert one numerical type to another. If the destination *type* cannot
+ * hold the source *value* without loss of precision, an exception is thrown.
+ *
+ * If the success of the conversion can be determined at compile time,
+ * no runtime checks are performed whatsoever and 'narrow' degenerates to a static_cast.
  */
-// @contract To, From integral types (already asserted)
 template <typename To, typename From>
-To narrow_int( From x )
+constexpr To narrow( From x )
 {
 	static_assert(
-	    std::is_integral_v<To> && std::is_integral_v<From>,
-	    "narrow_int() can only be performed on integral types" );
+	    !(std::is_reference_v<From> || std::is_reference_v<To>),
+	    "please call narrow() with value types only" );
+	static_assert(
+	    std::is_arithmetic_v<From> && std::is_arithmetic_v<To>,
+	    "narrow() is inteded for arithmetic types only" );
+	static_assert(
+	    !std::is_same_v<std::remove_cv<From>, std::remove_cv<To>>,
+	    "pointless conversion between identical types" );
 
-	// narrow_int<T, T>()
-	if constexpr( std::is_same_v<From, To> ) return x;
+	constexpr bool from_real = std::is_floating_point_v<From>;
+	constexpr bool from_int = std::is_integral_v<From>;
+	constexpr bool from_signed = std::is_signed_v<From>;
+	constexpr bool from_unsigned = std::is_unsigned_v<From>;
+	constexpr bool to_real = std::is_floating_point_v<To>;
+	constexpr bool to_int = std::is_integral_v<To>;
+	constexpr bool to_unsigned = std::is_unsigned_v<To>;
+	constexpr auto from_size = std::numeric_limits<From>::digits;
+	constexpr auto to_size = std::numeric_limits<To>::digits;
+	constexpr auto to_min = std::numeric_limits<To>::min();
+	constexpr auto to_max = std::numeric_limits<To>::max();
 
-	// signed -> unsigned
-	if constexpr( std::is_signed_v<From> && std::is_unsigned_v<To> )
-		if( x < From( 0 ) ) throw std::bad_cast();
-
-	// fast-path:
-	// signed   -> signed
-	// signed+  -> unsigned
-	// unsigned -> unsigned
-	// unsigned -> signed
-	if constexpr( std::numeric_limits<To>::max() >= std::numeric_limits<From>::max() )
-		return narrow_cast<To>( x );
-
-	// value inspection:
-	// signed  -> signed
-	// signed+ -> unsigned
-	if constexpr( std::is_signed_v<From> )
+	// int -> int
+	if constexpr( from_int && to_int )
 	{
-		if( x <= std::numeric_limits<To>::max() && x >= std::numeric_limits<To>::min() )
-			return narrow_cast<To>( x );
+		// signed -> unsigned
+		if constexpr( from_signed && to_unsigned )
+			if( x < 0 ) throw std::bad_cast();
+
+		// signed -> signed
+		// unsigned -> unsigned
+		// unsigned -> signed
+		if constexpr( to_size > from_size )
+			return static_cast<To>( x );
+		else if( ( from_unsigned || x >= to_min ) && x <= to_max )
+			return static_cast<To>( x );
+		else
+			throw std::bad_cast();
 	}
-	// unsigned -> unsigned
-	// unsigned -> signed
-	else
-	{
-		if( x <= std::numeric_limits<To>::max() ) return narrow_cast<To>( x );
-	}
+
+	// real -> real
+	if constexpr( from_real && to_real )
+		if constexpr( to_size > from_size ) return static_cast<To>( x );
+
+	// int -> real
+	if constexpr( from_int && to_real )
+		if constexpr( sizeof( To ) > sizeof( From ) ) return static_cast<To>( x );
+
+	if( x == static_cast<From>( static_cast<To>( x ) ) ) return static_cast<To>( x );
 
 	throw std::bad_cast();
 }
-
 #pragma warning( pop )
 } // namespace util
 } // namespace spice

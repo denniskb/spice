@@ -23,13 +23,13 @@ namespace spice::cuda
 template <typename Model>
 int snn<Model>::first() const
 {
-	return narrow_int<int>( _i * num_neurons() / _n );
+	return narrow<int>( _i * num_neurons() / _n );
 }
 
 template <typename Model>
 int snn<Model>::last() const
 {
-	return narrow_int<int>( ( _i + 1 ) * num_neurons() / _n );
+	return narrow<int>( ( _i + 1 ) * num_neurons() / _n );
 }
 
 template <typename Model>
@@ -52,7 +52,7 @@ void snn<Model>::reserve(
 	_graph.adj = { num_neurons, num_synapses / num_neurons, _graph.edges.data() };
 
 	_spikes.ids_data.resize( delay * num_neurons );
-	_spikes.ids = { _spikes.ids_data.data(), narrow_int<int>( num_neurons ) };
+	_spikes.ids = { _spikes.ids_data.data(), narrow<int>( num_neurons ) };
 	_spikes.counts.resize( delay );
 
 	if constexpr( Model::neuron::size > 0 ) _neurons.resize( num_neurons );
@@ -63,7 +63,7 @@ void snn<Model>::reserve(
 
 		_spikes.history_data.resize( MAX_HISTORY() * ( ( num_neurons + 31 ) / 32 ) );
 		_spikes.history = {
-		    _spikes.history_data.data(), narrow_int<int>( ( num_neurons + 31 ) / 32 ) };
+		    _spikes.history_data.data(), narrow<int>( ( num_neurons + 31 ) / 32 ) };
 		_spikes.updates.resize( num_neurons );
 
 		_graph.ages.resize( num_neurons );
@@ -97,7 +97,7 @@ snn<Model>::snn(
 	    first(),
 	    last(),
 	    this->info(),
-	    { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
+	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
 	cudaDeviceSynchronize();
 }
 
@@ -165,13 +165,13 @@ void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spik
 	    i,
 	    this->delay(),
 	    MAX_HISTORY(),
-	    { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) } );
+	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
 
 	if( i >= this->delay() - 1 )
 	{
 		receive<Model>(
 		    this->info(),
-		    { _graph.edges.data(), narrow_int<int>( _graph.adj.max_degree() ) },
+		    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
 
 		    _spikes.ids.row( circidx( i - this->delay() + 1, this->delay() ) ),
 		    _spikes.counts.data() + circidx( i - this->delay() + 1, this->delay() ),

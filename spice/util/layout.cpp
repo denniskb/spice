@@ -78,12 +78,10 @@ layout::layout(
 	}
 
 	{
-		auto const cmp = []( std::tuple<std::size_t, std::size_t, float> const & a,
-		                     std::tuple<std::size_t, std::size_t, float> const & b ) {
+		std::sort( connections.begin(), connections.end(), []( auto const & a, auto const & b ) {
 			return std::get<0>( a ) < std::get<0>( b ) ||
 			       std::get<0>( a ) == std::get<0>( b ) && std::get<1>( a ) < std::get<1>( b );
-		};
-		std::sort( connections.begin(), connections.end(), cmp );
+		} );
 
 		for( std::size_t i = 1; i < connections.size(); i++ )
 		{
@@ -108,10 +106,10 @@ layout::layout(
 		for( auto c : connections )
 		{
 			_connections.push_back(
-			    { narrow_int<int>( first( std::get<0>( c ) ) ),
-			      narrow_int<int>( last( std::get<0>( c ) ) ),
-			      narrow_int<int>( first( std::get<1>( c ) ) ),
-			      narrow_int<int>( last( std::get<1>( c ) ) ),
+			    { narrow<int>( first( std::get<0>( c ) ) ),
+			      narrow<int>( last( std::get<0>( c ) ) ),
+			      narrow<int>( first( std::get<1>( c ) ) ),
+			      narrow<int>( last( std::get<1>( c ) ) ),
 			      std::get<2>( c ) } );
 		}
 
@@ -121,7 +119,7 @@ layout::layout(
 #pragma warning( pop )
 
 std::size_t layout::size() const { return _n; }
-nonstd::span<layout::edge const> layout::connections() const { return _connections; }
+std::vector<layout::edge> const & layout::connections() const { return _connections; }
 std::size_t layout::max_degree() const { return _max_degree; }
 
 layout layout::slice( std::size_t n, std::size_t i )
@@ -129,8 +127,33 @@ layout layout::slice( std::size_t n, std::size_t i )
 	spice_assert( n > 0 );
 	spice_assert( i < n );
 
-	int const first = narrow_int<int>( size() * i / n );
-	int const last = narrow_int<int>( size() * ( i + 1 ) / n );
+#if 0
+	std::vector<int> costs;
+	{
+		std::map<int, std::pair<int, double>> pop2sizedeg;
+		for( auto const & c : connections() )
+		{
+			auto x = pop2sizedeg[std::get<2>( c )];
+			x.first = std::get<3>( c ) - std::get<2>( c );
+			x.second += ( std::get<1>( c ) - std::get<0>( c ) ) * std::get<4>( c );
+			pop2sizedeg[std::get<2>( c )] = x;
+		}
+
+		for( auto const & [k, v] : pop2sizedeg )
+			// TODO: Replace with narrow (once updated to accept floats)
+			costs.push_back( narrow_cast<int>( std::round( v.first * v.second ) ) );
+	}
+	std::inclusive_scan( costs.begin(), costs.end(), costs.begin() );
+
+	int a = narrow<int>( costs.back() * i / n );
+	int b = narrow<int>( costs.back() * ( i + 1 ) / n );
+
+	std::lower_bound( costs.begin(), costs.end(), a );
+	// TODO: Finish
+#endif
+
+	int const first = narrow<int>( size() * i / n );
+	int const last = narrow<int>( size() * ( i + 1 ) / n );
 
 	std::vector<layout::edge> part;
 	for( auto c : connections() )
