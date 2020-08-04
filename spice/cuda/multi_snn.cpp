@@ -22,7 +22,7 @@ multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int delay /* = 
 	{
 		d.set();
 		_nets.push_back( snn<Model>(
-		    slice( desc, device::devices().size(), d ),
+		    desc.slice( device::devices().size(), d ),
 		    dt,
 		    delay,
 		    narrow_int<int>( device::devices().size() ),
@@ -51,24 +51,6 @@ void multi_snn<Model>::sync()
 		d.set();
 		success_or_throw( cudaDeviceSynchronize() );
 	}
-}
-
-// static
-template <typename Model>
-layout multi_snn<Model>::slice( layout const & whole, std::size_t n, std::size_t i )
-{
-	int const first = narrow_int<int>( whole.size() * i / n );
-	int const last = narrow_int<int>( whole.size() * ( i + 1 ) / n );
-
-	std::vector<layout::edge> part;
-	for( auto c : whole.connections() )
-	{
-		std::get<2>( c ) = std::max( first, std::get<2>( c ) );
-		std::get<3>( c ) = std::min( last, std::get<3>( c ) );
-		if( std::get<2>( c ) < std::get<3>( c ) ) part.push_back( std::move( c ) );
-	}
-
-	return layout( whole.size(), part );
 }
 
 template class multi_snn<spice::vogels_abbott>;

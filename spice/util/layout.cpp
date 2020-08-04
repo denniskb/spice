@@ -124,6 +124,25 @@ std::size_t layout::size() const { return _n; }
 nonstd::span<layout::edge const> layout::connections() const { return _connections; }
 std::size_t layout::max_degree() const { return _max_degree; }
 
+layout layout::slice( std::size_t n, std::size_t i )
+{
+	spice_assert( n > 0 );
+	spice_assert( i < n );
+
+	int const first = narrow_int<int>( size() * i / n );
+	int const last = narrow_int<int>( size() * ( i + 1 ) / n );
+
+	std::vector<layout::edge> part;
+	for( auto c : connections() )
+	{
+		std::get<2>( c ) = std::max( first, std::get<2>( c ) );
+		std::get<3>( c ) = std::min( last, std::get<3>( c ) );
+		if( std::get<2>( c ) < std::get<3>( c ) ) part.push_back( std::move( c ) );
+	}
+
+	return layout( size(), part );
+}
+
 layout::layout( std::size_t n, std::vector<edge> flat )
     : _n( n )
     , _connections( flat )

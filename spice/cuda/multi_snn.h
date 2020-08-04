@@ -19,8 +19,5 @@ private:
 	std::vector<snn<Model>> _nets;
 	float const _dt;
 	int const _delay;
-
-	static spice::util::layout
-	slice( spice::util::layout const & whole, std::size_t n, std::size_t i );
 };
 } // namespace spice::cuda
