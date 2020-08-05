@@ -34,7 +34,7 @@ constexpr To narrow( From x )
 	    std::is_arithmetic_v<From> && std::is_arithmetic_v<To>,
 	    "narrow() is inteded for arithmetic types only" );
 	static_assert(
-	    !std::is_same_v<std::remove_cv<From>, std::remove_cv<To>>,
+	    !std::is_same_v<std::remove_cv_t<From>, std::remove_cv_t<To>>,
 	    "pointless conversion between identical types" );
 
 	constexpr bool from_real = std::is_floating_point_v<From>;
@@ -59,19 +59,25 @@ constexpr To narrow( From x )
 		// signed -> signed
 		// unsigned -> unsigned
 		// unsigned -> signed
-		if constexpr( to_size > from_size )
+		if constexpr( to_size >= from_size )
 			return static_cast<To>( x );
 		else if( ( from_unsigned || x >= to_min ) && x <= to_max )
 			return static_cast<To>( x );
 	}
 
-	// * -> real
-	// real -> *
-	if constexpr( from_real || to_real )
+	// real -> int
+	if constexpr( from_real && to_int )
 	{
-		// * -> real
-		if constexpr( to_real && to_size >= from_size ) return static_cast<To>( x );
-		// TODO: Handle int overflow!
+		std::remove_cv_t<From> tmp;
+		auto frac = modf( x, &tmp );
+
+		if( frac == 0 && x >= to_min && x < std::exp2( to_size ) ) return static_cast<To>( x );
+	}
+
+	// * -> real
+	if constexpr( to_real )
+	{
+		if constexpr( to_size >= from_size ) return static_cast<To>( x );
 		if( x == static_cast<From>( static_cast<To>( x ) ) ) return static_cast<To>( x );
 	}
 

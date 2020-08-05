@@ -109,6 +109,10 @@ TEST( TypeTraits, Narrow )
 	ASSERT_THROW(narrow<int>(3.14), std::bad_cast);
 	ASSERT_EQ(-7, narrow<int>(-7.f));
 	ASSERT_THROW(narrow<unsigned>(-7.0), std::bad_cast);
+	ASSERT_THROW(narrow<int>(0x1p31), std::bad_cast);
+	ASSERT_EQ(1llu << 31, narrow<unsigned>(0x1p31));
+	ASSERT_THROW(narrow<unsigned>(0x1p32), std::bad_cast);
+	ASSERT_THROW(narrow<int>((float)INT_MAX), std::bad_cast);
 
 	// clang-format on
 }
