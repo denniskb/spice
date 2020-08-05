@@ -103,6 +103,10 @@ TEST( TypeTraits, Narrow )
 	ASSERT_EQ(0x1p60, narrow<double>(1llu << 60));
 	ASSERT_THROW(narrow<float>(INT_MAX), std::bad_cast);
 	ASSERT_EQ((float)INT_MIN, narrow<float>(INT_MIN));
+	ASSERT_EQ((float)(1<<24), narrow<float>(1<<24));
+	ASSERT_THROW(narrow<float>((1<<24)+1), std::bad_cast);
+	ASSERT_EQ(-(float)(1<<24), narrow<float>(-(1<<24)));
+	ASSERT_THROW(narrow<float>(-(1<<24)-1), std::bad_cast);
 
 	// real -> int
 	ASSERT_EQ(3, narrow<int>(3.f));
