@@ -70,17 +70,21 @@ constexpr To narrow( From x )
 	// int -> real
 	if constexpr( from_int && to_real )
 	{
-		if( ( from_unsigned || x >= static_cast<long long>( -std::exp2( to_size ) ) ) &&
-		    x <= static_cast<long long>( std::exp2( to_size ) ) )
-			return static_cast<To>( x );
-
 		std::make_unsigned_t<From> y;
 		if constexpr( from_unsigned )
 			y = x;
 		else
 			y = std::abs( x );
 
-		if( ( y & ( y - 1 ) ) == 0 ) return static_cast<To>( x );
+		int a = std::numeric_limits<decltype( y )>::digits;
+		int b = 0;
+
+		for( ; a >= 0; a-- )
+			if( ( y >> a ) & 1 ) break;
+		for( ; b <= a; b++ )
+			if( ( y >> b ) & 1 ) break;
+
+		if( a - b + 1 <= to_size ) return static_cast<To>( x );
 	}
 
 	// real -> int

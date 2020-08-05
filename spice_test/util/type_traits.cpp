@@ -107,6 +107,7 @@ TEST( TypeTraits, Narrow )
 	ASSERT_THROW(narrow<float>((1<<24)+1), std::bad_cast);
 	ASSERT_EQ(-(float)(1<<24), narrow<float>(-(1<<24)));
 	ASSERT_THROW(narrow<float>(-(1<<24)-1), std::bad_cast);
+	ASSERT_EQ(16777218.f, narrow<float>(16777218));
 
 	// real -> int
 	ASSERT_EQ(3, narrow<int>(3.f));
