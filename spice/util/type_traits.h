@@ -15,8 +15,10 @@ To narrow_cast( From x )
 	return static_cast<To>( x );
 }
 
+// 4018 "signed/unsigned mismatch": integerpromotion does the right thing here
+// 4702 "unreachable code": code removed via constexpr if
 #pragma warning( push )
-#pragma warning( disable : 4702 ) // "unreachable code" (code removed via constexpr if)
+#pragma warning( disable : 4018 4702 )
 /**
  * Attempts to convert one numerical type to another. If the destination *type* cannot
  * hold the source *value* without loss of precision, an exception is thrown.
@@ -65,6 +67,22 @@ constexpr To narrow( From x )
 			return static_cast<To>( x );
 	}
 
+	// int -> real
+	if constexpr( from_int && to_real )
+	{
+		if( ( from_unsigned || x >= static_cast<long long>( -std::exp2( to_size ) ) ) &&
+		    x <= static_cast<long long>( std::exp2( to_size ) ) )
+			return static_cast<To>( x );
+
+		std::make_unsigned_t<From> y;
+		if constexpr( from_unsigned )
+			y = x;
+		else
+			y = std::abs( x );
+
+		if( ( y & ( y - 1 ) ) == 0 ) return static_cast<To>( x );
+	}
+
 	// real -> int
 	if constexpr( from_real && to_int )
 	{
@@ -74,8 +92,8 @@ constexpr To narrow( From x )
 		if( frac == 0 && x >= to_min && x < std::exp2( to_size ) ) return static_cast<To>( x );
 	}
 
-	// * -> real
-	if constexpr( to_real )
+	// real -> real
+	if constexpr( from_real && to_real )
 	{
 		if constexpr( to_size >= from_size ) return static_cast<To>( x );
 		if( x == static_cast<From>( static_cast<To>( x ) ) ) return static_cast<To>( x );
