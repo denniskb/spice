@@ -137,7 +137,7 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
+BENCHMARK_TEMPLATE( plot2_RunTime, synth )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 3'000'000, 1536'000'000 );

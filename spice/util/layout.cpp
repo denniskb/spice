@@ -5,6 +5,7 @@
 #include <spice/util/type_traits.h>
 
 #include <cmath>
+#include <map>
 #include <numeric>
 
 
@@ -127,12 +128,14 @@ layout layout::slice( std::size_t n, std::size_t i )
 	spice_assert( n > 0 );
 	spice_assert( i < n );
 
-#if 0
+	std::vector<int> szs;
 	std::vector<int> costs;
 	{
 		std::map<int, std::pair<int, double>> pop2sizedeg;
 		for( auto const & c : connections() )
 		{
+			pop2sizedeg[std::get<0>( c )].first = std::get<1>( c ) - std::get<0>( c );
+
 			auto x = pop2sizedeg[std::get<2>( c )];
 			x.first = std::get<3>( c ) - std::get<2>( c );
 			x.second += ( std::get<1>( c ) - std::get<0>( c ) ) * std::get<4>( c );
@@ -140,20 +143,28 @@ layout layout::slice( std::size_t n, std::size_t i )
 		}
 
 		for( auto const & [k, v] : pop2sizedeg )
-			// TODO: Replace with narrow (once updated to accept floats)
-			costs.push_back( narrow_cast<int>( std::round( v.first * v.second ) ) );
+		{
+			szs.push_back( v.first );
+			costs.push_back( static_cast<int>( std::round( v.first * v.second ) ) );
+		}
 	}
+	std::inclusive_scan( szs.begin(), szs.end(), szs.begin() );
 	std::inclusive_scan( costs.begin(), costs.end(), costs.begin() );
 
-	int a = narrow<int>( costs.back() * i / n );
-	int b = narrow<int>( costs.back() * ( i + 1 ) / n );
+	auto partition = [&]( std::size_t pivot ) -> std::size_t {
+		auto I = std::upper_bound( costs.begin(), costs.end(), pivot );
+		if( I == costs.end() ) return szs.back();
+		auto i = I - costs.begin();
 
-	std::lower_bound( costs.begin(), costs.end(), a );
-	// TODO: Finish
-#endif
+		if( i ) pivot -= costs[i - 1];
 
-	int const first = narrow<int>( size() * i / n );
-	int const last = narrow<int>( size() * ( i + 1 ) / n );
+		return pivot * ( szs[i] - ( i ? szs[i - 1] : 0 ) ) /
+		           ( costs[i] - ( i ? costs[i - 1] : 0 ) ) +
+		       ( i ? szs[i - 1] : 0 );
+	};
+
+	int const first = narrow<int>( partition( costs.back() * i / n ) );
+	int const last = narrow<int>( partition( costs.back() * ( i + 1 ) / n ) );
 
 	std::vector<layout::edge> part;
 	for( auto c : connections() )
