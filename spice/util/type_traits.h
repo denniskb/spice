@@ -9,8 +9,8 @@ namespace spice
 {
 namespace util
 {
-template <typename To, typename From>
-To narrow_cast( From x )
+template <typename To, typename _From>
+To narrow_cast( _From x )
 {
 	return static_cast<To>( x );
 }
@@ -26,27 +26,27 @@ To narrow_cast( From x )
  * If the success of the conversion can be determined at compile time,
  * no runtime checks are performed whatsoever and 'narrow' degenerates to a static_cast.
  */
-template <typename To, typename _From>
-constexpr To narrow( _From x )
+template <typename To, typename From>
+constexpr To narrow( From x )
 {
-	using From = std::remove_reference_t<std::remove_cv_t<_From>>;
+	using _From = std::remove_reference_t<std::remove_cv_t<From>>;
 
 	static_assert(
 	    std::is_same_v<To, std::remove_reference_t<std::remove_cv_t<To>>>,
 	    "narrow() may only return value types" );
 	static_assert(
-	    std::is_arithmetic_v<From> && std::is_arithmetic_v<To>,
+	    std::is_arithmetic_v<_From> && std::is_arithmetic_v<To>,
 	    "narrow() is inteded for arithmetic types only" );
-	static_assert( !std::is_same_v<From, To>, "pointless conversion between identical types" );
+	static_assert( !std::is_same_v<_From, To>, "pointless conversion between identical types" );
 
-	constexpr bool from_real = std::is_floating_point_v<From>;
-	constexpr bool from_int = std::is_integral_v<From>;
-	constexpr bool from_signed = std::is_signed_v<From>;
-	constexpr bool from_unsigned = std::is_unsigned_v<From>;
+	constexpr bool from_real = std::is_floating_point_v<_From>;
+	constexpr bool from_int = std::is_integral_v<_From>;
+	constexpr bool from_signed = std::is_signed_v<_From>;
+	constexpr bool from_unsigned = std::is_unsigned_v<_From>;
 	constexpr bool to_real = std::is_floating_point_v<To>;
 	constexpr bool to_int = std::is_integral_v<To>;
 	constexpr bool to_unsigned = std::is_unsigned_v<To>;
-	constexpr auto from_size = std::numeric_limits<From>::digits;
+	constexpr auto from_size = std::numeric_limits<_From>::digits;
 	constexpr auto to_size = std::numeric_limits<To>::digits;
 	constexpr auto to_min = std::numeric_limits<To>::min();
 	constexpr auto to_max = std::numeric_limits<To>::max();
@@ -72,7 +72,7 @@ constexpr To narrow( _From x )
 	{
 		if constexpr( to_size >= from_size ) return static_cast<To>( x );
 
-		std::make_unsigned_t<From> y;
+		std::make_unsigned_t<_From> y;
 		if constexpr( from_unsigned )
 			y = x;
 		else
@@ -94,7 +94,7 @@ constexpr To narrow( _From x )
 	// real -> int
 	if constexpr( from_real && to_int )
 	{
-		From tmp;
+		_From tmp;
 		auto frac = modf( x, &tmp );
 
 		if( frac == 0 && x >= to_min && x < std::exp2( to_size ) ) return static_cast<To>( x );
@@ -104,7 +104,7 @@ constexpr To narrow( _From x )
 	if constexpr( from_real && to_real )
 	{
 		if constexpr( to_size >= from_size ) return static_cast<To>( x );
-		if( x == static_cast<From>( static_cast<To>( x ) ) ) return static_cast<To>( x );
+		if( x == static_cast<_From>( static_cast<To>( x ) ) ) return static_cast<To>( x );
 	}
 
 	throw std::bad_cast();
