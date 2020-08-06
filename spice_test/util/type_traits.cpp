@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 
+#include <spice/util/random.h>
 #include <spice/util/type_traits.h>
+
+#include <cmath>
 
 
 using namespace spice::util;
@@ -75,7 +78,6 @@ TEST( TypeTraits, Narrow )
 	ASSERT_EQ   (         0, narrow<int>(         0u));
 
 	// small -> large
-	// (can't generate a *small* unsigned that, when converted to a *big* singed, throws.)
 	ASSERT_EQ(127, narrow<int>((unsigned char) 127));
 	ASSERT_EQ(  1, narrow<int>((unsigned char)   1));
 	ASSERT_EQ(  0, narrow<int>((unsigned char)   0));
@@ -88,38 +90,80 @@ TEST( TypeTraits, Narrow )
 	ASSERT_EQ(  (char)   0, narrow<char>(  0u));
 
 	// real -> real
-	ASSERT_EQ(3.14f, narrow<double>(3.14f));
-	ASSERT_EQ(0.1f, narrow<double>(0.1f));
-	ASSERT_EQ(0.125f, narrow<float>(0.125));
-	ASSERT_THROW(narrow<float>(0.1), std::bad_cast);
+	// small -> large
+	{
+		xoroshiro256ss rng(1337);
+		for (int i = 0; i < 1'000'000; i++)
+		{
+			unsigned x = rng() >> 32;
+			float f;
+			std::memcpy(&f, &x, sizeof(x));
+			if (!std::isnan(f))
+				ASSERT_EQ(static_cast<double>(f), narrow<double>(f));
+		}
+	}
+	// large -> small
+	{
+		xoroshiro256ss rng(1337);
+		for (int i = 0; i < 1'000'000; i++)
+		{
+			unsigned x = rng() >> 32;
+			float f;
+			std::memcpy(&f, &x, sizeof(x));
+			if (!std::isnan(f))
+				ASSERT_EQ(f, narrow<float>(static_cast<double>(f)));
+		}
+		ASSERT_THROW(narrow<float>(   0.1), std::bad_cast);
+		ASSERT_THROW(narrow<float>(  -0.1), std::bad_cast);
+		ASSERT_THROW(narrow<float>( 1e100), std::bad_cast);
+		ASSERT_THROW(narrow<float>(-1e100), std::bad_cast);
+	}
 
 	// int -> real
-	ASSERT_EQ(314.f, narrow<float>(314));
-	ASSERT_EQ(314.0, narrow<double>(314));
-	ASSERT_EQ(-123456.f, narrow<float>(-123456));
-	ASSERT_THROW(narrow<float>(1234567890), std::bad_cast);
-	ASSERT_EQ(0x1p30, narrow<float>(1<<30));
-	ASSERT_THROW(narrow<double>(9007199254740993llu), std::bad_cast);
-	ASSERT_EQ(0x1p60, narrow<double>(1llu << 60));
-	ASSERT_THROW(narrow<float>(INT_MAX), std::bad_cast);
-	ASSERT_EQ((float)INT_MIN, narrow<float>(INT_MIN));
-	ASSERT_EQ((float)(1<<24), narrow<float>(1<<24));
-	ASSERT_THROW(narrow<float>((1<<24)+1), std::bad_cast);
-	ASSERT_EQ(-(float)(1<<24), narrow<float>(-(1<<24)));
-	ASSERT_THROW(narrow<float>(-(1<<24)-1), std::bad_cast);
-	ASSERT_EQ(16777218.f, narrow<float>(16777218));
+	{
+		int i = 0;
+		float f = 0;
+		double d = 0;
+		for (;i <= (1<<24); i++, f++, d++)
+		{
+			ASSERT_EQ( f, narrow<float> ( i));
+			ASSERT_EQ(-f, narrow<float> (-i));
+			ASSERT_EQ( d, narrow<double>( i));
+			ASSERT_EQ(-d, narrow<double>(-i));
+		}
+		ASSERT_THROW(         narrow<float>((1<<24) + 1), std::bad_cast);
+		ASSERT_EQ(16777218.f, narrow<float>(16777218));
+
+		ASSERT_THROW(          narrow<float>(123456791), std::bad_cast);
+		ASSERT_EQ(123456792.f, narrow<float>(123456792));
+		ASSERT_THROW(          narrow<float>(123456793), std::bad_cast);
+
+		ASSERT_EQ(0x1p59, narrow<float>(1llu << 59));
+		ASSERT_EQ(0x1p59, narrow<double>(1llu << 59));
+
+		ASSERT_THROW(narrow<float>(INT_MAX), std::bad_cast);
+	}
 
 	// real -> int
-	ASSERT_EQ(3, narrow<int>(3.f));
-	ASSERT_EQ(3, narrow<int>(3.0));
-	ASSERT_THROW(narrow<int>(3.14f), std::bad_cast);
-	ASSERT_THROW(narrow<int>(3.14), std::bad_cast);
-	ASSERT_EQ(-7, narrow<int>(-7.f));
-	ASSERT_THROW(narrow<unsigned>(-7.0), std::bad_cast);
-	ASSERT_THROW(narrow<int>(0x1p31), std::bad_cast);
-	ASSERT_EQ(1llu << 31, narrow<unsigned>(0x1p31));
-	ASSERT_THROW(narrow<unsigned>(0x1p32), std::bad_cast);
-	ASSERT_THROW(narrow<int>((float)INT_MAX), std::bad_cast);
+	{
+		xoroshiro256ss rng(1337);
+		for (int i = 0; i < 100'000; i++)
+		{
+			unsigned x = rng() >> 32;
+			float f;
+			std::memcpy(&f, &x, sizeof(x));
+			if (!std::isnan(f))
+			{
+				float tmp;
+				float frac = modf(f, &tmp);
+				if (frac != 0)
+					ASSERT_THROW(narrow<int>(f), std::bad_cast);
+			}
+
+			double d = static_cast<double>(x);
+			ASSERT_EQ(x, narrow<unsigned>(d));
+		}
+	}
 
 	// clang-format on
 }
