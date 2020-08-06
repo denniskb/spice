@@ -26,18 +26,18 @@ To narrow_cast( From x )
  * If the success of the conversion can be determined at compile time,
  * no runtime checks are performed whatsoever and 'narrow' degenerates to a static_cast.
  */
-template <typename To, typename From>
-constexpr To narrow( From x )
+template <typename To, typename _From>
+constexpr To narrow( _From x )
 {
+	using From = std::remove_reference_t<std::remove_cv_t<_From>>;
+
 	static_assert(
-	    !(std::is_reference_v<From> || std::is_reference_v<To>),
-	    "please call narrow() with value types only" );
+	    std::is_same_v<To, std::remove_reference_t<std::remove_cv_t<To>>>,
+	    "narrow() may only return value types" );
 	static_assert(
 	    std::is_arithmetic_v<From> && std::is_arithmetic_v<To>,
 	    "narrow() is inteded for arithmetic types only" );
-	static_assert(
-	    !std::is_same_v<std::remove_cv_t<From>, std::remove_cv_t<To>>,
-	    "pointless conversion between identical types" );
+	static_assert( !std::is_same_v<From, To>, "pointless conversion between identical types" );
 
 	constexpr bool from_real = std::is_floating_point_v<From>;
 	constexpr bool from_int = std::is_integral_v<From>;
@@ -94,7 +94,7 @@ constexpr To narrow( From x )
 	// real -> int
 	if constexpr( from_real && to_int )
 	{
-		std::remove_cv_t<From> tmp;
+		From tmp;
 		auto frac = modf( x, &tmp );
 
 		if( frac == 0 && x >= to_min && x < std::exp2( to_size ) ) return static_cast<To>( x );
