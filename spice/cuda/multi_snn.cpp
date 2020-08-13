@@ -21,12 +21,9 @@ multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int delay /* = 
 	for( auto & d : device::devices() )
 	{
 		d.set();
-		_nets.push_back( snn<Model>(
-		    desc.slice( device::devices().size(), d ),
-		    dt,
-		    delay,
-		    narrow_int<int>( device::devices().size() ),
-		    d ) );
+
+		auto slice = desc.cut( device::devices().size(), d );
+		_nets.push_back( snn<Model>( slice.part, dt, delay, slice.first, slice.last ) );
 	}
 }
 

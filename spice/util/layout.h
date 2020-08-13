@@ -22,9 +22,6 @@ namespace util
 {
 class layout
 {
-	template <typename T>
-	friend class ::spice::cuda::multi_snn;
-
 public:
 	// ([first1, last2), [first2, last2), p)
 	using edge = std::tuple<int, int, int, int, float>;
@@ -38,7 +35,14 @@ public:
 	std::vector<edge> const & connections() const;
 	std::size_t max_degree() const;
 
-	layout slice( std::size_t n, std::size_t i );
+	template <typename T = layout>
+	struct slice
+	{
+		T part;
+		int first;
+		int last;
+	};
+	slice<> cut( std::size_t n, std::size_t i );
 
 private:
 	std::size_t _n;

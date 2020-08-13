@@ -21,18 +21,6 @@ using namespace spice::cuda::util;
 namespace spice::cuda
 {
 template <typename Model>
-int snn<Model>::first() const
-{
-	return narrow<int>( _i * num_neurons() / _n );
-}
-
-template <typename Model>
-int snn<Model>::last() const
-{
-	return narrow<int>( ( _i + 1 ) * num_neurons() / _n );
-}
-
-template <typename Model>
 int snn<Model>::MAX_HISTORY() const
 {
 	return std::max( this->delay() + 1, 48 );
@@ -62,8 +50,7 @@ void snn<Model>::reserve(
 		_synapses.resize( num_synapses );
 
 		_spikes.history_data.resize( MAX_HISTORY() * ( ( num_neurons + 31 ) / 32 ) );
-		_spikes.history = {
-		    _spikes.history_data.data(), narrow<int>( ( num_neurons + 31 ) / 32 ) };
+		_spikes.history = { _spikes.history_data.data(), narrow<int>( ( num_neurons + 31 ) / 32 ) };
 		_spikes.updates.resize( num_neurons );
 
 		_graph.ages.resize( num_neurons );
@@ -80,11 +67,11 @@ snn<Model>::snn(
     spice::util::layout const & desc,
     float const dt,
     int const delay /* = 1 */,
-    int n /* = 1 */,
-    int i /* = 0 */ )
+    int first /* = 0 */,
+    int last /* = -1 */ )
     : ::spice::snn<Model>( dt, delay )
-    , _n( n )
-    , _i( i )
+    , _first( first )
+    , _last( last == -1 ? narrow<int>( desc.size() ) : last )
 {
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
@@ -94,8 +81,8 @@ snn<Model>::snn(
 
 	upload_meta<Model>( _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
-	    first(),
-	    last(),
+	    _first,
+	    _last,
 	    this->info(),
 	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
 	cudaDeviceSynchronize();
@@ -104,6 +91,8 @@ snn<Model>::snn(
 template <typename Model>
 snn<Model>::snn( spice::cpu::snn<Model> const & net )
     : ::spice::snn<Model>( net )
+    , _first( 0 )
+    , _last( narrow<int>( net.num_neurons() ) )
 {
 	reserve( net.num_neurons(), net.num_synapses(), net.delay() );
 
@@ -151,8 +140,8 @@ void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spik
 	if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();
 
 	update<Model>(
-	    first(),
-	    last(),
+	    _first,
+	    _last,
 	    this->info(),
 	    dt,
 	    _spikes.ids.row( circidx( i, this->delay() ) ),

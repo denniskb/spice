@@ -123,7 +123,7 @@ std::size_t layout::size() const { return _n; }
 std::vector<layout::edge> const & layout::connections() const { return _connections; }
 std::size_t layout::max_degree() const { return _max_degree; }
 
-layout layout::slice( std::size_t n, std::size_t i )
+layout::slice<> layout::cut( std::size_t n, std::size_t i )
 {
 	spice_assert( n > 0 );
 	spice_assert( i < n );
@@ -152,8 +152,8 @@ layout layout::slice( std::size_t n, std::size_t i )
 	std::inclusive_scan( costs.begin(), costs.end(), costs.begin() );
 
 	auto partition = [&]( std::size_t pivot ) -> std::size_t {
-		auto I = std::upper_bound( costs.begin(), costs.end(), pivot );
-		if( I == costs.end() ) return szs.back();
+		if( !pivot ) return 0;
+		auto I = std::lower_bound( costs.begin(), costs.end(), pivot );
 		auto i = I - costs.begin();
 
 		if( i ) pivot -= costs[i - 1];
@@ -174,7 +174,7 @@ layout layout::slice( std::size_t n, std::size_t i )
 		if( std::get<2>( c ) < std::get<3>( c ) ) part.push_back( std::move( c ) );
 	}
 
-	return layout( size(), part );
+	return { layout( size(), part ), first, last };
 }
 
 layout::layout( std::size_t n, std::vector<edge> flat )

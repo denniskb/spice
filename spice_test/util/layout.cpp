@@ -50,91 +50,121 @@ TEST( Layout, Slice )
 	{
 		layout l( 10, 0.5f );
 		{
-			layout s = l.slice( 1, 0 );
-			ASSERT_EQ( s.connections(), l.connections() );
+			auto s = l.cut( 1, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 10 );
+			ASSERT_EQ( s.part.connections(), l.connections() );
 		}
 		{
-			layout s = l.slice( 2, 0 );
-			ASSERT_EQ( s.connections().size(), 1 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 0, 5, 0.5f ) );
+			auto s = l.cut( 2, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 5 );
+			ASSERT_EQ( s.part.connections().size(), 1 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 0, 5, 0.5f ) );
 		}
 		{
-			layout s = l.slice( 2, 1 );
-			ASSERT_EQ( s.connections().size(), 1 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 5, 10, 0.5f ) );
+			auto s = l.cut( 2, 1 );
+			ASSERT_EQ( s.first, 5 );
+			ASSERT_EQ( s.last, 10 );
+			ASSERT_EQ( s.part.connections().size(), 1 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 5, 10, 0.5f ) );
 		}
 		{
-			layout s = l.slice( 3, 0 );
-			ASSERT_EQ( s.connections().size(), 1 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 0, 3, 0.5f ) );
+			auto s = l.cut( 3, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 3 );
+			ASSERT_EQ( s.part.connections().size(), 1 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 0, 3, 0.5f ) );
 		}
 		{
-			layout s = l.slice( 3, 1 );
-			ASSERT_EQ( s.connections().size(), 1 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 3, 6, 0.5f ) );
+			auto s = l.cut( 3, 1 );
+			ASSERT_EQ( s.first, 3 );
+			ASSERT_EQ( s.last, 6 );
+			ASSERT_EQ( s.part.connections().size(), 1 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 3, 6, 0.5f ) );
 		}
 		{
-			layout s = l.slice( 3, 2 );
-			ASSERT_EQ( s.connections().size(), 1 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 6, 10, 0.5f ) );
+			auto s = l.cut( 3, 2 );
+			ASSERT_EQ( s.first, 6 );
+			ASSERT_EQ( s.last, 10 );
+			ASSERT_EQ( s.part.connections().size(), 1 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 6, 10, 0.5f ) );
 		}
 	}
 
 	{
 		layout l( { 10, 10 }, { { 0, 1, 0.25f }, { 1, 1, 0.75f } } );
 		{
-			layout s = l.slice( 1, 0 );
-			ASSERT_EQ( s.connections(), l.connections() );
+			auto s = l.cut( 1, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 20 );
+			ASSERT_EQ( s.part.connections(), l.connections() );
 		}
 		{
-			layout s = l.slice( 2, 0 );
-			ASSERT_EQ( s.connections().size(), 2 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 10, 15, 0.25f ) );
-			ASSERT_EQ( s.connections()[1], std::make_tuple( 10, 20, 10, 15, 0.75f ) );
+			auto s = l.cut( 2, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 15 );
+			ASSERT_EQ( s.part.connections().size(), 2 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 10, 15, 0.25f ) );
+			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 10, 20, 10, 15, 0.75f ) );
 		}
 		{
-			layout s = l.slice( 2, 1 );
-			ASSERT_EQ( s.connections().size(), 2 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 15, 20, 0.25f ) );
-			ASSERT_EQ( s.connections()[1], std::make_tuple( 10, 20, 15, 20, 0.75f ) );
+			auto s = l.cut( 2, 1 );
+			ASSERT_EQ( s.first, 15 );
+			ASSERT_EQ( s.last, 20 );
+			ASSERT_EQ( s.part.connections().size(), 2 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 15, 20, 0.25f ) );
+			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 10, 20, 15, 20, 0.75f ) );
 		}
 	}
 
 	{
 		layout l( { 10, 10, 10 }, { { 0, 0, 0.5f }, { 2, 2, 0.25f }, { 1, 2, 0.25f } } );
 		{
-			layout s = l.slice( 1, 0 );
-			ASSERT_EQ( s.connections(), l.connections() );
+			auto s = l.cut( 1, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 30 );
+			ASSERT_EQ( s.part.connections(), l.connections() );
 		}
 		{
-			layout s = l.slice( 2, 0 );
-			ASSERT_EQ( s.connections().size(), 1 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 0, 10, 0.5f ) );
+			auto s = l.cut( 2, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 10 );
+			ASSERT_EQ( s.part.connections().size(), 1 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 0, 10, 0.5f ) );
 		}
 		{
-			layout s = l.slice( 2, 1 );
-			ASSERT_EQ( s.connections().size(), 2 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 10, 20, 20, 30, 0.25f ) );
-			ASSERT_EQ( s.connections()[1], std::make_tuple( 20, 30, 20, 30, 0.25f ) );
+			auto s = l.cut( 2, 1 );
+			ASSERT_EQ( s.first, 10 );
+			ASSERT_EQ( s.last, 30 );
+			ASSERT_EQ( s.part.connections().size(), 2 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 10, 20, 20, 30, 0.25f ) );
+			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 20, 30, 20, 30, 0.25f ) );
 		}
 	}
 
 	{
 		layout l( { 10, 10 }, { { 0, 0, 0.1f }, { 1, 1, 0.9f } } );
 		{
-			layout s = l.slice( 1, 0 );
-			ASSERT_EQ( s.connections(), l.connections() );
+			auto s = l.cut( 1, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 20 );
+			ASSERT_EQ( s.part.connections(), l.connections() );
 		}
 		{
-			layout s = l.slice( 2, 0 );
-			ASSERT_EQ( s.connections().size(), 2 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 0, 10, 0, 10, 0.1f ) );
-			ASSERT_EQ( s.connections()[1], std::make_tuple( 10, 20, 10, 14, 0.9f ) );
+			auto s = l.cut( 2, 0 );
+			ASSERT_EQ( s.first, 0 );
+			ASSERT_EQ( s.last, 14 );
+			ASSERT_EQ( s.part.connections().size(), 2 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 0, 10, 0.1f ) );
+			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 10, 20, 10, 14, 0.9f ) );
 		}
 		{
-			layout s = l.slice( 2, 1 );
-			ASSERT_EQ( s.connections().size(), 1 );
-			ASSERT_EQ( s.connections()[0], std::make_tuple( 10, 20, 14, 20, 0.9f ) );
+			auto s = l.cut( 2, 1 );
+			ASSERT_EQ( s.first, 14 );
+			ASSERT_EQ( s.last, 20 );
+			ASSERT_EQ( s.part.connections().size(), 1 );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 10, 20, 14, 20, 0.9f ) );
 		}
 	}
 }

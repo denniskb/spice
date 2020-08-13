@@ -119,14 +119,14 @@ static void plot2_RunTime( benchmark::State & state )
 
 	try
 	{
-		cuda::multi_snn<Model> net(
+		cuda::snn<Model> net(
 		    layout( { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ), 0.0001f, 10 );
 
 		for( auto _ : state )
 		{
 			timer t;
 			for( int i = 0; i < ITER; i++ ) net.step();
-			net.sync();
+			// net.sync();
 			cudaDeviceSynchronize();
 			state.SetIterationTime( t.time() / ITER );
 		}
