@@ -19,6 +19,9 @@ public:
 	snn( spice::util::layout const & desc, float dt, int delay = 1, int first = 0, int last = -1 );
 	snn( spice::cpu::snn<Model> const & net );
 
+	void step( std::vector<int> * out_spikes = nullptr ) override;
+	void step( int ** out_spikes, unsigned ** out_num_spikes );
+
 	std::size_t num_neurons() const override;
 	std::size_t num_synapses() const override;
 	std::pair<std::vector<int>, std::size_t> graph() const override;
@@ -56,7 +59,5 @@ private:
 	int MAX_HISTORY() const;
 
 	void reserve( std::size_t num_neurons, std::size_t max_degree, int delay );
-
-	void _step( int i, float dt, std::vector<int> * out_spikes ) override;
 };
 } // namespace spice::cuda

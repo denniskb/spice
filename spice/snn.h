@@ -5,6 +5,7 @@
 #include <spice/util/layout.h>
 #include <spice/util/numeric.h>
 
+#include <functional>
 #include <vector>
 
 
@@ -18,7 +19,7 @@ class snn
 public:
 	virtual ~snn() = default;
 
-	void step( std::vector<int> * out_spikes = nullptr );
+	virtual void step( std::vector<int> * out_spikes = nullptr ) = 0;
 
 	virtual std::size_t num_neurons() const = 0;
 	virtual std::size_t num_synapses() const = 0;
@@ -34,13 +35,12 @@ public:
 
 protected:
 	explicit snn( float dt, int delay = 1 );
+	void _step( std::function<void( int, float )> impl );
 
 private:
 	float const _dt;
 	int const _delay;
 	int _i = 0;
 	util::kahan_sum<float> _simtime;
-
-	virtual void _step( int i, float dt, std::vector<int> * out_spikes ) = 0;
 };
 } // namespace spice

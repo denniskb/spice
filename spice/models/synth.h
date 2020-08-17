@@ -29,13 +29,13 @@ struct synth : model
 		}
 
 		template <typename Iter, typename Backend>
-		HYBRID static bool update( Iter n, float const, snn_info info, Backend & bak )
+		HYBRID static bool update( Iter, float const, snn_info, Backend & bak )
 		{
 			return bak.rand() < 0.01f;
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>
-		HYBRID static void receive( int src, Iter dst, SynIter, snn_info, Backend & bak )
+		HYBRID static void receive( int, Iter dst, SynIter, snn_info, Backend & bak )
 		{
 			using util::get;
 

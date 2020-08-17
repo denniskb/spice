@@ -20,6 +20,8 @@ class snn : public ::spice::snn<Model>
 public:
 	snn( util::layout const & desc, float dt, int delay = 1 );
 
+	void step( std::vector<int> * out_spikes = nullptr ) override;
+
 	std::size_t num_neurons() const override;
 	std::size_t num_synapses() const override;
 	// (edges, width)
@@ -44,8 +46,6 @@ private:
 	} _spikes;
 
 	backend _backend;
-
-	void _step( int i, float dt, std::vector<int> * out_spikes ) override;
 };
 } // namespace cpu
 } // namespace spice

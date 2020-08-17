@@ -33,7 +33,7 @@ struct vogels_abbott : model
 		}
 
 		template <typename Iter, typename Backend>
-		HYBRID static bool update( Iter n, float const dt, snn_info info, Backend & bak )
+		HYBRID static bool update( Iter n, float const dt, snn_info, Backend & )
 		{
 			using util::get;
 

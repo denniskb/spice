@@ -112,6 +112,75 @@ snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ 
 	}
 }
 
+template <typename Model>
+void snn<Model>::step( std::vector<int> * out_spikes )
+{
+	this->_step( [&]( int const istep, float const dt ) {
+		int const post = istep % ( this->delay() + 1 );
+		int const pre = ( istep + 1 ) % ( this->delay() + 1 );
+
+		// Update neurons
+		{
+			auto const nspikes = _spikes.ids.size();
+
+			for( int i = 0; i < this->num_neurons(); i++ )
+			{
+				bool const spiked = Model::neuron::template update(
+				    iter( _neurons ? _neurons->data() : nullptr, i ), dt, this->info(), _backend );
+
+				if constexpr( Model::synapse::size > 0 ) ( *( _spikes.flags ) )[post][i] = spiked;
+
+				if( spiked ) _spikes.ids.push_back( i );
+			}
+
+			_spikes.counts.push_back( _spikes.ids.size() - nspikes );
+		}
+
+		if( out_spikes && !_spikes.counts.empty() )
+			out_spikes->assign( _spikes.ids.end() - _spikes.counts.back(), _spikes.ids.end() );
+
+		// Update synapses
+		if constexpr( Model::synapse::size > 0 )
+		{
+			for_each(
+			    [&]( int syn, int src, int dst ) {
+				    Model::synapse::template update(
+				        iter( _synapses->data(), syn ),
+				        src,
+				        dst,
+				        ( *_spikes.flags )[pre][src],
+				        ( *_spikes.flags )[post][dst],
+				        dt,
+				        this->info(),
+				        _backend );
+			    },
+			    narrow<int>( this->num_neurons() ),
+			    []( int x ) { return x; },
+			    _graph.adj );
+		}
+
+		// Receive spikes
+		if( _spikes.counts.size() >= this->delay() )
+		{
+			for_each(
+			    [&]( int syn, int src, int dst ) {
+				    Model::neuron::template receive(
+				        src,
+				        iter( _neurons->data(), dst ),
+				        const_iter<Model::synapse::tuple_t>( _synapses->data(), syn ),
+				        this->info(),
+				        _backend );
+			    },
+			    narrow<int>( _spikes.counts.front() ),
+			    [&]( int x ) { return _spikes.ids[x]; },
+			    _graph.adj );
+
+			_spikes.ids.erase( _spikes.ids.begin(), _spikes.ids.begin() + _spikes.counts.front() );
+			_spikes.counts.erase( _spikes.counts.begin() );
+		}
+	} );
+}
+
 
 // TODO: Remove code duplication
 template <typename Model>
@@ -144,72 +213,7 @@ std::vector<typename Model::synapse::tuple_t> snn<Model>::synapses() const
 #pragma warning( push )
 #pragma warning( disable : 4100 ) // unreferenced formal paramter (VS doesn't recognize access to
                                   // 'istep' inside lambda)
-template <typename Model>
-void snn<Model>::_step( int const istep, float const dt, std::vector<int> * out_spikes )
-{
-	int const post = istep % ( this->delay() + 1 );
-	int const pre = ( istep + 1 ) % ( this->delay() + 1 );
 
-	// Update neurons
-	{
-		auto const nspikes = _spikes.ids.size();
-
-		for( int i = 0; i < this->num_neurons(); i++ )
-		{
-			bool const spiked = Model::neuron::template update(
-			    iter( _neurons ? _neurons->data() : nullptr, i ), dt, this->info(), _backend );
-
-			if constexpr( Model::synapse::size > 0 ) ( *( _spikes.flags ) )[post][i] = spiked;
-
-			if( spiked ) _spikes.ids.push_back( i );
-		}
-
-		_spikes.counts.push_back( _spikes.ids.size() - nspikes );
-	}
-
-	if( out_spikes && !_spikes.counts.empty() )
-		out_spikes->assign( _spikes.ids.end() - _spikes.counts.back(), _spikes.ids.end() );
-
-	// Update synapses
-	if constexpr( Model::synapse::size > 0 )
-	{
-		for_each(
-		    [&]( int syn, int src, int dst ) {
-			    Model::synapse::template update(
-			        iter( _synapses->data(), syn ),
-			        src,
-			        dst,
-			        ( *_spikes.flags )[pre][src],
-			        ( *_spikes.flags )[post][dst],
-			        dt,
-			        this->info(),
-			        _backend );
-		    },
-		    narrow<int>( this->num_neurons() ),
-		    []( int x ) { return x; },
-		    _graph.adj );
-	}
-
-	// Receive spikes
-	if( _spikes.counts.size() >= this->delay() )
-	{
-		for_each(
-		    [&]( int syn, int src, int dst ) {
-			    Model::neuron::template receive(
-			        src,
-			        iter( _neurons->data(), dst ),
-			        const_iter<Model::synapse::tuple_t>( _synapses->data(), syn ),
-			        this->info(),
-			        _backend );
-		    },
-		    narrow<int>( _spikes.counts.front() ),
-		    [&]( int x ) { return _spikes.ids[x]; },
-		    _graph.adj );
-
-		_spikes.ids.erase( _spikes.ids.begin(), _spikes.ids.begin() + _spikes.counts.front() );
-		_spikes.counts.erase( _spikes.counts.begin() );
-	}
-}
 #pragma warning( pop )
 
 

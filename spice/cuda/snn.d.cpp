@@ -106,6 +106,71 @@ snn<Model>::snn( spice::cpu::snn<Model> const & net )
 
 
 template <typename Model>
+void snn<Model>::step( std::vector<int> * out_spikes )
+{
+	int * spikes;
+	unsigned * num_spikes;
+
+	step( &spikes, &num_spikes );
+
+	if( out_spikes )
+	{
+		unsigned count;
+		cudaMemcpy( &count, num_spikes, sizeof( unsigned ), cudaMemcpyDefault );
+		out_spikes->resize( count );
+		cudaMemcpy( out_spikes->data(), spikes, count * sizeof( unsigned ), cudaMemcpyDefault );
+	}
+}
+
+template <typename Model>
+void snn<Model>::step( int ** out_spikes, unsigned ** out_num_spikes )
+{
+	this->_step( [&]( int const i, float const dt ) {
+		zero_async( _spikes.counts.data() + circidx( i, this->delay() ) );
+
+		if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();
+
+		update<Model>(
+		    _first,
+		    _last,
+		    this->info(),
+		    dt,
+		    _spikes.ids.row( circidx( i, this->delay() ) ),
+		    _spikes.counts.data() + circidx( i, this->delay() ),
+
+		    _spikes.history,
+		    _graph.ages.data(),
+		    _spikes.updates.data(),
+		    _spikes.num_updates.data(),
+		    i,
+		    this->delay(),
+		    MAX_HISTORY(),
+		    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
+
+		if( i >= this->delay() - 1 )
+		{
+			receive<Model>(
+			    this->info(),
+			    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
+
+			    _spikes.ids.row( circidx( i - this->delay() + 1, this->delay() ) ),
+			    _spikes.counts.data() + circidx( i - this->delay() + 1, this->delay() ),
+
+			    _graph.ages.data(),
+			    _spikes.history,
+			    MAX_HISTORY(),
+			    i,
+			    this->delay(),
+			    dt );
+		}
+
+		*out_spikes = _spikes.ids.row( circidx( i, this->delay() ) );
+		*out_num_spikes = _spikes.counts.data() + circidx( i, this->delay() );
+	} );
+}
+
+
+template <typename Model>
 std::size_t snn<Model>::num_neurons() const
 {
 	return _graph.adj.num_nodes();
@@ -129,65 +194,6 @@ template <typename Model>
 std::vector<typename Model::synapse::tuple_t> snn<Model>::synapses() const
 {
 	return _synapses.to_aos();
-}
-
-
-template <typename Model>
-void snn<Model>::_step( int const i, float const dt, std::vector<int> * out_spikes )
-{
-	zero_async( _spikes.counts.data() + circidx( i, this->delay() ) );
-
-	if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();
-
-	update<Model>(
-	    _first,
-	    _last,
-	    this->info(),
-	    dt,
-	    _spikes.ids.row( circidx( i, this->delay() ) ),
-	    _spikes.counts.data() + circidx( i, this->delay() ),
-
-	    _spikes.history,
-	    _graph.ages.data(),
-	    _spikes.updates.data(),
-	    _spikes.num_updates.data(),
-	    i,
-	    this->delay(),
-	    MAX_HISTORY(),
-	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
-
-	if( i >= this->delay() - 1 )
-	{
-		receive<Model>(
-		    this->info(),
-		    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
-
-		    _spikes.ids.row( circidx( i - this->delay() + 1, this->delay() ) ),
-		    _spikes.counts.data() + circidx( i - this->delay() + 1, this->delay() ),
-
-		    _graph.ages.data(),
-		    _spikes.history,
-		    MAX_HISTORY(),
-		    i,
-		    this->delay(),
-		    dt );
-	}
-
-	if( out_spikes )
-	{
-		unsigned count;
-		cudaMemcpy(
-		    &count,
-		    _spikes.counts.data() + circidx( i, this->delay() ),
-		    sizeof( unsigned ),
-		    cudaMemcpyDefault );
-		out_spikes->resize( count );
-		cudaMemcpy(
-		    out_spikes->data(),
-		    _spikes.ids.row( circidx( i, this->delay() ) ),
-		    count * sizeof( unsigned ),
-		    cudaMemcpyDefault );
-	}
 }
 
 

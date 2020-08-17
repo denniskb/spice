@@ -11,13 +11,6 @@
 namespace spice
 {
 template <typename Model>
-void snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
-{
-	_step( _i++, _simtime.add( dt() ), out_spikes );
-}
-
-
-template <typename Model>
 float snn<Model>::dt() const
 {
 	return _dt;
@@ -40,6 +33,12 @@ snn<Model>::snn( float dt, int delay /* = 1 */ )
 {
 	spice_assert( dt >= 0.0f );
 	spice_assert( delay >= 1 );
+}
+
+template <typename Model>
+void snn<Model>::_step( std::function<void( int, float )> impl )
+{
+	impl( _i++, _simtime.add( dt() ) );
 }
 
 
