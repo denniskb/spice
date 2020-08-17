@@ -109,9 +109,9 @@ BENCHMARK( plot0_AdjGen )
 template <typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	float const P = 0.1f;
+	float const P = std::is_same_v<Model, vogels_abbott> ? 0.02f : 0.05f;
 	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / ( P / 2 ) ) );
+	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
 	std::size_t const ITER = 1000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
@@ -119,13 +119,19 @@ static void plot2_RunTime( benchmark::State & state )
 
 	try
 	{
-		cuda::snn<Model> net(
-		    layout( { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ), 0.0001f, 10 );
+		std::unique_ptr<cuda::snn<Model>> net;
+		if constexpr( std::is_same_v<Model, vogels_abbott> )
+			net.reset( new cuda::snn<Model>( layout( N, 0.02f ), 0.0001f, 8 ) );
+		else
+			net.reset( new cuda::snn<Model>(
+			    layout( { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ), 0.0001f, 15 ) );
 
 		for( auto _ : state )
 		{
+			for( int i = 0; i < ITER; i++ ) net->step();
+			cudaDeviceSynchronize();
 			timer t;
-			for( int i = 0; i < ITER; i++ ) net.step();
+			for( int i = 0; i < ITER; i++ ) net->step();
 			// net.sync();
 			cudaDeviceSynchronize();
 			state.SetIterationTime( t.time() / ITER );
@@ -137,15 +143,15 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-BENCHMARK_TEMPLATE( plot2_RunTime, synth )
+BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 3'000'000, 1536'000'000 );
-/*BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
-    //->UseManualTime()
+    ->ExpRange( 1'000'000, 2'048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
+    ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 512'000'000 );
+    ->ExpRange( 1'000'000, 2'048'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
-    //->UseManualTime()
+    ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 125'000, 128'000'000 );*/
+    ->ExpRange( 1'000'000, 512'000'000 );
