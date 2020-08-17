@@ -18,12 +18,18 @@ TEST( KahanSum, Add )
 	float const DELTA = 0.001f;
 
 	kahan_sum<float> ksum;
+	float deltas = 0;
 	for( int i = 0; i < ITER; i++ )
 	{
 		ASSERT_FLOAT_EQ( (float)ksum, i * DELTA );
-		ASSERT_NEAR( ksum.add( DELTA ), DELTA, DELTA / 100 );
+
+		float delta = ksum.add( DELTA );
+		deltas += delta;
+
+		ASSERT_NEAR( delta, DELTA, DELTA / 100 );
 	}
 
 	// would fail with 'float ksum':
 	ASSERT_FLOAT_EQ( (float)ksum, 1 );
+	ASSERT_FLOAT_EQ( deltas, 1 );
 }
