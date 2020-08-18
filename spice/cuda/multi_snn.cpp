@@ -28,26 +28,49 @@ multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int delay /* = 
 }
 
 template <typename Model>
-void multi_snn<Model>::step()
+void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
+	int * spikes[8];
+	unsigned * n_spikes[8];
+
 	for( auto & d : device::devices() )
 	{
 		d.set();
-		// TODO: Tradeoff: fewer cudaSetDevice()s vs blocking spike sync
-		// for( int i = 0; i < _nets[d].delay(); i++ )
-		_nets[d].step();
-		// TODO: Exchange spikes
+		_nets[d].step( &spikes[d], &n_spikes[d] );
 	}
+
+	for( auto & d : device::devices() ) d.synchronize();
+
+	// 2 gpus for now:
+	int a, b;
+	success_or_throw( cudaMemcpy( &a, n_spikes[0], 4, cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy( &b, n_spikes[1], 4, cudaMemcpyDefault ) );
+
+	success_or_throw( cudaMemcpy( spikes[0] + a, spikes[1], 4 * b, cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy( spikes[1] + b, spikes[0], 4 * a, cudaMemcpyDefault ) );
+
+	if( out_spikes )
+	{
+		out_spikes->resize( a + b );
+		cudaMemcpy( out_spikes->data(), spikes[0], 4 * a, cudaMemcpyDefault );
+		cudaMemcpy( out_spikes->data() + a, spikes[1], 4 * b, cudaMemcpyDefault );
+	}
+
+	a += b;
+	success_or_throw( cudaMemcpy( n_spikes[0], &a, 4, cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy( n_spikes[1], &a, 4, cudaMemcpyDefault ) );
 }
 
 template <typename Model>
 void multi_snn<Model>::sync()
 {
-	for( auto & d : device::devices() )
-	{
-		d.set();
-		success_or_throw( cudaDeviceSynchronize() );
-	}
+	for( auto & d : device::devices() ) d.synchronize();
+}
+
+template <typename Model>
+std::size_t multi_snn<Model>::num_neurons() const
+{
+	return _nets[0].num_neurons();
 }
 
 template class multi_snn<spice::vogels_abbott>;

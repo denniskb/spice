@@ -119,21 +119,22 @@ static void plot2_RunTime( benchmark::State & state )
 
 	try
 	{
-		std::unique_ptr<cuda::snn<Model>> net;
+		std::unique_ptr<cuda::multi_snn<Model>> net;
 		if constexpr( std::is_same_v<Model, vogels_abbott> )
-			net.reset( new cuda::snn<Model>( layout( N, 0.02f ), 0.0001f, 8 ) );
+			net.reset( new cuda::multi_snn<Model>( layout( N, 0.02f ), 0.0001f, 8 ) );
 		else
-			net.reset( new cuda::snn<Model>(
+			net.reset( new cuda::multi_snn<Model>(
 			    layout( { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ), 0.0001f, 15 ) );
 
 		for( auto _ : state )
 		{
 			for( int i = 0; i < ITER; i++ ) net->step();
-			cudaDeviceSynchronize();
+			net->sync();
+			// cudaDeviceSynchronize();
 			timer t;
 			for( int i = 0; i < ITER; i++ ) net->step();
-			// net.sync();
-			cudaDeviceSynchronize();
+			net->sync();
+			// cudaDeviceSynchronize();
 			state.SetIterationTime( t.time() / ITER );
 		}
 	}
@@ -146,12 +147,12 @@ static void plot2_RunTime( benchmark::State & state )
 BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 1'000'000, 2'048'000'000 );
+    ->ExpRange( 1'000'000, 512'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 1'000'000, 2'048'000'000 );
+    ->ExpRange( 1'000'000, 512'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 1'000'000, 512'000'000 );
+    ->ExpRange( 1'000'000, 128'000'000 );

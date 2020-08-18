@@ -1,3 +1,4 @@
+#include "../spice/cuda/multi_snn.h"
 #include "../spice/cuda/snn.h"
 #include "../spice/models/brunel.h"
 #include "../spice/models/brunel_with_plasticity.h"
@@ -41,7 +42,7 @@ int main( int const argc, char const ** argv )
 			avgspikes += n.size();
 
 			// Ommit simulation steps without activations from output.
-			// if( n.size() > 0 )
+			if( n.size() > 0 )
 			{
 				std::sort( n.begin(), n.end() );
 
@@ -65,21 +66,21 @@ int main( int const argc, char const ** argv )
 	{
 		// Initialize a snn with the brunel model
 		if( !strcmp( argv[1], "brunel" ) )
-			run_sim( cuda::snn<brunel>(
+			run_sim( cuda::multi_snn<brunel>(
 			    layout( { NNEURON / 2, NNEURON / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
 			    0.0001f,
 			    15 ) );
 		// Initialize a snn with the brunel model (with plasticity turned on)
 		else if( !strcmp( argv[1], "brunel+" ) )
-			run_sim( cuda::snn<brunel_with_plasticity>(
+			run_sim( cuda::multi_snn<brunel_with_plasticity>(
 			    layout( { NNEURON / 2, NNEURON / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
 			    0.0001f,
 			    15 ) );
 		// Initialize a snn with the vogels&abbott model
 		else if( !strcmp( argv[1], "vogels" ) )
-			run_sim( cuda::snn<vogels_abbott>( { NNEURON, 0.02f }, 0.0001f, 8 ) );
+			run_sim( cuda::multi_snn<vogels_abbott>( { NNEURON, 0.02f }, 0.0001f, 8 ) );
 		else if( !strcmp( argv[1], "synth" ) )
-			run_sim( cuda::snn<synth>( { NNEURON, 0.1f }, 0.0001f, 1 ) );
+			run_sim( cuda::multi_snn<synth>( { NNEURON, 0.1f }, 0.0001f, 1 ) );
 	}
 	catch( std::exception & e )
 	{

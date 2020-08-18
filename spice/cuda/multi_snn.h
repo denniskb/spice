@@ -12,8 +12,10 @@ class multi_snn
 public:
 	multi_snn( spice::util::layout desc, float dt, int delay = 1 );
 
-	void step();
+	void step( std::vector<int> * out_spikes = nullptr );
 	void sync();
+
+	std::size_t num_neurons() const;
 
 private:
 	std::vector<snn<Model>> _nets;

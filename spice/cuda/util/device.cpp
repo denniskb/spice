@@ -55,6 +55,11 @@ cudaDeviceProp device::props() const
 }
 
 void device::set() { success_or_throw( cudaSetDevice( _id ) ); }
+void device::synchronize()
+{
+	set();
+	success_or_throw( cudaDeviceSynchronize() );
+}
 
 
 device::device( int id ) noexcept

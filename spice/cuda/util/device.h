@@ -29,6 +29,7 @@ public:
 
 	cudaDeviceProp props() const;
 	void set();
+	void synchronize();
 
 private:
 	int _id;
