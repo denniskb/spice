@@ -15,15 +15,15 @@ namespace spice::cuda
 {
 template <typename Model>
 multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int delay /* = 1 */ )
-    : _dt( dt )
-    , _delay( delay )
+    : ::spice::snn<Model>( dt, delay )
 {
+	_nets.reserve( device::devices().size() );
 	for( auto & d : device::devices() )
 	{
 		d.set();
 
 		auto slice = desc.cut( device::devices().size(), d );
-		_nets.push_back( snn<Model>( slice.part, dt, delay, slice.first, slice.last ) );
+		_nets.push_back( cuda::snn<Model>( slice.part, dt, delay, slice.first, slice.last ) );
 	}
 }
 
@@ -70,7 +70,31 @@ void multi_snn<Model>::sync()
 template <typename Model>
 std::size_t multi_snn<Model>::num_neurons() const
 {
-	return _nets[0].num_neurons();
+	return _nets.front().num_neurons();
+}
+template <typename Model>
+std::size_t multi_snn<Model>::num_synapses() const
+{
+	return _nets.front().num_synapses();
+}
+
+template <typename Model>
+std::pair<std::vector<int>, std::size_t> multi_snn<Model>::adj() const
+{
+	// TODO: Fix
+	return _nets.front().adj();
+}
+template <typename Model>
+std::vector<typename Model::neuron::tuple_t> multi_snn<Model>::neurons() const
+{
+	// TODO: Fix
+	return _nets.front().neurons();
+}
+template <typename Model>
+std::vector<typename Model::synapse::tuple_t> multi_snn<Model>::synapses() const
+{
+	// TODO: Fix
+	return _nets.front().synapses();
 }
 
 template class multi_snn<spice::vogels_abbott>;

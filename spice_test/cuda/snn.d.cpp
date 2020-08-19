@@ -50,8 +50,8 @@ static bool graphs_equal( snn<Model> const & lhs, snn<Model> const & rhs )
 		return false;
 
 	// TOOD: Rewrite to be more generic by wrapping lhs/rhs into adj_list
-	auto _lhs = lhs.graph();
-	auto _rhs = rhs.graph();
+	auto _lhs = lhs.adj();
+	auto _rhs = rhs.adj();
 
 	if( _lhs.second != _rhs.second ) return false;
 

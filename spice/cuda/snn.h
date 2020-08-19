@@ -24,7 +24,7 @@ public:
 
 	std::size_t num_neurons() const override;
 	std::size_t num_synapses() const override;
-	std::pair<std::vector<int>, std::size_t> graph() const override;
+	std::pair<std::vector<int>, std::size_t> adj() const override;
 	std::vector<typename Model::neuron::tuple_t> neurons() const override;
 	std::vector<typename Model::synapse::tuple_t> synapses() const override;
 

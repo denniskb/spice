@@ -96,7 +96,7 @@ snn<Model>::snn( spice::cpu::snn<Model> const & net )
 {
 	reserve( net.num_neurons(), net.num_synapses(), net.delay() );
 
-	_graph.edges = net.graph().first;
+	_graph.edges = net.adj().first;
 	_neurons.from_aos( net.neurons() );
 	_synapses.from_aos( net.synapses() );
 
@@ -181,7 +181,7 @@ std::size_t snn<Model>::num_synapses() const
 	return _graph.adj.num_edges();
 }
 template <typename Model>
-std::pair<std::vector<int>, std::size_t> snn<Model>::graph() const
+std::pair<std::vector<int>, std::size_t> snn<Model>::adj() const
 {
 	return { _graph.edges, _graph.adj.max_degree() };
 }

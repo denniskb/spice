@@ -194,7 +194,7 @@ std::size_t snn<Model>::num_synapses() const
 	return _graph.adj.num_edges();
 }
 template <typename Model>
-std::pair<std::vector<int>, std::size_t> snn<Model>::graph() const
+std::pair<std::vector<int>, std::size_t> snn<Model>::adj() const
 {
 	return { _graph.edges, _graph.adj.max_degree() };
 }
