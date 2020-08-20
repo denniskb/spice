@@ -17,7 +17,13 @@ class snn : public ::spice::snn<Model>
 {
 public:
 	snn( spice::util::layout const & desc, float dt, int delay = 1, int first = 0, int last = -1 );
-	snn( spice::cpu::snn<Model> const & net );
+	snn( std::vector<int> const & adj,
+	     std::size_t width,
+	     float dt,
+	     int delay = 1,
+	     int first = 0,
+	     int last = -1 );
+	snn( spice::snn<Model> const & net );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
 	void step( int ** out_spikes, unsigned ** out_num_spikes );

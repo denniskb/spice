@@ -12,7 +12,7 @@ class multi_snn : public ::spice::snn<Model>
 {
 public:
 	multi_snn( spice::util::layout desc, float dt, int delay = 1 );
-	// cpu::snn->cuda::snn converting ctor
+	multi_snn( spice::snn<Model> const & net );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
 	void sync();

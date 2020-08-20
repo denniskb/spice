@@ -28,6 +28,16 @@ multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int delay /* = 
 }
 
 template <typename Model>
+multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
+    : ::spice::snn<Model>( net )
+{
+	// TODO: Split adj. list (according to balancing strat)
+	// which is why I wanted to separate them.... nai!
+	// Also req. ability to create from raw adj. list! (test individually!)
+}
+
+
+template <typename Model>
 void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
 	int * spikes[8];

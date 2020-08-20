@@ -1,6 +1,7 @@
 #include "snn.h"
 
 #include <spice/cuda/algorithm.h>
+#include <spice/cuda/util/defs.h>
 #include <spice/cuda/util/device.h>
 #include <spice/cuda/util/event.h>
 #include <spice/cuda/util/stream.h>
@@ -89,7 +90,37 @@ snn<Model>::snn(
 }
 
 template <typename Model>
-snn<Model>::snn( spice::cpu::snn<Model> const & net )
+snn<Model>::snn(
+    std::vector<int> const & adj,
+    std::size_t width,
+    float const dt,
+    int const delay /* = 1 */,
+    int first /* = 0 */,
+    int last /* = -1 */ )
+    : ::spice::snn<Model>( dt, delay )
+    , _first( first )
+    , _last( last == -1 ? narrow<int>( adj.size() / width ) : last )
+{
+	spice_assert( adj.size() % width == 0 );
+	spice_assert( width > 0 );
+	spice_assert( width % WARP_SZ == 0 );
+	spice_assert( dt > 0.0f );
+	spice_assert( delay >= 1 );
+
+	reserve( adj.size() / width, adj.size(), delay );
+	_graph.edges = adj;
+
+	upload_meta<Model>( _neurons.data(), _synapses.data() );
+	spice::cuda::init<Model>(
+	    _first,
+	    _last,
+	    this->info(),
+	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
+	cudaDeviceSynchronize();
+}
+
+template <typename Model>
+snn<Model>::snn( spice::snn<Model> const & net )
     : ::spice::snn<Model>( net )
     , _first( 0 )
     , _last( narrow<int>( net.num_neurons() ) )

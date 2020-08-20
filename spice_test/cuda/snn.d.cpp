@@ -102,20 +102,39 @@ TYPED_TEST( dSNN, Ctor )
 // draw same numbers on CPU and GPU/deactivate rng for testing purposes..
 TEST( dSNN, Step )
 {
-	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f );
-	cuda::snn d( h );
-	ASSERT_TRUE( close( h, d, 0.0 ) );
+	{ // From cpu::snn
+		cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f );
+		cuda::snn d( h );
+		ASSERT_TRUE( close( h, d, 0.0 ) );
 
-	std::vector<int> h_spikes, d_spikes;
+		std::vector<int> h_spikes, d_spikes;
 
-	for( int i = 0; i < 1000; i++ )
-	{
-		h.step( &h_spikes );
-		d.step( &d_spikes );
-		ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << i;
+		for( int i = 0; i < 1000; i++ )
+		{
+			h.step( &h_spikes );
+			d.step( &d_spikes );
+			ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << i;
+		}
+
+		ASSERT_TRUE( close( h, d, 1e-5 ) );
 	}
 
-	ASSERT_TRUE( close( h, d, 1e-5 ) );
+	{ // From adj. list
+		cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f );
+		cuda::snn<vogels_abbott> d( h.adj().first, h.adj().second, 0.0001f );
+		ASSERT_TRUE( close( h, d, 0.0 ) );
+
+		std::vector<int> h_spikes, d_spikes;
+
+		for( int i = 0; i < 1000; i++ )
+		{
+			h.step( &h_spikes );
+			d.step( &d_spikes );
+			ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << i;
+		}
+
+		ASSERT_TRUE( close( h, d, 1e-5 ) );
+	}
 }
 
 TEST( dSNN, StepWithDelay )

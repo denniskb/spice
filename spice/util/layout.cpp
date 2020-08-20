@@ -116,6 +116,8 @@ layout::layout(
 
 		_max_degree = estimate_max_deg( _connections );
 	}
+
+	spice_assert( max_degree() % WARP_SZ == 0 );
 }
 #pragma warning( pop )
 
