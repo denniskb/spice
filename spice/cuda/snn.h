@@ -26,7 +26,8 @@ public:
 	snn( spice::snn<Model> const & net );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
-	void step( int ** out_spikes, unsigned ** out_num_spikes );
+	void step(
+	    int ** out_dspikes, unsigned ** out_dnum_spikes, std::vector<int> * out_spikes = nullptr );
 
 	std::size_t num_neurons() const override;
 	std::size_t num_synapses() const override;

@@ -101,8 +101,8 @@ snn<Model>::snn(
     , _first( first )
     , _last( last == -1 ? narrow<int>( adj.size() / width ) : last )
 {
-	spice_assert( adj.size() % width == 0 );
 	spice_assert( width > 0 );
+	spice_assert( adj.size() % width == 0 );
 	spice_assert( width % WARP_SZ == 0 );
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
@@ -142,19 +142,12 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 	int * spikes;
 	unsigned * num_spikes;
 
-	step( &spikes, &num_spikes );
-
-	if( out_spikes )
-	{
-		unsigned count;
-		cudaMemcpy( &count, num_spikes, sizeof( unsigned ), cudaMemcpyDefault );
-		out_spikes->resize( count );
-		cudaMemcpy( out_spikes->data(), spikes, count * sizeof( unsigned ), cudaMemcpyDefault );
-	}
+	step( &spikes, &num_spikes, out_spikes );
 }
 
 template <typename Model>
-void snn<Model>::step( int ** out_spikes, unsigned ** out_num_spikes )
+void snn<Model>::step(
+    int ** out_dspikes, unsigned ** out_dnum_spikes, std::vector<int> * out_spikes /* = nullptr */ )
 {
 	this->_step( [&]( int const i, float const dt ) {
 		zero_async( _spikes.counts.data() + circidx( i, this->delay() ) );
@@ -195,8 +188,17 @@ void snn<Model>::step( int ** out_spikes, unsigned ** out_num_spikes )
 			    dt );
 		}
 
-		*out_spikes = _spikes.ids.row( circidx( i, this->delay() ) );
-		*out_num_spikes = _spikes.counts.data() + circidx( i, this->delay() );
+		*out_dspikes = _spikes.ids.row( circidx( i, this->delay() ) );
+		*out_dnum_spikes = _spikes.counts.data() + circidx( i, this->delay() );
+
+		if( out_spikes )
+		{
+			unsigned count;
+			cudaMemcpy( &count, *out_dnum_spikes, sizeof( unsigned ), cudaMemcpyDefault );
+			out_spikes->resize( count );
+			cudaMemcpy(
+			    out_spikes->data(), *out_dspikes, count * sizeof( int ), cudaMemcpyDefault );
+		}
 	} );
 }
 

@@ -3,6 +3,7 @@
 #include "../model.h"
 
 #include <spice/cpu/snn.h>
+#include <spice/cuda/multi_snn.h>
 #include <spice/cuda/snn.h>
 #include <spice/models/vogels_abbott.h>
 
@@ -141,6 +142,49 @@ TEST( dSNN, StepWithDelay )
 {
 	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f, 8 );
 	cuda::snn d( h );
+	ASSERT_TRUE( close( h, d, 0.0 ) );
+
+	std::vector<int> h_spikes, d_spikes;
+
+	for( int i = 0; i < 1000; i++ )
+	{
+		h.step( &h_spikes );
+		d.step( &d_spikes );
+		ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << i;
+	}
+
+	ASSERT_TRUE( close( h, d, 1e-5 ) );
+}
+
+TEST( MultiSNN, Step )
+{
+	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f );
+	cuda::multi_snn d( h );
+	ASSERT_EQ( d.num_neurons(), 4000 );
+	ASSERT_EQ( d.dt(), 0.0001f );
+	ASSERT_EQ( d.delay(), 1 );
+	ASSERT_TRUE( close( h, d, 0.0 ) );
+
+	std::vector<int> h_spikes, d_spikes;
+
+	for( int i = 0; i < 1000; i++ )
+	{
+		h.step( &h_spikes );
+		d.step( &d_spikes );
+
+		ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << i;
+	}
+
+	ASSERT_TRUE( close( h, d, 1e-5 ) );
+}
+
+TEST( MultiSNN, StepWithDelay )
+{
+	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f, 8 );
+	cuda::multi_snn d( h );
+	ASSERT_EQ( d.num_neurons(), 4000 );
+	ASSERT_EQ( d.dt(), 0.0001f );
+	ASSERT_EQ( d.delay(), 8 );
 	ASSERT_TRUE( close( h, d, 0.0 ) );
 
 	std::vector<int> h_spikes, d_spikes;
