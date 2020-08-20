@@ -150,8 +150,24 @@ void snn<Model>::step(
     int ** out_dspikes, unsigned ** out_dnum_spikes, std::vector<int> * out_spikes /* = nullptr */ )
 {
 	this->_step( [&]( int const i, float const dt ) {
-		zero_async( _spikes.counts.data() + circidx( i, this->delay() ) );
+		if( i >= this->delay() )
+		{
+			receive<Model>(
+			    this->info(),
+			    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
 
+			    _spikes.ids.row( circidx( i - this->delay(), this->delay() ) ),
+			    _spikes.counts.data() + circidx( i - this->delay(), this->delay() ),
+
+			    _graph.ages.data(),
+			    _spikes.history,
+			    MAX_HISTORY(),
+			    i,
+			    this->delay(),
+			    dt );
+		}
+
+		zero_async( _spikes.counts.data() + circidx( i, this->delay() ) );
 		if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();
 
 		update<Model>(
@@ -170,23 +186,6 @@ void snn<Model>::step(
 		    this->delay(),
 		    MAX_HISTORY(),
 		    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
-
-		if( i >= this->delay() - 1 )
-		{
-			receive<Model>(
-			    this->info(),
-			    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
-
-			    _spikes.ids.row( circidx( i - this->delay() + 1, this->delay() ) ),
-			    _spikes.counts.data() + circidx( i - this->delay() + 1, this->delay() ),
-
-			    _graph.ages.data(),
-			    _spikes.history,
-			    MAX_HISTORY(),
-			    i,
-			    this->delay(),
-			    dt );
-		}
 
 		*out_dspikes = _spikes.ids.row( circidx( i, this->delay() ) );
 		*out_dnum_spikes = _spikes.counts.data() + circidx( i, this->delay() );

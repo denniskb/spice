@@ -253,12 +253,12 @@ static __global__ void _process_spikes(
 					Model::synapse::template init(
 					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
 				else if constexpr( Model::synapse::size > 0 )
-					for( int k = ages[src]; k <= iter; k++ )
+					for( int k = ages[src]; k < iter; k++ )
 						Model::synapse::template update(
 						    synapse_iter<typename Model::synapse>( isyn ),
 						    src,
 						    dst,
-						    MODE == HNDL_SPKS && k == iter,
+						    MODE == HNDL_SPKS && k == iter - 1,
 						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
 						    dt,
 						    info,
@@ -278,7 +278,7 @@ static __global__ void _process_spikes(
 		{
 			__syncthreads();
 
-			if( threadIdx.x == 0 ) ages[src] = iter + 1;
+			if( threadIdx.x == 0 ) ages[src] = iter;
 		}
 	}
 }
