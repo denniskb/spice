@@ -44,18 +44,12 @@ TEST( DVar, CopyAssign )
 	ASSERT_EQ( x, 5 );
 }
 
-TEST( DVar, Zero )
+TEST( DVar, Assign )
 {
-	dvar<int> x( 5 );
-	x.zero();
-
-	ASSERT_EQ( x, 0 );
-
+	dvar<int> x;
 	x = 5;
-	x.zero_async();
-	cudaDeviceSynchronize();
 
-	ASSERT_EQ( x, 0 );
+	ASSERT_EQ( x, 5 );
 }
 
 TEST( DVar, MultiGPU )

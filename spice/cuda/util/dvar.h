@@ -14,12 +14,7 @@ public:
 	    std::is_arithmetic_v<T>,
 	    "dvar is only intended for individual primitive variables residing on the device" );
 
-	dvar() { _data.zero(); }
-	dvar( T x )
-	    : dvar()
-	{
-		copy_from( x );
-	}
+	explicit dvar( T x = T( 0 ) ) { copy_from( x ); }
 
 	dvar & operator=( T x )
 	{
@@ -30,30 +25,24 @@ public:
 	operator T() const
 	{
 		T x;
-		cudaMemcpy( &x, data(), sizeof( T ), cudaMemcpyDefault );
+		success_or_throw( cudaMemcpy( &x, data(), sizeof( T ), cudaMemcpyDefault ) );
 		return x;
 	}
 
 	T * data() { return _data.data(); }
 	T const * data() const { return _data.data(); }
 
-	template <typename U = T>
-	std::enable_if_t<std::is_arithmetic_v<U>> zero()
-	{
-		zero_async();
-		cudaDeviceSynchronize();
-	}
-
-	template <typename U = T>
-	std::enable_if_t<std::is_arithmetic_v<U>> zero_async( cudaStream_t s = nullptr )
+	void zero_async( cudaStream_t s = nullptr )
 	{
 		// TODO: Experiment with memcpy instead of kernel call (overlap)
 		spice::cuda::zero_async( _data.data(), s );
-		success_or_throw( cudaGetLastError() );
 	}
 
 private:
 	dbuffer<T> _data{ 1 };
-	void copy_from( T x ) { cudaMemcpy( _data.data(), &x, sizeof( T ), cudaMemcpyDefault ); }
+	void copy_from( T x )
+	{
+		success_or_throw( cudaMemcpy( _data.data(), &x, sizeof( T ), cudaMemcpyDefault ) );
+	}
 };
 } // namespace spice::cuda::util

@@ -41,7 +41,7 @@ public:
 	operator std::vector<T>() const
 	{
 		std::vector<T> result( size() );
-		cudaMemcpy( result.data(), data(), size_in_bytes(), cudaMemcpyDefault );
+		success_or_throw( cudaMemcpy( result.data(), data(), size_in_bytes(), cudaMemcpyDefault ) );
 		return result;
 	}
 
@@ -57,7 +57,7 @@ public:
 		{
 			_data.reset();
 			_size = 0;
-			_data.reset( reinterpret_cast<T *>( cuda_malloc( n * sizeof( T ) ) ) );
+			_data.reset( static_cast<T *>( cuda_malloc( n * sizeof( T ) ) ) );
 		}
 
 		_size = n;
@@ -85,7 +85,7 @@ private:
 		if( data() == cont.data() && size() == cont.size() ) return;
 
 		resize( cont.size() );
-		cudaMemcpy( data(), cont.data(), size_in_bytes(), cudaMemcpyDefault );
+		success_or_throw( cudaMemcpy( data(), cont.data(), size_in_bytes(), cudaMemcpyDefault ) );
 	}
 };
 } // namespace util
