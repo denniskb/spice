@@ -31,8 +31,6 @@ public:
 
 	unsigned id() const { return _i; }
 
-#pragma warning( push )
-#pragma warning( disable : 6011 ) // deref. null ptr - asserted not null
 	template <int I, bool C = Const>
 	auto const & get( typename std::enable_if_t<C> * dummy = 0 )
 	{
@@ -46,7 +44,6 @@ public:
 		spice_assert( _data );
 		return std::get<I>( _data[_i] );
 	}
-#pragma warning( pop )
 
 private:
 	T * _data = nullptr;
@@ -208,13 +205,6 @@ std::vector<typename Model::synapse::tuple_t> snn<Model>::synapses() const
 {
 	return _synapses.value_or( std::vector<typename Model::synapse::tuple_t>{} );
 }
-
-
-#pragma warning( push )
-#pragma warning( disable : 4100 ) // unreferenced formal paramter (VS doesn't recognize access to
-                                  // 'istep' inside lambda)
-
-#pragma warning( pop )
 
 
 template class snn<vogels_abbott>;
