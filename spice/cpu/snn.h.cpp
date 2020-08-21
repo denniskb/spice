@@ -119,6 +119,26 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 		int const post = istep % ( this->delay() + 1 );
 		int const pre = ( istep + 1 ) % ( this->delay() + 1 );
 
+		// Receive spikes
+		if( _spikes.counts.size() >= this->delay() )
+		{
+			for_each(
+			    [&]( int syn, int src, int dst ) {
+				    Model::neuron::template receive(
+				        src,
+				        iter( _neurons->data(), dst ),
+				        const_iter<Model::synapse::tuple_t>( _synapses->data(), syn ),
+				        this->info(),
+				        _backend );
+			    },
+			    narrow<int>( _spikes.counts.front() ),
+			    [&]( int x ) { return _spikes.ids[x]; },
+			    _graph.adj );
+
+			_spikes.ids.erase( _spikes.ids.begin(), _spikes.ids.begin() + _spikes.counts.front() );
+			_spikes.counts.erase( _spikes.counts.begin() );
+		}
+
 		// Update neurons
 		{
 			auto const nspikes = _spikes.ids.size();
@@ -157,26 +177,6 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 			    narrow<int>( this->num_neurons() ),
 			    []( int x ) { return x; },
 			    _graph.adj );
-		}
-
-		// Receive spikes
-		if( _spikes.counts.size() >= this->delay() )
-		{
-			for_each(
-			    [&]( int syn, int src, int dst ) {
-				    Model::neuron::template receive(
-				        src,
-				        iter( _neurons->data(), dst ),
-				        const_iter<Model::synapse::tuple_t>( _synapses->data(), syn ),
-				        this->info(),
-				        _backend );
-			    },
-			    narrow<int>( _spikes.counts.front() ),
-			    [&]( int x ) { return _spikes.ids[x]; },
-			    _graph.adj );
-
-			_spikes.ids.erase( _spikes.ids.begin(), _spikes.ids.begin() + _spikes.counts.front() );
-			_spikes.counts.erase( _spikes.counts.begin() );
 		}
 	} );
 }
