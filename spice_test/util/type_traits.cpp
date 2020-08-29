@@ -4,6 +4,7 @@
 #include <spice/util/type_traits.h>
 
 #include <cmath>
+#include <cstring>
 
 
 using namespace spice::util;
@@ -98,8 +99,7 @@ TEST( TypeTraits, Narrow )
 			unsigned x = rng() >> 32;
 			float f;
 			std::memcpy(&f, &x, sizeof(x));
-			if (!std::isnan(f))
-				ASSERT_EQ(static_cast<double>(f), narrow<double>(f));
+			if (!std::isnan(f)) { ASSERT_EQ(static_cast<double>(f), narrow<double>(f)); }
 		}
 	}
 	// large -> small
@@ -110,8 +110,7 @@ TEST( TypeTraits, Narrow )
 			unsigned x = rng() >> 32;
 			float f;
 			std::memcpy(&f, &x, sizeof(x));
-			if (!std::isnan(f))
-				ASSERT_EQ(f, narrow<float>(static_cast<double>(f)));
+			if (!std::isnan(f)) { ASSERT_EQ(f, narrow<float>(static_cast<double>(f))); }
 		}
 		ASSERT_THROW(narrow<float>(   0.1), std::bad_cast);
 		ASSERT_THROW(narrow<float>(  -0.1), std::bad_cast);
@@ -141,7 +140,7 @@ TEST( TypeTraits, Narrow )
 		ASSERT_EQ(0x1p59, narrow<float>(1llu << 59));
 		ASSERT_EQ(0x1p59, narrow<double>(1llu << 59));
 
-		ASSERT_THROW(narrow<float>(INT_MAX), std::bad_cast);
+		ASSERT_THROW(narrow<float>(std::numeric_limits<int>::max()), std::bad_cast);
 	}
 
 	// real -> int
@@ -155,9 +154,8 @@ TEST( TypeTraits, Narrow )
 			if (!std::isnan(f))
 			{
 				float tmp;
-				float frac = modf(f, &tmp);
-				if (frac != 0)
-					ASSERT_THROW(narrow<int>(f), std::bad_cast);
+				float frac = std::modf(f, &tmp);
+				if (frac != 0) { ASSERT_THROW(narrow<int>(f), std::bad_cast); }
 			}
 
 			double d = static_cast<double>(x);

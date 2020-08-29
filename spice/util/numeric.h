@@ -10,7 +10,11 @@ class kahan_sum
 {
 public:
 	// Adds delta to the sum. Returns the actual delta added (delta - residue)
-	Prec add( Prec delta )
+#ifdef __GNUC__
+	__attribute__( ( optimize( "-fno-fast-math" ) ) )
+#endif
+	Prec
+	add( Prec delta )
 	{
 		auto y = delta - _c;
 		auto t = _sum + y;

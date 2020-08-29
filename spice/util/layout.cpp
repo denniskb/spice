@@ -9,13 +9,13 @@
 #include <numeric>
 
 
-static constexpr std::size_t operator"" _sz( std::size_t n ) { return n; }
+static constexpr std::size_t operator"" _sz( unsigned long long int n ) { return n; }
 
 static std::size_t estimate_max_deg( std::vector<spice::util::layout::edge> const & connections )
 {
 	using namespace spice::util;
 
-	std::size_t src = connections.empty() ? 0 : std::get<0>( connections.front() );
+	int src = connections.empty() ? 0 : std::get<0>( connections.front() );
 
 	std::size_t result = 0;
 	double m = 0.0, s2 = 0.0;
@@ -81,7 +81,7 @@ layout::layout(
 	{
 		std::sort( connections.begin(), connections.end(), []( auto const & a, auto const & b ) {
 			return std::get<0>( a ) < std::get<0>( b ) ||
-			       std::get<0>( a ) == std::get<0>( b ) && std::get<1>( a ) < std::get<1>( b );
+			       ( std::get<0>( a ) == std::get<0>( b ) && std::get<1>( a ) < std::get<1>( b ) );
 		} );
 
 		for( std::size_t i = 1; i < connections.size(); i++ )

@@ -37,7 +37,7 @@ class xoroshiro128p
 public:
 	using result_type = unsigned;
 	constexpr unsigned min() { return 0; }
-	constexpr unsigned max() { return UINT_MAX; }
+	constexpr unsigned max() { return std::numeric_limits<unsigned>::max(); }
 
 	HYBRID inline explicit xoroshiro128p( unsigned long long seed )
 	{
@@ -80,7 +80,7 @@ class xoroshiro256ss
 public:
 	using result_type = unsigned long long;
 	constexpr result_type min() { return 0; }
-	constexpr result_type max() { return ULLONG_MAX; }
+	constexpr result_type max() { return std::numeric_limits<unsigned long long>::max(); }
 
 	HYBRID inline explicit xoroshiro256ss( unsigned long long seed )
 	{

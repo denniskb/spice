@@ -14,8 +14,8 @@ TEST( DBuffer, DefaultCtor )
 	dbuffer<int> x;
 
 	ASSERT_EQ( x.data(), nullptr );
-	ASSERT_EQ( x.size(), 0 );
-	ASSERT_EQ( x.size_in_bytes(), 0 );
+	ASSERT_EQ( x.size(), 0u );
+	ASSERT_EQ( x.size_in_bytes(), 0u );
 }
 
 TEST( DBuffer, SizeCtor )
@@ -23,7 +23,7 @@ TEST( DBuffer, SizeCtor )
 	dbuffer<int> x( 23 );
 
 	ASSERT_NE( x.data(), nullptr );
-	ASSERT_EQ( x.size(), 23 );
+	ASSERT_EQ( x.size(), 23u );
 	ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
 
 	ASSERT_THROW( dbuffer<int>( 1000'000'000'000 ), std::bad_alloc );
@@ -37,7 +37,7 @@ TEST( DBuffer, CopyCtor )
 
 		ASSERT_NE( x.data(), nullptr );
 		ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 23 );
-		ASSERT_EQ( x.size(), 23 );
+		ASSERT_EQ( x.size(), 23u );
 		ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
 	}
 
@@ -62,7 +62,7 @@ TEST( DBuffer, CopyAssign )
 
 		ASSERT_NE( x.data(), nullptr );
 		ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 23 );
-		ASSERT_EQ( x.size(), 23 );
+		ASSERT_EQ( x.size(), 23u );
 		ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
 	}
 
@@ -94,7 +94,7 @@ TEST( DBuffer, ConvCtor )
 
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 3 );
-	ASSERT_EQ( x.size(), 3 );
+	ASSERT_EQ( x.size(), 3u );
 	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int ) );
 }
 
@@ -107,7 +107,7 @@ TEST( DBuffer, ConvAssign )
 
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 3 );
-	ASSERT_EQ( x.size(), 3 );
+	ASSERT_EQ( x.size(), 3u );
 	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int ) );
 }
 
@@ -142,7 +142,7 @@ TEST( DBuffer, Resize )
 	x.resize( 23 );
 
 	ASSERT_NE( x.data(), nullptr );
-	ASSERT_EQ( x.size(), 23 );
+	ASSERT_EQ( x.size(), 23u );
 	ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
 
 	// downsizing maintains contents
@@ -155,7 +155,7 @@ TEST( DBuffer, Resize )
 	x.resize( 3 );
 
 	ASSERT_EQ( x.data(), p );
-	ASSERT_EQ( x.size(), 3 );
+	ASSERT_EQ( x.size(), 3u );
 	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int ) );
 
 	y.clear();
@@ -167,13 +167,13 @@ TEST( DBuffer, Resize )
 	x.resize( 13 );
 
 	ASSERT_NE( x.data(), nullptr );
-	ASSERT_EQ( x.size(), 13 );
+	ASSERT_EQ( x.size(), 13u );
 	ASSERT_EQ( x.size_in_bytes(), 13 * sizeof( int ) );
 
 	ASSERT_THROW( x.resize( 1'000'000'000'000 ), std::bad_alloc );
 	ASSERT_EQ( x.data(), nullptr );
-	ASSERT_EQ( x.size(), 0 );
-	ASSERT_EQ( x.size_in_bytes(), 0 );
+	ASSERT_EQ( x.size(), 0u );
+	ASSERT_EQ( x.size_in_bytes(), 0u );
 }
 
 TEST( DBuffer, Zero )
@@ -183,7 +183,7 @@ TEST( DBuffer, Zero )
 	x.zero();
 
 	ASSERT_NE( x.data(), nullptr );
-	ASSERT_EQ( x.size(), 5 );
+	ASSERT_EQ( x.size(), 5u );
 	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int ) );
 
 	y = x;
@@ -198,7 +198,7 @@ TEST( DBuffer, ZeroAsync )
 	cudaDeviceSynchronize();
 
 	ASSERT_NE( x.data(), nullptr );
-	ASSERT_EQ( x.size(), 5 );
+	ASSERT_EQ( x.size(), 5u );
 	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int ) );
 
 	y = x;

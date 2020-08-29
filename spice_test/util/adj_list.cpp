@@ -10,9 +10,9 @@ TEST( AdjList, Ctor )
 {
 	{
 		adj_list x;
-		ASSERT_EQ( x.num_nodes(), 0 );
-		ASSERT_EQ( x.max_degree(), 0 );
-		ASSERT_EQ( x.num_edges(), 0 );
+		ASSERT_EQ( x.num_nodes(), 0u );
+		ASSERT_EQ( x.max_degree(), 0u );
+		ASSERT_EQ( x.num_edges(), 0u );
 
 		ASSERT_EQ( x.edges(), nullptr );
 	}
@@ -25,11 +25,11 @@ TEST( AdjList, Ctor )
 
 		adj_list x( 100, deg, e.data() );
 
-		ASSERT_EQ( x.num_nodes(), 100 );
-		ASSERT_EQ( x.max_degree(), 0 );
-		ASSERT_EQ( x.num_edges(), 0 );
+		ASSERT_EQ( x.num_nodes(), 100u );
+		ASSERT_EQ( x.max_degree(), 0u );
+		ASSERT_EQ( x.num_edges(), 0u );
 
-		for( int i = 0; i < 100; i++ ) ASSERT_EQ( x.neighbors( i ).size(), 0 );
+		for( int i = 0; i < 100; i++ ) ASSERT_EQ( x.neighbors( i ).size(), 0u );
 	}
 
 	{
@@ -40,13 +40,13 @@ TEST( AdjList, Ctor )
 
 		adj_list x( 100, deg, e.data() );
 
-		ASSERT_EQ( x.num_nodes(), 100 );
-		ASSERT_EQ( x.max_degree(), 128 );
+		ASSERT_EQ( x.num_nodes(), 100u );
+		ASSERT_EQ( x.max_degree(), 128u );
 		ASSERT_EQ( x.num_edges(), deg * 100 );
 
 		for( int i = 0; i < 100; i++ )
 		{
-			ASSERT_EQ( x.neighbors( i ).size(), 100 );
+			ASSERT_EQ( x.neighbors( i ).size(), 100u );
 
 			int j = 0;
 			for( auto n : x.neighbors( i ) )
@@ -66,8 +66,8 @@ TEST( AdjList, Ctor )
 
 		adj_list x( 100, deg, e.data() );
 
-		ASSERT_EQ( x.num_nodes(), 100 );
-		ASSERT_LE( x.max_degree(), 128 );
+		ASSERT_EQ( x.num_nodes(), 100u );
+		ASSERT_LE( x.max_degree(), 128u );
 		ASSERT_EQ( x.num_edges(), deg * 100 );
 
 		for( int i = 0; i < 100; i++ )
@@ -142,9 +142,9 @@ TEST( AdjList, Ctor )
 		for( std::size_t i = 30; i < 60; i++ )
 		{
 			auto const degree = adj.neighbors( i ).size();
-			ASSERT_EQ( degree, 0 );
+			ASSERT_EQ( degree, 0u );
 
-			ASSERT_EQ( adj.neighbors( i ).size(), 0 );
+			ASSERT_EQ( adj.neighbors( i ).size(), 0u );
 		}
 	}
 }

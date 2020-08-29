@@ -19,7 +19,7 @@ TEST( Device, Devices )
 	int n;
 	cudaGetDeviceCount( &n );
 
-	ASSERT_EQ( n, device::devices().size() );
+	ASSERT_EQ( static_cast<unsigned>( n ), device::devices().size() );
 
 	int d;
 	cudaGetDevice( &d );
@@ -27,7 +27,7 @@ TEST( Device, Devices )
 
 	ASSERT_EQ( device::cpu, cudaCpuDeviceId );
 
-	if( device::devices().size() == 1 ) ASSERT_EQ( device::active(), device::devices( 0 ) );
+	if( device::devices().size() == 1 ) { ASSERT_EQ( device::active(), device::devices( 0 ) ); }
 
 	ASSERT_NE( device::cpu, device::none );
 

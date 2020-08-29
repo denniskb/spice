@@ -353,13 +353,19 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int * edges )
 
 	spice_assert( desc.size() <= ( 1u << 31 ) - 1 );
 	call( [&] {
-		_generate_adj_ids<<<desc.size(), WARP_SZ>>>(
-		    seed(), desc.connections().size(), desc.size(), desc.max_degree(), edges );
+		_generate_adj_ids<<<narrow<int>( desc.size() ), WARP_SZ>>>(
+		    seed(),
+		    narrow<int>( desc.connections().size() ),
+		    narrow<int>( desc.size() ),
+		    narrow<unsigned>( desc.max_degree() ),
+		    edges );
 	} );
 }
 
 template <typename Model>
-void upload_meta( Model::neuron::ptuple_t const & neuron, Model::synapse::ptuple_t const & synapse )
+void upload_meta(
+    typename Model::neuron::ptuple_t const & neuron,
+    typename Model::synapse::ptuple_t const & synapse )
 {
 	static_assert(
 	    Model::neuron::size <= 20,
@@ -545,7 +551,7 @@ void receive(
     int const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	if( Model::synapse::size > 0 || info.num_neurons < 400'000 )
+	if( info.num_neurons < 400'000 || Model::synapse::size > 0 )
 		call( [&] {
 			_process_spikes<Model, HNDL_SPKS>
 			    <<<( Model::synapse::size > 0 ? 256 : 128 ),

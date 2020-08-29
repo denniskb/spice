@@ -16,7 +16,7 @@ using namespace spice;
 template <typename Cont1, typename Cont2>
 bool set_equal( Cont1 const & lhs, Cont2 const & rhs )
 {
-	return std::is_same_v<Cont1::value_type, Cont2::value_type> &&
+	return std::is_same_v<typename Cont1::value_type, typename Cont2::value_type> &&
 	       std::distance( lhs.begin(), lhs.end() ) == std::distance( rhs.begin(), rhs.end() ) &&
 	       std::is_permutation( lhs.begin(), lhs.end(), rhs.begin() );
 }
@@ -26,7 +26,7 @@ bool set_equal( Cont1 const & lhs, Cont2 const & rhs )
 template <typename Pop>
 static bool close( Pop const & lhs, Pop const & rhs, double thres )
 {
-	constexpr auto sz = std::tuple_size_v<Pop::value_type>;
+	constexpr auto sz = std::tuple_size_v<typename Pop::value_type>;
 	if( sz == 0 ) return true;
 
 	if( lhs.size() != rhs.size() ) return false;
@@ -73,14 +73,14 @@ TYPED_TEST( dSNN, Ctor )
 {
 	{ // Ctor
 		cuda::snn<TypeParam> d( { 100, 0.1f }, 0.0001f );
-		ASSERT_EQ( d.num_neurons(), 100 );
+		ASSERT_EQ( d.num_neurons(), 100u );
 		ASSERT_EQ( d.dt(), 0.0001f );
 		ASSERT_EQ( d.delay(), 1 );
 	}
 
 	{ // Ctor
 		cuda::snn<TypeParam> d( { 100, 0.1f }, 0.0001f, 15 );
-		ASSERT_EQ( d.num_neurons(), 100 );
+		ASSERT_EQ( d.num_neurons(), 100u );
 		ASSERT_EQ( d.dt(), 0.0001f );
 		ASSERT_EQ( d.delay(), 15 );
 
@@ -91,7 +91,7 @@ TYPED_TEST( dSNN, Ctor )
 	{ // Conv. Ctor
 		cpu::snn<TypeParam> h( { 100, 0.1f }, 0.0001f, 15 );
 		cuda::snn d( h );
-		ASSERT_EQ( d.num_neurons(), 100 );
+		ASSERT_EQ( d.num_neurons(), 100u );
 		ASSERT_EQ( d.dt(), 0.0001f );
 		ASSERT_EQ( d.delay(), 15 );
 
@@ -160,7 +160,7 @@ TEST( MultiSNN, Step )
 {
 	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f );
 	cuda::multi_snn d( h );
-	ASSERT_EQ( d.num_neurons(), 4000 );
+	ASSERT_EQ( d.num_neurons(), 4000u );
 	ASSERT_EQ( d.dt(), 0.0001f );
 	ASSERT_EQ( d.delay(), 1 );
 	ASSERT_TRUE( close( h, d, 0.0 ) );
@@ -182,7 +182,7 @@ TEST( MultiSNN, StepWithDelay )
 {
 	cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f, 8 );
 	cuda::multi_snn d( h );
-	ASSERT_EQ( d.num_neurons(), 4000 );
+	ASSERT_EQ( d.num_neurons(), 4000u );
 	ASSERT_EQ( d.dt(), 0.0001f );
 	ASSERT_EQ( d.delay(), 8 );
 	ASSERT_TRUE( close( h, d, 0.0 ) );

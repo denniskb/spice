@@ -53,10 +53,10 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 
 	xoroshiro256ss gen( _seed++ );
 
-	std::size_t const N = desc.size();
+	int const N = narrow<int>( desc.size() );
 
 	std::size_t offset = 0;
-	for( std::size_t i = 0; i < N; i++ )
+	for( int i = 0; i < N; i++ )
 	{
 		int total_degree = 0;
 		for( auto const c : desc.connections() )
@@ -75,7 +75,7 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 			float * neighbor_ids = reinterpret_cast<float *>( edges.data() + offset );
 
 			float total = exprnd( gen );
-			for( std::size_t k = 0; k < degree; k++ )
+			for( int k = 0; k < degree; k++ )
 			{
 				neighbor_ids[k] = total;
 				total += exprnd( gen );

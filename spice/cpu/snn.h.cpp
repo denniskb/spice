@@ -23,13 +23,13 @@ template <typename T, bool Const = false>
 class iter
 {
 public:
-	iter( T * data, unsigned i )
+	iter( T * data, std::size_t i )
 	    : _data( data )
 	    , _i( i )
 	{
 	}
 
-	unsigned id() const { return _i; }
+	std::size_t id() const { return _i; }
 
 	template <int I, bool C = Const>
 	auto const & get( typename std::enable_if_t<C> * dummy = 0 )
@@ -47,7 +47,7 @@ public:
 
 private:
 	T * _data = nullptr;
-	unsigned _i = 0;
+	std::size_t _i = 0;
 };
 
 template <typename T>
@@ -87,7 +87,7 @@ snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ 
 	if constexpr( Model::neuron::size > 0 )
 	{
 		_neurons.emplace( desc.size() );
-		for( int i = 0; i < desc.size(); i++ )
+		for( std::size_t i = 0; i < desc.size(); i++ )
 			Model::neuron::template init( iter( _neurons->data(), i ), this->info(), _backend );
 	}
 
@@ -109,6 +109,8 @@ snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ 
 	}
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 template <typename Model>
 void snn<Model>::step( std::vector<int> * out_spikes )
 {
@@ -117,14 +119,14 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 		int const pre = ( istep + 1 ) % ( this->delay() + 1 );
 
 		// Receive spikes
-		if( _spikes.counts.size() >= this->delay() )
+		if( _spikes.counts.size() >= static_cast<unsigned>( this->delay() ) )
 		{
 			for_each(
 			    [&]( int syn, int src, int dst ) {
 				    Model::neuron::template receive(
 				        src,
 				        iter( _neurons->data(), dst ),
-				        const_iter<Model::synapse::tuple_t>( _synapses->data(), syn ),
+				        const_iter<typename Model::synapse::tuple_t>( _synapses->data(), syn ),
 				        this->info(),
 				        _backend );
 			    },
@@ -140,7 +142,7 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 		{
 			auto const nspikes = _spikes.ids.size();
 
-			for( int i = 0; i < this->num_neurons(); i++ )
+			for( int i = 0; i < narrow<int>( this->num_neurons() ); i++ )
 			{
 				bool const spiked = Model::neuron::template update(
 				    iter( _neurons ? _neurons->data() : nullptr, i ), dt, this->info(), _backend );
@@ -177,6 +179,7 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 		}
 	} );
 }
+#pragma GCC diagnostic pop
 
 
 // TODO: Remove code duplication

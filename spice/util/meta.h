@@ -32,7 +32,8 @@ template <typename Tuple1, typename Tuple2, typename Fn, std::size_t... I>
 auto map_i( Tuple1 && t1, Tuple2 && t2, Fn && f, std::index_sequence<I...> )
 {
 	static_assert(
-	    std::tuple_size_v<std::decay_t<Tuple1>> == std::tuple_size_v<std::decay_t<Tuple2>>,
+	    std::tuple_size<std::decay_t<Tuple1>>::value ==
+	        std::tuple_size<std::decay_t<Tuple2>>::value,
 	    "tuples must have the same size" );
 
 	return std::make_tuple( std::forward<Fn>( f )(
@@ -48,7 +49,7 @@ auto map_i( Tuple && t, Fn && f )
 	return detail::map_i(
 	    std::forward<Tuple>( t ),
 	    std::forward<Fn>( f ),
-	    std::make_index_sequence<std::tuple_size_v<std::decay_t<Tuple>>>() );
+	    std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>::value>() );
 }
 
 template <typename Tuple1, typename Tuple2, typename Fn>
@@ -58,7 +59,7 @@ auto map_i( Tuple1 && t1, Tuple2 && t2, Fn && f )
 	    std::forward<Tuple1>( t1 ),
 	    std::forward<Tuple2>( t2 ),
 	    std::forward<Fn>( f ),
-	    std::make_index_sequence<std::tuple_size_v<std::decay_t<Tuple1>>>() );
+	    std::make_index_sequence<std::tuple_size<std::decay_t<Tuple1>>::value>() );
 }
 
 template <typename Tuple, typename Fn>
@@ -99,7 +100,7 @@ void for_each( Tuple & t, Fn && f )
 template <typename Tuple, typename T, typename Fn, std::size_t I = 0>
 auto reduce( Tuple && t, T && init, Fn && f )
 {
-	if constexpr( I == std::tuple_size_v<std::decay_t<Tuple>> )
+	if constexpr( I == std::tuple_size<std::decay_t<Tuple>>::value )
 		return init;
 	else
 		return std::forward<Fn>( f )(

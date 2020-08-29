@@ -5,8 +5,10 @@
 #include "../spice/models/synth.h"
 #include "../spice/models/vogels_abbott.h"
 
+#include <cstring>
 #include <fstream>
 #include <iostream>
+
 
 
 using namespace spice;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <limits>
 #include <type_traits>
 #include <typeinfo>
@@ -19,6 +20,9 @@ To narrow_cast( _From x )
 // 4702 "unreachable code": code removed via constexpr if
 #pragma warning( push )
 #pragma warning( disable : 4018 4702 )
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 /**
  * Attempts to convert one numerical type to another. If the destination *type* cannot
  * hold the source *value* without loss of precision, an exception is thrown.
@@ -32,20 +36,21 @@ constexpr To narrow( From x )
 	using _From = std::remove_reference_t<std::remove_cv_t<From>>;
 
 	static_assert(
-	    std::is_same_v<To, std::remove_reference_t<std::remove_cv_t<To>>>,
+	    std::is_same<To, std::remove_reference_t<std::remove_cv_t<To>>>::value,
 	    "narrow() may only return value types" );
 	static_assert(
-	    std::is_arithmetic_v<_From> && std::is_arithmetic_v<To>,
+	    std::is_arithmetic<_From>::value && std::is_arithmetic<To>::value,
 	    "narrow() is inteded for arithmetic types only" );
-	static_assert( !std::is_same_v<_From, To>, "pointless conversion between identical types" );
+	static_assert(
+	    !std::is_same<_From, To>::value, "pointless conversion between identical types" );
 
-	constexpr bool from_real = std::is_floating_point_v<_From>;
-	constexpr bool from_int = std::is_integral_v<_From>;
-	constexpr bool from_signed = std::is_signed_v<_From>;
-	constexpr bool from_unsigned = std::is_unsigned_v<_From>;
-	constexpr bool to_real = std::is_floating_point_v<To>;
-	constexpr bool to_int = std::is_integral_v<To>;
-	constexpr bool to_unsigned = std::is_unsigned_v<To>;
+	constexpr bool from_real = std::is_floating_point<_From>::value;
+	constexpr bool from_int = std::is_integral<_From>::value;
+	constexpr bool from_signed = std::is_signed<_From>::value;
+	constexpr bool from_unsigned = std::is_unsigned<_From>::value;
+	constexpr bool to_real = std::is_floating_point<To>::value;
+	constexpr bool to_int = std::is_integral<To>::value;
+	constexpr bool to_unsigned = std::is_unsigned<To>::value;
 	constexpr auto from_size = std::numeric_limits<_From>::digits;
 	constexpr auto to_size = std::numeric_limits<To>::digits;
 	constexpr auto to_min = std::numeric_limits<To>::min();
@@ -95,7 +100,7 @@ constexpr To narrow( From x )
 	if constexpr( from_real && to_int )
 	{
 		_From tmp;
-		auto frac = modf( x, &tmp );
+		auto frac = std::modf( x, &tmp );
 
 		if( frac == 0 && x >= to_min && x < std::exp2( to_size ) ) return static_cast<To>( x );
 	}
@@ -109,6 +114,7 @@ constexpr To narrow( From x )
 
 	throw std::bad_cast();
 }
+#pragma GCC diagnostic pop
 #pragma warning( pop )
 } // namespace util
 } // namespace spice

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <algorithm>
-#include <exception>
 #include <initializer_list>
+#include <stdexcept>
+
 
 #include <cuda_runtime.h>
 
@@ -15,9 +16,9 @@ namespace util
 {
 namespace detail
 {
-inline std::exception err2ex( cudaError_t err )
+inline std::runtime_error err2ex( cudaError_t err )
 {
-	return std::exception( cudaGetErrorString( err ) );
+	return std::runtime_error( cudaGetErrorString( err ) );
 }
 
 template <typename Ex>

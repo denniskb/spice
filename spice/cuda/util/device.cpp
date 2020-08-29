@@ -2,6 +2,7 @@
 
 #include <spice/cuda/util/error.h>
 #include <spice/util/assert.h>
+#include <spice/util/type_traits.h>
 
 #include <iostream>
 #include <vector>
@@ -15,10 +16,12 @@ namespace spice::cuda::util
 nonstd::span<device> device::devices()
 {
 	static std::array<device, 8> _devices{ 0, 1, 2, 3, 4, 5, 6, 7 };
-	static int const n = [] {
+	static std::size_t const n = [] {
 		int i = 0;
 		success_or_throw( cudaGetDeviceCount( &i ) );
-		spice_assert( i <= _devices.size(), "spice does not support more than 8 gpus per node." );
+		spice_assert(
+		    spice::util::narrow<unsigned>( i ) <= _devices.size(),
+		    "spice does not support more than 8 gpus per node." );
 		return i;
 	}();
 

@@ -3,10 +3,18 @@ cmake_minimum_required(VERSION 3.0.2)
 project(spice LANGUAGES CXX CUDA)
 
 if(MSVC)
-	set(CMAKE_CXX_FLAGS "/std:c++17 /EHsc /W4 /WX /fp:fast")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /wd4068 /WX /fp:fast")
+else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unknown-pragmas -Werror -ffast-math")
 endif()
-set(CMAKE_CUDA_FLAGS "--expt-extended-lambda --generate-code=arch=compute_50,code=sm_50 --use_fast_math")
+
+set(CPP_STD 17)
 set(CUDA_ARCH 50)
+
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda --generate-code=arch=compute_${CUDA_ARCH},code=sm_50 -arch=sm_${CUDA_ARCH} --use_fast_math -std=c++17")
+if(CMAKE_BUILD_TYPE MATCHES Release)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -DNDEBUG")
+endif()
 
 set(with_samples TRUE CACHE BOOL "Build samples (optional, recommended)")
 set(with_release_asserts TRUE CACHE BOOL "Use for dev/testing. Turn off for bench/production.")
@@ -20,10 +28,11 @@ endif()
 # spice
 file(GLOB_RECURSE spice_src spice/*)
 add_library(spice ${spice_src})
-set_source_files_properties(spice/util/ PROPERTIES COMPILE_FLAGS "-std=c++11" )
 
-target_include_directories(spice PUBLIC .)
+set_property(TARGET spice PROPERTY CXX_STANDARD ${CPP_STD})
 set_property(TARGET spice PROPERTY CUDA_ARCHITECTURES ${CUDA_ARCH})
+
+target_include_directories(spice PUBLIC . ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 if(MSVC)
 	source_group("" FILES ${spice_src})
@@ -36,14 +45,15 @@ if(with_tests)
 	file(GLOB_RECURSE spice_test_src spice_test/*)
 	add_executable(spice_test ${spice_test_src})
 
+	set_property(TARGET spice_test PROPERTY CXX_STANDARD ${CPP_STD})
+	set_property(TARGET spice_test PROPERTY CUDA_ARCHITECTURES ${CUDA_ARCH})
+
 	set(gtest_inc_dir "" CACHE PATH "googletest include directory")
 	set(gtest_lib_release "" CACHE FILEPATH "googletest library release version")
 	set(gtest_lib_debug "" CACHE FILEPATH "googletest library debug version")
 
-	target_include_directories(spice_test PUBLIC .)
-	target_include_directories(spice_test PUBLIC ${gtest_inc_dir})
+	target_include_directories(spice_test PUBLIC . ${gtest_inc_dir})
 	target_link_libraries(spice_test spice optimized ${gtest_lib_release} debug ${gtest_lib_debug})
-	set_property(TARGET spice_test PROPERTY CUDA_ARCHITECTURES ${CUDA_ARCH})
 
 	if(MSVC)
 		source_group("" FILES ${spice_test_src})
@@ -57,14 +67,15 @@ if(with_bench)
 	file(GLOB_RECURSE spice_bench_src spice_bench/*)
 	add_executable(spice_bench ${spice_bench_src})
 
+	set_property(TARGET spice_bench PROPERTY CXX_STANDARD ${CPP_STD})
+	set_property(TARGET spice_bench PROPERTY CUDA_ARCHITECTURES ${CUDA_ARCH})
+
 	set(gbench_inc_dir "" CACHE PATH "googlebenchmark include directory")
 	set(gbench_lib_release "" CACHE FILEPATH "googlebenchmark library release version")
 	set(gbench_lib_debug "" CACHE FILEPATH "googlebenchmark library debug version")
 
-	target_include_directories(spice_bench PUBLIC .)
-	target_include_directories(spice_bench PUBLIC ${gbench_inc_dir})
+	target_include_directories(spice_bench PUBLIC . ${gbench_inc_dir})
 	target_link_libraries(spice_bench spice optimized ${gbench_lib_release} debug ${gbench_lib_debug})
-	set_property(TARGET spice_bench PROPERTY CUDA_ARCHITECTURES ${CUDA_ARCH})
 
 	if(MSVC)
 		target_link_libraries(spice_bench shlwapi.lib)
@@ -77,8 +88,11 @@ endif()
 # samples
 if (with_samples)
 	add_executable(samples "samples/main.cpp")
-	target_link_libraries(samples spice)
+
+	set_property(TARGET samples PROPERTY CXX_STANDARD ${CPP_STD})
 	set_property(TARGET samples PROPERTY CUDA_ARCHITECTURES ${CUDA_ARCH})
+
+	target_link_libraries(samples spice)
 	
 	if(MSVC)
 		source_group("" FILES "samples/main.cpp")

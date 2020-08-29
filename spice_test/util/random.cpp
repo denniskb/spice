@@ -8,7 +8,7 @@
 using namespace spice::util;
 
 unsigned zerorng() { return 0; }
-unsigned maxrng() { return UINT_MAX; }
+unsigned maxrng() { return std::numeric_limits<unsigned>::max(); }
 
 
 unsigned long long seed()
