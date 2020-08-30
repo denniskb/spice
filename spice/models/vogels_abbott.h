@@ -8,7 +8,7 @@ namespace spice
 {
 struct vogels_abbott : model
 {
-	struct neuron : ::spice::neuron<float, float, float, int>
+	struct neuron : ::spice::neuron<float, float, float, int_>
 	{             //                  |      |      |     |
 		enum attr //                  |      |      |     |
 		{         //                  |      |      |     |
@@ -37,7 +37,7 @@ struct vogels_abbott : model
 		{
 			using util::get;
 
-			int const Tref = 50;                // dt
+			int_ const Tref = 50;                // dt
 			float const Vrest = -0.06f;         // v
 			float const Vthres = -0.05f;        // v
 			float const TmemInv = 1.0f / 0.02f; // s
@@ -71,14 +71,14 @@ struct vogels_abbott : model
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>
-		HYBRID static void receive( int src, Iter dst, SynIter, snn_info info, Backend & bak )
+		HYBRID static void receive( int_ src, Iter dst, SynIter, snn_info info, Backend & bak )
 		{
 			using util::get;
 
 			float const Wex =
-			    0.4f * 16'000'000 / ( (long long)info.num_neurons * info.num_neurons ); // siemens
+			    0.4f * 16'000'000 / ( (long_)info.num_neurons * info.num_neurons ); // siemens
 			float const Win =
-			    5.1f * 16'000'000 / ( (long long)info.num_neurons * info.num_neurons ); // siemens
+			    5.1f * 16'000'000 / ( (long_)info.num_neurons * info.num_neurons ); // siemens
 
 			auto const nexc = static_cast<int>( 0.8f * info.num_neurons );
 

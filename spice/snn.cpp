@@ -16,7 +16,7 @@ float snn<Model>::dt() const
 	return _dt;
 }
 template <typename Model>
-int snn<Model>::delay() const
+int_ snn<Model>::delay() const
 {
 	return _delay;
 }
@@ -27,7 +27,7 @@ snn_info snn<Model>::info() const
 }
 
 template <typename Model>
-snn<Model>::snn( float dt, int delay /* = 1 */ )
+snn<Model>::snn( float dt, int_ delay /* = 1 */ )
     : _dt( dt )
     , _delay( delay )
 {
@@ -36,7 +36,7 @@ snn<Model>::snn( float dt, int delay /* = 1 */ )
 }
 
 template <typename Model>
-void snn<Model>::_step( std::function<void( int, float )> impl )
+void snn<Model>::_step( std::function<void( int_, float )> impl )
 {
 	impl( _i++, _simtime.add( dt() ) );
 }

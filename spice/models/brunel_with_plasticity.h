@@ -21,7 +21,7 @@ struct brunel_with_plasticity : model
 		Zpost
 	};
 
-	struct neuron : ::spice::neuron<float, int>
+	struct neuron : ::spice::neuron<float, int_>
 	{
 		template <typename Iter, typename Backend>
 		HYBRID static void init( Iter n, snn_info, Backend & )
@@ -41,10 +41,10 @@ struct brunel_with_plasticity : model
 
 			float const TmemInv = 1.0 / 0.02; // s
 			float const Vrest = 0.0;          // v
-			int const Tref = 20;              // dt
+			int_ const Tref = 20;              // dt
 			float const Vthres = 0.02f;       // v
 
-			if( n.id() < static_cast<unsigned>( info.num_neurons / 2 ) ) // poisson neuron
+			if( n.id() < static_cast<uint_>( info.num_neurons / 2 ) ) // poisson neuron
 			{
 				float const firing_rate = 20; // Hz
 
@@ -69,7 +69,7 @@ struct brunel_with_plasticity : model
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>
-		HYBRID static void receive( int, Iter dst, SynIter syn, snn_info info, Backend & bak )
+		HYBRID static void receive( int_, Iter dst, SynIter syn, snn_info info, Backend & bak )
 		{
 			using util::get;
 
@@ -81,7 +81,7 @@ struct brunel_with_plasticity : model
 	struct synapse : ::spice::synapse<float, float, float>
 	{
 		template <typename Iter, typename Backend>
-		HYBRID static void init( Iter syn, int src, int, snn_info info, Backend & )
+		HYBRID static void init( Iter syn, int_ src, int_, snn_info info, Backend & )
 		{
 			using util::get;
 
@@ -102,8 +102,8 @@ struct brunel_with_plasticity : model
 		template <typename Iter, typename Backend>
 		HYBRID static void update(
 		    Iter syn,
-		    int const src,
-		    int const dst,
+		    int_ const src,
+		    int_ const dst,
 		    bool const pre,
 		    bool const post,
 		    float const dt,

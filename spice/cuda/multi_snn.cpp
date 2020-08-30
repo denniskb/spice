@@ -15,7 +15,7 @@ using namespace spice::cuda::util;
 namespace spice::cuda
 {
 template <typename Model>
-multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int delay /* = 1 */ )
+multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
 {
 	_nets.reserve( device::devices().size() );
@@ -78,8 +78,8 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 template <typename Model>
 void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
-	int * spikes[8];
-	unsigned * n_spikes[8];
+	int_ * spikes[8];
+	uint_ * n_spikes[8];
 
 	{
 		std::vector<int> tmp;
@@ -96,7 +96,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	sync();
 
 	// 2 gpus for now:
-	int a, b;
+	int_ a, b;
 	success_or_throw( cudaMemcpy( &a, n_spikes[0], 4, cudaMemcpyDefault ) );
 	success_or_throw( cudaMemcpy( &b, n_spikes[1], 4, cudaMemcpyDefault ) );
 

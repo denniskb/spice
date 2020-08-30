@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <spice/util/numeric.h>
+#include <spice/util/stdint.h>
 
 
 using namespace spice::util;
@@ -14,12 +15,12 @@ TEST( KahanSum, Ctor )
 
 TEST( KahanSum, Add )
 {
-	int const ITER = 1000;
+	int_ const ITER = 1000;
 	float const DELTA = 0.001f;
 
 	kahan_sum<float> ksum;
 	float deltas = 0;
-	for( int i = 0; i < ITER; i++ )
+	for( int_ i = 0; i < ITER; i++ )
 	{
 		ASSERT_FLOAT_EQ( (float)ksum, i * DELTA );
 

@@ -22,7 +22,7 @@ void * cuda_malloc_host( std::size_t n )
 	return p;
 }
 
-void * cuda_malloc_managed( std::size_t n, unsigned flags /* = cudaMemAttachGlobal */ )
+void * cuda_malloc_managed( std::size_t n, uint_ flags /* = cudaMemAttachGlobal */ )
 {
 	void * p = nullptr;
 	success_or_throw( cudaMallocManaged( &p, n, flags ), std::bad_alloc() );

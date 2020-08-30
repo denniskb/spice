@@ -6,15 +6,15 @@
 using namespace spice::cuda::util;
 
 
-void write_23( int * p );
+void write_23( int_ * p );
 
 
 TEST( Memory, CudaMalloc )
 {
 	std::unique_ptr<int, cudaError_t ( * )( void * )> p(
-	    static_cast<int *>( cuda_malloc( 4 ) ), cudaFree );
+	    static_cast<int_ *>( cuda_malloc( 4 ) ), cudaFree );
 
-	int x = 4;
+	int_ x = 4;
 	cudaMemcpy( p.get(), &x, 4, cudaMemcpyDefault );
 
 	x = 0;
@@ -26,7 +26,7 @@ TEST( Memory, CudaMalloc )
 TEST( Memory, CudaMallocHost )
 {
 	std::unique_ptr<int, cudaError_t ( * )( void * )> p(
-	    static_cast<int *>( cuda_malloc_host( 4 ) ), cudaFree );
+	    static_cast<int_ *>( cuda_malloc_host( 4 ) ), cudaFree );
 
 	*p = 5;
 	ASSERT_EQ( *p, 5 );
@@ -41,7 +41,7 @@ TEST( Memory, CudaMallocHost )
 TEST( Memory, CudaMallocManaged )
 {
 	std::unique_ptr<int, cudaError_t ( * )( void * )> p(
-	    static_cast<int *>( cuda_malloc_managed( 4 ) ), cudaFree );
+	    static_cast<int_ *>( cuda_malloc_managed( 4 ) ), cudaFree );
 
 	*p = 5;
 	ASSERT_EQ( *p, 5 );

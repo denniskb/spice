@@ -83,7 +83,7 @@ static void plot0_AdjGen( benchmark::State & state )
 		{
 			generate_rnd_adj_list( desc, e.data() );
 			start.record();
-			for( int i = 0; i < 10; i++ ) generate_rnd_adj_list( desc, e.data() );
+			for( int_ i = 0; i < 10; i++ ) generate_rnd_adj_list( desc, e.data() );
 			// cudaMemsetAsync( e.data(), 0, 4 * NSYN );
 			stop.record();
 			stop.synchronize();

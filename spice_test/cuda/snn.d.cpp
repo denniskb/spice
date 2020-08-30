@@ -110,7 +110,7 @@ TEST( dSNN, Step )
 
 		std::vector<int> h_spikes, d_spikes;
 
-		for( int i = 0; i < 1000; i++ )
+		for( int_ i = 0; i < 1000; i++ )
 		{
 			h.step( &h_spikes );
 			d.step( &d_spikes );
@@ -127,7 +127,7 @@ TEST( dSNN, Step )
 
 		std::vector<int> h_spikes, d_spikes;
 
-		for( int i = 0; i < 1000; i++ )
+		for( int_ i = 0; i < 1000; i++ )
 		{
 			h.step( &h_spikes );
 			d.step( &d_spikes );
@@ -146,7 +146,7 @@ TEST( dSNN, StepWithDelay )
 
 	std::vector<int> h_spikes, d_spikes;
 
-	for( int i = 0; i < 1000; i++ )
+	for( int_ i = 0; i < 1000; i++ )
 	{
 		h.step( &h_spikes );
 		d.step( &d_spikes );
@@ -167,7 +167,7 @@ TEST( MultiSNN, Step )
 
 	std::vector<int> h_spikes, d_spikes;
 
-	for( int i = 0; i < 1000; i++ )
+	for( int_ i = 0; i < 1000; i++ )
 	{
 		h.step( &h_spikes );
 		d.step( &d_spikes );
@@ -189,7 +189,7 @@ TEST( MultiSNN, StepWithDelay )
 
 	std::vector<int> h_spikes, d_spikes;
 
-	for( int i = 0; i < 1000; i++ )
+	for( int_ i = 0; i < 1000; i++ )
 	{
 		h.step( &h_spikes );
 		d.step( &d_spikes );

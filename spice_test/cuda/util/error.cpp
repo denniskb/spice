@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <spice/cuda/util/error.h>
+#include <spice/util/stdint.h>
 
 
 using namespace spice::cuda::util;
@@ -36,7 +37,7 @@ TEST( Error, ThrowOnError )
 TEST( Error, ClearAfterThrow )
 {
 	ASSERT_EQ( cudaGetLastError(), cudaSuccess );
-	int * p;
+	int_ * p;
 	ASSERT_THROW( success_or_throw( cudaMalloc( &p, 1'000'000'000'000 ) ), std::exception );
 	ASSERT_EQ( cudaGetLastError(), cudaSuccess );
 }

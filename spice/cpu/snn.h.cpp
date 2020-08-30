@@ -13,7 +13,7 @@
 #include <numeric>
 
 
-static unsigned long long seed = 1337;
+static ulong_ seed = 1337;
 
 
 using namespace spice::util;
@@ -31,14 +31,14 @@ public:
 
 	std::size_t id() const { return _i; }
 
-	template <int I, bool C = Const>
+	template <int_ I, bool C = Const>
 	auto const & get( typename std::enable_if_t<C> * dummy = 0 )
 	{
 		spice_assert( _data );
 		return std::get<I>( _data[_i] );
 	}
 
-	template <int I, bool C = Const>
+	template <int_ I, bool C = Const>
 	auto & get( typename std::enable_if_t<!C> * dummy = 0 )
 	{
 		spice_assert( _data );
@@ -55,15 +55,15 @@ using const_iter = iter<T, true>;
 
 
 template <typename F, typename ID>
-static void for_each( F && f, int const count, ID && id, adj_list const & adj )
+static void for_each( F && f, int_ const count, ID && id, adj_list const & adj )
 {
-	for( int i = 0; i < count; i++ )
+	for( int_ i = 0; i < count; i++ )
 	{
-		int const src = std::forward<ID>( id )( i );
+		int_ const src = std::forward<ID>( id )( i );
 
-		int j = 0;
-		for( int dst : adj.neighbors( src ) )
-			std::forward<F>( f )( narrow<unsigned>( adj.edge_index( src, j++ ) ), src, dst );
+		int_ j = 0;
+		for( int_ dst : adj.neighbors( src ) )
+			std::forward<F>( f )( narrow<uint_>( adj.edge_index( src, j++ ) ), src, dst );
 	}
 }
 
@@ -71,7 +71,7 @@ static void for_each( F && f, int const count, ID && id, adj_list const & adj )
 namespace spice::cpu
 {
 template <typename Model>
-snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ )
+snn<Model>::snn( layout const & desc, float const dt, int_ const delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
     , _backend( seed++ )
 {
@@ -96,12 +96,12 @@ snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ 
 	{
 		_synapses.emplace( _graph.adj.num_edges() );
 		for_each(
-		    [&]( unsigned syn, int src, int dst ) {
+		    [&]( uint_ syn, int_ src, int_ dst ) {
 			    Model::synapse::template init(
 			        iter( _synapses->data(), syn ), src, dst, this->info(), _backend );
 		    },
 		    narrow<int>( desc.size() ),
-		    []( int x ) { return x; },
+		    []( int_ x ) { return x; },
 		    _graph.adj );
 
 		_spikes.flags.emplace( delay + 1 );
@@ -114,15 +114,15 @@ snn<Model>::snn( layout const & desc, float const dt, int const delay /* = 1 */ 
 template <typename Model>
 void snn<Model>::step( std::vector<int> * out_spikes )
 {
-	this->_step( [&]( int const istep, float const dt ) {
-		int const post = istep % ( this->delay() + 1 );
-		int const pre = ( istep + 1 ) % ( this->delay() + 1 );
+	this->_step( [&]( int_ const istep, float const dt ) {
+		int_ const post = istep % ( this->delay() + 1 );
+		int_ const pre = ( istep + 1 ) % ( this->delay() + 1 );
 
 		// Receive spikes
-		if( _spikes.counts.size() >= static_cast<unsigned>( this->delay() ) )
+		if( _spikes.counts.size() >= static_cast<uint_>( this->delay() ) )
 		{
 			for_each(
-			    [&]( int syn, int src, int dst ) {
+			    [&]( int_ syn, int_ src, int_ dst ) {
 				    Model::neuron::template receive(
 				        src,
 				        iter( _neurons->data(), dst ),
@@ -131,7 +131,7 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 				        _backend );
 			    },
 			    narrow<int>( _spikes.counts.front() ),
-			    [&]( int x ) { return _spikes.ids[x]; },
+			    [&]( int_ x ) { return _spikes.ids[x]; },
 			    _graph.adj );
 
 			_spikes.ids.erase( _spikes.ids.begin(), _spikes.ids.begin() + _spikes.counts.front() );
@@ -142,7 +142,7 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 		{
 			auto const nspikes = _spikes.ids.size();
 
-			for( int i = 0; i < narrow<int>( this->num_neurons() ); i++ )
+			for( int_ i = 0; i < narrow<int>( this->num_neurons() ); i++ )
 			{
 				bool const spiked = Model::neuron::template update(
 				    iter( _neurons ? _neurons->data() : nullptr, i ), dt, this->info(), _backend );
@@ -162,7 +162,7 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 		if constexpr( Model::synapse::size > 0 )
 		{
 			for_each(
-			    [&]( int syn, int src, int dst ) {
+			    [&]( int_ syn, int_ src, int_ dst ) {
 				    Model::synapse::template update(
 				        iter( _synapses->data(), syn ),
 				        src,
@@ -174,7 +174,7 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 				        _backend );
 			    },
 			    narrow<int>( this->num_neurons() ),
-			    []( int x ) { return x; },
+			    []( int_ x ) { return x; },
 			    _graph.adj );
 		}
 	} );

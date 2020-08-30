@@ -11,6 +11,7 @@
 #include <spice/util/assert.h>
 #include <spice/util/circular_buffer.h>
 #include <spice/util/random.h>
+#include <spice/util/stdint.h>
 
 #include <array>
 
@@ -28,13 +29,13 @@ __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
 
 
-static unsigned long long seed()
+static ulong_ seed()
 {
-	static unsigned long long x = 1337;
+	static ulong_ x = 1337;
 	return hash( x++ );
 }
 
-static int nblocks( int desired, int max, int block_size )
+static int_ nblocks( int_ desired, int_ max, int_ block_size )
 {
 	return std::min( max, ( desired + block_size - 1 ) / block_size );
 }
@@ -42,15 +43,15 @@ static int nblocks( int desired, int max, int block_size )
 class iter_base
 {
 public:
-	__device__ explicit iter_base( int i )
+	__device__ explicit iter_base( int_ i )
 	    : _i( i )
 	{
 	}
 
-	__device__ unsigned id() const { return _i; }
+	__device__ uint_ id() const { return _i; }
 
 private:
-	unsigned const _i = 0;
+	uint_ const _i = 0;
 };
 
 template <typename Decl, bool Neuron = true, bool Const = false>
@@ -59,28 +60,28 @@ class iter : public iter_base
 public:
 	using iter_base::iter_base;
 
-	template <int I, bool N = Neuron, bool C = Const>
+	template <int_ I, bool N = Neuron, bool C = Const>
 	__device__ auto & get( typename std::enable_if_t<N && !C> * dummy = 0 ) const
 	{
 		return reinterpret_cast<std::tuple_element_t<I, typename Decl::tuple_t> *>(
 		    _neuron_storage[I] )[id()];
 	}
 
-	template <int I, bool N = Neuron, bool C = Const>
+	template <int_ I, bool N = Neuron, bool C = Const>
 	__device__ auto const & get( typename std::enable_if_t<N && C> * dummy = 0 ) const
 	{
 		return reinterpret_cast<std::tuple_element_t<I, typename Decl::tuple_t> *>(
 		    _neuron_storage[I] )[id()];
 	}
 
-	template <int I, bool N = Neuron, bool C = Const>
+	template <int_ I, bool N = Neuron, bool C = Const>
 	__device__ auto & get( typename std::enable_if_t<!N && !C> * dummy = 0 ) const
 	{
 		return reinterpret_cast<std::tuple_element_t<I, typename Decl::tuple_t> *>(
 		    _synapse_storage[I] )[id()];
 	}
 
-	template <int I, bool N = Neuron, bool C = Const>
+	template <int_ I, bool N = Neuron, bool C = Const>
 	__device__ auto const & get( typename std::enable_if_t<!N && C> * dummy = 0 ) const
 	{
 		return reinterpret_cast<std::tuple_element_t<I, typename Decl::tuple_t> *>(
@@ -102,36 +103,36 @@ using const_synapse_iter = iter<Decl, false, true>;
 
 
 static __global__ void _generate_adj_ids(
-    unsigned long long const seed,
-    int const desc_len,
-    int const N,
-    unsigned const max_degree,
-    int * const out_edges )
+    ulong_ const seed,
+    int_ const desc_len,
+    int_ const N,
+    uint_ const max_degree,
+    int_ * const out_edges )
 {
 	__shared__ float row[768];
 
 	spice::util::xoroshiro128p rng( threadid() ^ seed );
 
-	unsigned offset = blockIdx.x * max_degree;
-	int total_degree = 0;
-	for( int c = 0; c < desc_len; c++ )
+	uint_ offset = blockIdx.x * max_degree;
+	int_ total_degree = 0;
+	for( int_ c = 0; c < desc_len; c++ )
 	{
 		if( blockIdx.x < _desc_range[c].x || blockIdx.x >= _desc_range[c].y ) continue;
 
-		int first = _desc_range[c].z;
-		int range = _desc_range[c].w - first;
-		int degree = min( max_degree - total_degree, binornd( rng, range, _desc_p[c] ) );
+		int_ first = _desc_range[c].z;
+		int_ range = _desc_range[c].w - first;
+		int_ degree = min( max_degree - total_degree, binornd( rng, range, _desc_p[c] ) );
 		degree = __shfl_sync( MASK_ALL, degree, 0 );
 		total_degree += degree;
 
 		while( degree > 0 )
 		{
-			int const d = min( 768, degree );
-			int const r = (int)( (long long)d * range / degree );
+			int_ const d = min( 768, degree );
+			int_ const r = (int)( (long_)d * range / degree );
 
 			// accumulate
 			float total = 0.0f;
-			for( int i = threadIdx.x; i < d; i += WARP_SZ )
+			for( int_ i = threadIdx.x; i < d; i += WARP_SZ )
 			{
 				float f = exprnd( rng );
 
@@ -148,7 +149,7 @@ static __global__ void _generate_adj_ids(
 				total = __shfl_sync( MASK_ALL, total, 0 );
 
 				float const scale = ( r - d ) / total;
-				for( int i = threadIdx.x; i < d; i += WARP_SZ )
+				for( int_ i = threadIdx.x; i < d; i += WARP_SZ )
 					( out_edges + offset )[i] = first + static_cast<int>( row[i] * scale ) + i;
 			}
 
@@ -159,35 +160,35 @@ static __global__ void _generate_adj_ids(
 		}
 	}
 
-	for( unsigned i = offset + threadIdx.x; i < ( blockIdx.x + 1 ) * max_degree; i += WARP_SZ )
+	for( uint_ i = offset + threadIdx.x; i < ( blockIdx.x + 1 ) * max_degree; i += WARP_SZ )
 		out_edges[i] = -1;
 }
 
 template <typename Model, bool INIT>
 static __global__ void _process_neurons(
-    int const first,
-    int const last,
+    int_ const first,
+    int_ const last,
     snn_info const info,
-    unsigned long long const seed,
+    ulong_ const seed,
 
     float const dt = 0,
-    int * spikes = nullptr,
-    unsigned * num_spikes = nullptr,
+    int_ * spikes = nullptr,
+    uint_ * num_spikes = nullptr,
 
-    unsigned * history = nullptr,
-    int const * ages = nullptr,
-    int * updates = nullptr,
-    unsigned * num_updates = nullptr,
-    int const iter = 0,
-    int const delay = 0,
-    int const max_history = 0,
-    unsigned * delayed_history = nullptr )
+    uint_ * history = nullptr,
+    int_ const * ages = nullptr,
+    int_ * updates = nullptr,
+    uint_ * num_updates = nullptr,
+    int_ const iter = 0,
+    int_ const delay = 0,
+    int_ const max_history = 0,
+    uint_ * delayed_history = nullptr )
 {
 	spice_assert( info.num_neurons < INT_MAX - num_threads() );
 
 	backend bak( threadid() ^ seed );
 
-	for( int i = first + threadid(); i < last; i += num_threads() )
+	for( int_ i = first + threadid(); i < last; i += num_threads() )
 	{
 		neuron_iter<typename Model::neuron> it( i );
 
@@ -199,7 +200,7 @@ static __global__ void _process_neurons(
 
 			if( Model::synapse::size > 0 ) // plast.
 			{
-				unsigned const flag = __ballot_sync( __activemask(), spiked );
+				uint_ const flag = __ballot_sync( __activemask(), spiked );
 				if( laneid() == 0 ) history[i / 32] = flag;
 
 				bool const delayed_spike = delayed_history[i / 32] >> ( i % 32 ) & 1u;
@@ -222,30 +223,30 @@ enum mode
 template <typename Model, mode MODE>
 static __global__ void _process_spikes(
     snn_info const info,
-    unsigned long long const seed,
-    span2d<int const> adj,
+    ulong_ const seed,
+    span2d<int_ const> adj,
 
-    int const * spikes = nullptr,
-    unsigned const * num_spikes = nullptr,
+    int_ const * spikes = nullptr,
+    uint_ const * num_spikes = nullptr,
 
-    int * ages = nullptr,
-    span2d<unsigned> history = {},
-    int const max_history = 0,
-    int const iter = 0,
-    int const delay = 0,
+    int_ * ages = nullptr,
+    span2d<uint_> history = {},
+    int_ const max_history = 0,
+    int_ const iter = 0,
+    int_ const delay = 0,
     float const dt = 0 )
 {
 	backend bak( threadid() ^ seed );
 
-	for( int i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
+	for( int_ i = blockIdx.x; i < ( ( MODE == INIT_SYNS ) ? info.num_neurons : *num_spikes );
 	     i += gridDim.x )
 	{
-		unsigned const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
+		uint_ const src = ( MODE == INIT_SYNS ) ? i : spikes[i];
 
-		for( unsigned j = threadIdx.x; j < adj.width(); j += blockDim.x )
+		for( uint_ j = threadIdx.x; j < adj.width(); j += blockDim.x )
 		{
-			unsigned const isyn = adj.row( src ) - adj.row( 0 ) + j;
-			int const dst = adj( src, j );
+			uint_ const isyn = adj.row( src ) - adj.row( 0 ) + j;
+			int_ const dst = adj( src, j );
 
 			if( dst >= 0 )
 			{
@@ -253,7 +254,7 @@ static __global__ void _process_spikes(
 					Model::synapse::template init(
 					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
 				else if constexpr( Model::synapse::size > 0 )
-					for( int k = ages[src]; k < iter; k++ )
+					for( int_ k = ages[src]; k < iter; k++ )
 						Model::synapse::template update(
 						    synapse_iter<typename Model::synapse>( isyn ),
 						    src,
@@ -286,23 +287,23 @@ static __global__ void _process_spikes(
 template <typename Model>
 static __global__ void _process_spikes_cache_aware(
     snn_info const info,
-    unsigned long long const seed,
-    span2d<int const> adj,
+    ulong_ const seed,
+    span2d<int_ const> adj,
 
-    int const * spikes = nullptr,
-    unsigned const * num_spikes = nullptr )
+    int_ const * spikes = nullptr,
+    uint_ const * num_spikes = nullptr )
 {
 	backend bak( threadid() ^ seed );
 
-	int const S = *num_spikes;
+	int_ const S = *num_spikes;
 
-	for( int i = blockIdx.x; i < S * ( adj.width() / WARP_SZ ); i += gridDim.x )
+	for( int_ i = blockIdx.x; i < S * ( adj.width() / WARP_SZ ); i += gridDim.x )
 	{
-		int s = i % S;
-		int o = i / S;
+		int_ s = i % S;
+		int_ o = i / S;
 
-		int src = spikes[s];
-		int dst = adj( src, WARP_SZ * o + threadIdx.x );
+		int_ src = spikes[s];
+		int_ dst = adj( src, WARP_SZ * o + threadIdx.x );
 
 		if( dst >= 0 )
 			Model::neuron::template receive(
@@ -325,7 +326,7 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::layout const & desc, int * edges )
+void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges )
 {
 	spice_assert(
 	    desc.connections().size() <= 20,
@@ -357,7 +358,7 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int * edges )
 		    seed(),
 		    narrow<int>( desc.connections().size() ),
 		    narrow<int>( desc.size() ),
-		    narrow<unsigned>( desc.max_degree() ),
+		    narrow<uint_>( desc.max_degree() ),
 		    edges );
 	} );
 }
@@ -405,7 +406,7 @@ template void upload_meta<::spice::synth>(
 
 // TOOD: Fuse these two into one function using conditional compilation ('if constexpr')
 template <typename Model>
-void init( int first, int last, snn_info const info, span2d<int const> adj /* = {} */ )
+void init( int_ first, int_ last, snn_info const info, span2d<int_ const> adj /* = {} */ )
 {
 	call( [&] {
 		_process_neurons<Model, true>
@@ -415,28 +416,28 @@ void init( int first, int last, snn_info const info, span2d<int const> adj /* = 
 	if constexpr( Model::synapse::size > 0 )
 		call( [&] { _process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj ); } );
 }
-template void init<::spice::vogels_abbott>( int, int, snn_info, span2d<int const> );
-template void init<::spice::brunel>( int, int, snn_info, span2d<int const> );
-template void init<::spice::brunel_with_plasticity>( int, int, snn_info, span2d<int const> );
-template void init<::spice::synth>( int, int, snn_info, span2d<int const> );
+template void init<::spice::vogels_abbott>( int_, int_, snn_info, span2d<int_ const> );
+template void init<::spice::brunel>( int_, int_, snn_info, span2d<int_ const> );
+template void init<::spice::brunel_with_plasticity>( int_, int_, snn_info, span2d<int_ const> );
+template void init<::spice::synth>( int_, int_, snn_info, span2d<int_ const> );
 
 template <typename Model>
 void update(
-    int first,
-    int last,
+    int_ first,
+    int_ last,
     snn_info const info,
     float const dt,
-    int * spikes,
-    unsigned * num_spikes,
+    int_ * spikes,
+    uint_ * num_spikes,
 
-    span2d<unsigned> history /* = {} */,
-    int * ages /* = nullptr */,
-    int * updates /* = nullptr */,
-    unsigned * num_updates /* = nullptr */,
-    int const iter /* = 0 */,
-    int const delay /* = 0 */,
-    int const max_history /* = 0 */,
-    span2d<int const> adj /* = {} */ )
+    span2d<uint_> history /* = {} */,
+    int_ * ages /* = nullptr */,
+    int_ * updates /* = nullptr */,
+    uint_ * num_updates /* = nullptr */,
+    int_ const iter /* = 0 */,
+    int_ const delay /* = 0 */,
+    int_ const max_history /* = 0 */,
+    span2d<int_ const> adj /* = {} */ )
 {
 	call( [&] {
 		_process_neurons<Model, false><<<nblocks( last - first, 128, 256 ), 256>>>(
@@ -476,79 +477,79 @@ void update(
 		} );
 }
 template void update<::spice::vogels_abbott>(
-    int,
-    int,
+    int_,
+    int_,
     snn_info,
     float,
-    int *,
-    unsigned *,
-    span2d<unsigned>,
-    int *,
-    int *,
-    unsigned *,
-    int const,
-    int const,
-    int const,
-    span2d<int const> );
+    int_ *,
+    uint_ *,
+    span2d<uint_>,
+    int_ *,
+    int_ *,
+    uint_ *,
+    int_ const,
+    int_ const,
+    int_ const,
+    span2d<int_ const> );
 template void update<::spice::brunel>(
-    int,
-    int,
+    int_,
+    int_,
     snn_info,
     float,
-    int *,
-    unsigned *,
-    span2d<unsigned>,
-    int *,
-    int *,
-    unsigned *,
-    int const,
-    int const,
-    int const,
-    span2d<int const> );
+    int_ *,
+    uint_ *,
+    span2d<uint_>,
+    int_ *,
+    int_ *,
+    uint_ *,
+    int_ const,
+    int_ const,
+    int_ const,
+    span2d<int_ const> );
 template void update<::spice::brunel_with_plasticity>(
-    int,
-    int,
+    int_,
+    int_,
     snn_info,
     float,
-    int *,
-    unsigned *,
-    span2d<unsigned>,
-    int *,
-    int *,
-    unsigned *,
-    int const,
-    int const,
-    int const,
-    span2d<int const> );
+    int_ *,
+    uint_ *,
+    span2d<uint_>,
+    int_ *,
+    int_ *,
+    uint_ *,
+    int_ const,
+    int_ const,
+    int_ const,
+    span2d<int_ const> );
 template void update<::spice::synth>(
-    int,
-    int,
+    int_,
+    int_,
     snn_info,
     float,
-    int *,
-    unsigned *,
-    span2d<unsigned>,
-    int *,
-    int *,
-    unsigned *,
-    int const,
-    int const,
-    int const,
-    span2d<int const> );
+    int_ *,
+    uint_ *,
+    span2d<uint_>,
+    int_ *,
+    int_ *,
+    uint_ *,
+    int_ const,
+    int_ const,
+    int_ const,
+    span2d<int_ const> );
 
 template <typename Model>
 void receive(
     snn_info const info,
-    span2d<int const> adj,
+    span2d<int_ const> adj,
 
-    int const * spikes,
-    unsigned const * num_spikes,
+    int_ const * spikes,
+    uint_ const * num_spikes,
 
-    int * ages /* = nullptr */,
-    span2d<unsigned> history /* = {} */,
-    int const max_history /* = 0 */,
-    int const iter /* = 0 */,
-    int const delay /* = 0 */,
+    int_ * ages /* = nullptr */,
+    span2d<uint_> history /* = {} */,
+    int_ const max_history /* = 0 */,
+    int_ const iter /* = 0 */,
+    int_ const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
 	if( info.num_neurons < 400'000 || Model::synapse::size > 0 )
@@ -583,55 +584,55 @@ void receive(
 }
 template void receive<::spice::vogels_abbott>(
     snn_info const,
-    span2d<int const>,
+    span2d<int_ const>,
 
-    int const *,
-    unsigned const *,
+    int_ const *,
+    uint_ const *,
 
-    int *,
-    span2d<unsigned>,
-    int const,
-    int const iter,
-    int const delay,
+    int_ *,
+    span2d<uint_>,
+    int_ const,
+    int_ const iter,
+    int_ const delay,
     float const dt );
 template void receive<::spice::brunel>(
     snn_info const,
-    span2d<int const>,
+    span2d<int_ const>,
 
-    int const *,
-    unsigned const *,
+    int_ const *,
+    uint_ const *,
 
-    int *,
-    span2d<unsigned>,
-    int const,
-    int const iter,
-    int const delay,
+    int_ *,
+    span2d<uint_>,
+    int_ const,
+    int_ const iter,
+    int_ const delay,
     float const dt );
 template void receive<::spice::brunel_with_plasticity>(
     snn_info const,
-    span2d<int const>,
+    span2d<int_ const>,
 
-    int const *,
-    unsigned const *,
+    int_ const *,
+    uint_ const *,
 
-    int *,
-    span2d<unsigned>,
-    int const,
-    int const iter,
-    int const delay,
+    int_ *,
+    span2d<uint_>,
+    int_ const,
+    int_ const iter,
+    int_ const delay,
     float const dt );
 template void receive<::spice::synth>(
     snn_info const,
-    span2d<int const>,
+    span2d<int_ const>,
 
-    int const *,
-    unsigned const *,
+    int_ const *,
+    uint_ const *,
 
-    int *,
-    span2d<unsigned>,
-    int const,
-    int const iter,
-    int const delay,
+    int_ *,
+    span2d<uint_>,
+    int_ const,
+    int_ const iter,
+    int_ const delay,
     float const dt );
 
 template <typename T>
@@ -639,9 +640,9 @@ void zero_async( T * t, cudaStream_t s /* = nullptr */ )
 {
 	call( [&] { _zero_async<T><<<1, 1, 0, s>>>( t ); } );
 }
-template void zero_async<int>( int *, cudaStream_t );
+template void zero_async<int>( int_ *, cudaStream_t );
 template void zero_async<int64_t>( int64_t *, cudaStream_t );
-template void zero_async<unsigned>( unsigned *, cudaStream_t );
+template void zero_async<uint_>( uint_ *, cudaStream_t );
 template void zero_async<uint64_t>( uint64_t *, cudaStream_t );
 template void zero_async<float>( float *, cudaStream_t );
 template void zero_async<double>( double *, cudaStream_t );

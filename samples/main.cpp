@@ -10,7 +10,6 @@
 #include <iostream>
 
 
-
 using namespace spice;
 using namespace spice::util;
 
@@ -26,8 +25,8 @@ int main( int const argc, char const ** argv )
 		return EXIT_FAILURE;
 	}
 
-	unsigned const NNEURON = atoi( argv[2] );
-	unsigned const NITER = atoi( argv[3] );
+	uint_ const NNEURON = atoi( argv[2] );
+	uint_ const NITER = atoi( argv[3] );
 
 	// Lambda taking a snn and simulating it for NITER steps.
 	// Neuron activations get written out to [out-file].
@@ -49,7 +48,7 @@ int main( int const argc, char const ** argv )
 				std::sort( n.begin(), n.end() );
 
 				auto delim = "";
-				for( int x : n )
+				for( int_ x : n )
 				{
 					file << delim << x;
 					delim = ",";

@@ -12,7 +12,7 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::layout const & desc, int * edges );
+void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges );
 
 template <typename Model>
 void upload_meta(
@@ -20,39 +20,39 @@ void upload_meta(
     typename Model::synapse::ptuple_t const & synapse );
 
 template <typename Model>
-void init( int first, int last, snn_info info, spice::util::span2d<int const> adj = {} );
+void init( int_ first, int_ last, snn_info info, spice::util::span2d<int_ const> adj = {} );
 
 template <typename Model>
 void update(
-    int first,
-    int last,
+    int_ first,
+    int_ last,
     snn_info info,
     float dt,
-    int * spikes,
-    unsigned * out_num_spikes,
+    int_ * spikes,
+    uint_ * out_num_spikes,
 
-    spice::util::span2d<unsigned> history = {},
-    int * ages = nullptr,
-    int * updates = nullptr,
-    unsigned * num_updates = nullptr,
-    int const iter = 0,
-    int const delay = 0,
-    int const max_history = 0,
-    spice::util::span2d<int const> adj = {} );
+    spice::util::span2d<uint_> history = {},
+    int_ * ages = nullptr,
+    int_ * updates = nullptr,
+    uint_ * num_updates = nullptr,
+    int_ const iter = 0,
+    int_ const delay = 0,
+    int_ const max_history = 0,
+    spice::util::span2d<int_ const> adj = {} );
 
 template <typename Model>
 void receive(
     snn_info info,
-    spice::util::span2d<int const> adj,
+    spice::util::span2d<int_ const> adj,
 
-    int const * spikes,
-    unsigned const * num_spikes,
+    int_ const * spikes,
+    uint_ const * num_spikes,
 
-    int * ages = nullptr,
-    spice::util::span2d<unsigned> history = {},
-    int max_history = 0,
-    int iter = 0,
-    int delay = 0,
+    int_ * ages = nullptr,
+    spice::util::span2d<uint_> history = {},
+    int_ max_history = 0,
+    int_ iter = 0,
+    int_ delay = 0,
     float dt = 0 );
 
 template <typename T>

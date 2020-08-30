@@ -16,7 +16,7 @@ To narrow_cast( _From x )
 	return static_cast<To>( x );
 }
 
-// 4018 "signed/unsigned mismatch": integerpromotion does the right thing here
+// 4018 "signed/uint_ mismatch": integerpromotion does the right thing here
 // 4702 "unreachable code": code removed via constexpr if
 #pragma warning( push )
 #pragma warning( disable : 4018 4702 )
@@ -56,23 +56,23 @@ constexpr To narrow( From x )
 	constexpr auto to_min = std::numeric_limits<To>::min();
 	constexpr auto to_max = std::numeric_limits<To>::max();
 
-	// int -> int
+	// int_ -> int_
 	if constexpr( from_int && to_int )
 	{
-		// signed -> unsigned
+		// signed -> uint_
 		if constexpr( from_signed && to_unsigned )
 			if( x < 0 ) throw std::bad_cast();
 
 		// signed -> signed
-		// unsigned -> unsigned
-		// unsigned -> signed
+		// uint_ -> uint_
+		// uint_ -> signed
 		if constexpr( to_size >= from_size )
 			return static_cast<To>( x );
 		else if( ( from_unsigned || x >= to_min ) && x <= to_max )
 			return static_cast<To>( x );
 	}
 
-	// int -> real
+	// int_ -> real
 	if constexpr( from_int && to_real )
 	{
 		if constexpr( to_size >= from_size ) return static_cast<To>( x );
@@ -85,8 +85,8 @@ constexpr To narrow( From x )
 
 		if( y <= 1llu << to_size ) return static_cast<To>( x );
 
-		int a = std::numeric_limits<decltype( y )>::digits - 1;
-		int b = 0;
+		int_ a = std::numeric_limits<decltype( y )>::digits - 1;
+		int_ b = 0;
 
 		for( ; a >= 0; a-- )
 			if( ( y >> a ) & 1 ) break;
@@ -96,7 +96,7 @@ constexpr To narrow( From x )
 		if( a - b + 1 <= to_size ) return static_cast<To>( x );
 	}
 
-	// real -> int
+	// real -> int_
 	if constexpr( from_real && to_int )
 	{
 		_From tmp;

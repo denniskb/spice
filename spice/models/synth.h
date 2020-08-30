@@ -11,7 +11,7 @@ namespace spice
 {
 struct synth : model
 {
-	struct neuron : ::spice::neuron<int, int>
+	struct neuron : ::spice::neuron<int, int_>
 	{
 		enum attr
 		{
@@ -35,7 +35,7 @@ struct synth : model
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>
-		HYBRID static void receive( int, Iter dst, SynIter, snn_info, Backend & bak )
+		HYBRID static void receive( int_, Iter dst, SynIter, snn_info, Backend & bak )
 		{
 			using util::get;
 

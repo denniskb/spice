@@ -16,12 +16,12 @@ TEST( Device, UVA )
 
 TEST( Device, Devices )
 {
-	int n;
+	int_ n;
 	cudaGetDeviceCount( &n );
 
-	ASSERT_EQ( static_cast<unsigned>( n ), device::devices().size() );
+	ASSERT_EQ( static_cast<uint_>( n ), device::devices().size() );
 
-	int d;
+	int_ d;
 	cudaGetDevice( &d );
 	ASSERT_EQ( d, device::active() );
 
@@ -46,7 +46,7 @@ TEST( Device, SetActive )
 	{
 		dev.set();
 
-		int d;
+		int_ d;
 		cudaGetDevice( &d );
 		ASSERT_EQ( d, dev );
 		ASSERT_EQ( d, device::active() );

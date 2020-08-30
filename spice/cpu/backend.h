@@ -7,7 +7,7 @@ namespace spice
 {
 struct backend
 {
-	explicit backend( unsigned long long seed )
+	explicit backend( ulong_ seed )
 	    : rng( seed )
 	{
 		spice_assert( seed > 0 );

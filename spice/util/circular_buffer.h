@@ -10,8 +10,8 @@ namespace spice
 {
 namespace util
 {
-template <typename Int>
-HYBRID Int circidx( Int i, Int size )
+template <typename int_>
+HYBRID int_ circidx( int_ i, int_ size )
 {
 	spice_assert( size > 0 );
 	spice_assert( i >= -size );

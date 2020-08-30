@@ -24,7 +24,7 @@ public:
 	virtual std::size_t num_neurons() const = 0;
 	virtual std::size_t num_synapses() const = 0;
 	float dt() const;
-	int delay() const;
+	int_ delay() const;
 	snn_info info() const;
 
 	// TODO: return variants instead (cpu::snn returns span, gpu::snn returns vector)
@@ -34,13 +34,13 @@ public:
 	virtual std::vector<typename Model::synapse::tuple_t> synapses() const = 0;
 
 protected:
-	explicit snn( float dt, int delay = 1 );
-	void _step( std::function<void( int, float )> impl );
+	explicit snn( float dt, int_ delay = 1 );
+	void _step( std::function<void( int_, float )> impl );
 
 private:
 	float const _dt;
-	int const _delay;
-	int _i = 0;
+	int_ const _delay;
+	int_ _i = 0;
 	util::kahan_sum<float> _simtime;
 };
 } // namespace spice

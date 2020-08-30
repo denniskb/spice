@@ -24,7 +24,7 @@ TEST( DBuffer, SizeCtor )
 
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_EQ( x.size(), 23u );
-	ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int_ ) );
 
 	ASSERT_THROW( dbuffer<int>( 1000'000'000'000 ), std::bad_alloc );
 }
@@ -38,7 +38,7 @@ TEST( DBuffer, CopyCtor )
 		ASSERT_NE( x.data(), nullptr );
 		ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 23 );
 		ASSERT_EQ( x.size(), 23u );
-		ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
+		ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int_ ) );
 	}
 
 	{
@@ -63,7 +63,7 @@ TEST( DBuffer, CopyAssign )
 		ASSERT_NE( x.data(), nullptr );
 		ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 23 );
 		ASSERT_EQ( x.size(), 23u );
-		ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
+		ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int_ ) );
 	}
 
 	{
@@ -95,7 +95,7 @@ TEST( DBuffer, ConvCtor )
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 3 );
 	ASSERT_EQ( x.size(), 3u );
-	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int_ ) );
 }
 
 TEST( DBuffer, ConvAssign )
@@ -108,7 +108,7 @@ TEST( DBuffer, ConvAssign )
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_GE( std::abs( std::distance( x.data(), y.data() ) ), 3 );
 	ASSERT_EQ( x.size(), 3u );
-	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int_ ) );
 }
 
 TEST( DBuffer, ConvFunc )
@@ -143,7 +143,7 @@ TEST( DBuffer, Resize )
 
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_EQ( x.size(), 23u );
-	ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 23 * sizeof( int_ ) );
 
 	// downsizing maintains contents
 	auto const p = x.data();
@@ -156,7 +156,7 @@ TEST( DBuffer, Resize )
 
 	ASSERT_EQ( x.data(), p );
 	ASSERT_EQ( x.size(), 3u );
-	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 3 * sizeof( int_ ) );
 
 	y.clear();
 	y = x;
@@ -168,7 +168,7 @@ TEST( DBuffer, Resize )
 
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_EQ( x.size(), 13u );
-	ASSERT_EQ( x.size_in_bytes(), 13 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 13 * sizeof( int_ ) );
 
 	ASSERT_THROW( x.resize( 1'000'000'000'000 ), std::bad_alloc );
 	ASSERT_EQ( x.data(), nullptr );
@@ -184,7 +184,7 @@ TEST( DBuffer, Zero )
 
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_EQ( x.size(), 5u );
-	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int_ ) );
 
 	y = x;
 	ASSERT_EQ( y, vec( { 0, 0, 0, 0, 0 } ) );
@@ -199,7 +199,7 @@ TEST( DBuffer, ZeroAsync )
 
 	ASSERT_NE( x.data(), nullptr );
 	ASSERT_EQ( x.size(), 5u );
-	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int ) );
+	ASSERT_EQ( x.size_in_bytes(), 5 * sizeof( int_ ) );
 
 	y = x;
 	ASSERT_EQ( y, vec( { 0, 0, 0, 0, 0 } ) );

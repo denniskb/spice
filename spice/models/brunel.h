@@ -8,7 +8,7 @@ namespace spice
 {
 struct brunel : model
 {
-	struct neuron : ::spice::neuron<float, int>
+	struct neuron : ::spice::neuron<float, int_>
 	{             //                  |     |
 		enum attr //                  |     |
 		{         //                  |     |
@@ -34,10 +34,10 @@ struct brunel : model
 
 			float const TmemInv = 1.0 / 0.02; // s
 			float const Vrest = 0.0;          // v
-			int const Tref = 20;              // dt
+			int_ const Tref = 20;              // dt
 			float const Vthres = 0.02f;       // v
 
-			if( n.id() < static_cast<unsigned>( info.num_neurons / 2 ) ) // poisson neuron
+			if( n.id() < static_cast<uint_>( info.num_neurons / 2 ) ) // poisson neuron
 			{
 				float const firing_rate = 20; // Hz
 
@@ -62,7 +62,7 @@ struct brunel : model
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>
-		HYBRID static void receive( int src, Iter dst, SynIter, snn_info info, Backend & bak )
+		HYBRID static void receive( int_ src, Iter dst, SynIter, snn_info info, Backend & bak )
 		{
 			using util::get;
 

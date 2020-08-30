@@ -33,7 +33,7 @@ TEST( dAlgorithm, AdjList )
 
 	for( std::size_t i = 0; i < 10; i++ )
 	{
-		int prev = -1;
+		int_ prev = -1;
 		for( auto n : adj.neighbors( i ) )
 		{
 			ASSERT_TRUE( n >= 0 && n < 60 );
@@ -44,7 +44,7 @@ TEST( dAlgorithm, AdjList )
 
 	for( std::size_t i = 10; i < 30; i++ )
 	{
-		int prev = -1;
+		int_ prev = -1;
 		for( auto n : adj.neighbors( i ) )
 		{
 			ASSERT_TRUE( n < 10 || n >= 30 );

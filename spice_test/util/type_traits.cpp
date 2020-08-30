@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <spice/util/random.h>
+#include <spice/util/stdint.h>
 #include <spice/util/type_traits.h>
 
 #include <cmath>
@@ -33,11 +34,11 @@ TEST( TypeTraits, Narrow )
 	ASSERT_THROW(             narrow<char>(-129), std::bad_cast);
 	ASSERT_THROW(             narrow<char>(-300), std::bad_cast);
 
-	// UNSIGNED -> UNSIGNED
+	// uint_ -> uint_
 	// small -> large
-	ASSERT_EQ(255u, narrow<unsigned>((unsigned char) 255));
-	ASSERT_EQ(  1u, narrow<unsigned>((unsigned char)   1));
-	ASSERT_EQ(  0u, narrow<unsigned>((unsigned char)   0));
+	ASSERT_EQ(255u, narrow<uint_>((unsigned char) 255));
+	ASSERT_EQ(  1u, narrow<uint_>((unsigned char)   1));
+	ASSERT_EQ(  0u, narrow<uint_>((unsigned char)   0));
 
 	// large -> small
 	ASSERT_THROW(                     narrow<unsigned char>(512u), std::bad_cast);
@@ -46,20 +47,20 @@ TEST( TypeTraits, Narrow )
 	ASSERT_EQ   ((unsigned char)   1, narrow<unsigned char>(  1u));
 	ASSERT_EQ   ((unsigned char)   0, narrow<unsigned char>(  0u));
 
-	// SIGNED -> UNSIGNED
+	// SIGNED -> uint_
 	// same
-	ASSERT_EQ   (127u, narrow<unsigned>( 127));
-	ASSERT_EQ   (  1u, narrow<unsigned>(   1));
-	ASSERT_EQ   (  0u, narrow<unsigned>(   0));
-	ASSERT_THROW(      narrow<unsigned>(-  1), std::bad_cast);
-	ASSERT_THROW(      narrow<unsigned>(-100), std::bad_cast);
+	ASSERT_EQ   (127u, narrow<uint_>( 127));
+	ASSERT_EQ   (  1u, narrow<uint_>(   1));
+	ASSERT_EQ   (  0u, narrow<uint_>(   0));
+	ASSERT_THROW(      narrow<uint_>(-  1), std::bad_cast);
+	ASSERT_THROW(      narrow<uint_>(-100), std::bad_cast);
 
 	// small -> large
-	ASSERT_EQ   (127u, narrow<unsigned>((char)  127));
-	ASSERT_EQ   (  1u, narrow<unsigned>((char)    1));
-	ASSERT_EQ   (  0u, narrow<unsigned>((char)    0));
-	ASSERT_THROW(      narrow<unsigned>((char) -  1), std::bad_cast);
-	ASSERT_THROW(      narrow<unsigned>((char) - 55), std::bad_cast);
+	ASSERT_EQ   (127u, narrow<uint_>((char)  127));
+	ASSERT_EQ   (  1u, narrow<uint_>((char)    1));
+	ASSERT_EQ   (  0u, narrow<uint_>((char)    0));
+	ASSERT_THROW(      narrow<uint_>((char) -  1), std::bad_cast);
+	ASSERT_THROW(      narrow<uint_>((char) - 55), std::bad_cast);
 
 	// large -> small
 	ASSERT_THROW(                     narrow<unsigned char>( 700), std::bad_cast);
@@ -70,7 +71,7 @@ TEST( TypeTraits, Narrow )
 	ASSERT_THROW(                     narrow<unsigned char>(-  1), std::bad_cast);
 	ASSERT_THROW(                     narrow<unsigned char>(-100), std::bad_cast);
 
-	// UNSIGNED -> SIGNED
+	// uint_ -> SIGNED
 	// same
 	ASSERT_THROW(            narrow<int>(4000000000u), std::bad_cast);
 	ASSERT_THROW(            narrow<int>(2147483648u), std::bad_cast);
@@ -94,9 +95,9 @@ TEST( TypeTraits, Narrow )
 	// small -> large
 	{
 		xoroshiro256ss rng(1337);
-		for (int i = 0; i < 1'000'000; i++)
+		for (int_ i = 0; i < 1'000'000; i++)
 		{
-			unsigned x = rng() >> 32;
+			uint_ x = rng() >> 32;
 			float f;
 			std::memcpy(&f, &x, sizeof(x));
 			if (!std::isnan(f)) { ASSERT_EQ(static_cast<double>(f), narrow<double>(f)); }
@@ -105,9 +106,9 @@ TEST( TypeTraits, Narrow )
 	// large -> small
 	{
 		xoroshiro256ss rng(1337);
-		for (int i = 0; i < 1'000'000; i++)
+		for (int_ i = 0; i < 1'000'000; i++)
 		{
-			unsigned x = rng() >> 32;
+			uint_ x = rng() >> 32;
 			float f;
 			std::memcpy(&f, &x, sizeof(x));
 			if (!std::isnan(f)) { ASSERT_EQ(f, narrow<float>(static_cast<double>(f))); }
@@ -118,9 +119,9 @@ TEST( TypeTraits, Narrow )
 		ASSERT_THROW(narrow<float>(-1e100), std::bad_cast);
 	}
 
-	// int -> real
+	// int_ -> real
 	{
-		int i = 0;
+		int_ i = 0;
 		float f = 0;
 		double d = 0;
 		for (;i <= (1<<24); i++, f++, d++)
@@ -143,12 +144,12 @@ TEST( TypeTraits, Narrow )
 		ASSERT_THROW(narrow<float>(std::numeric_limits<int>::max()), std::bad_cast);
 	}
 
-	// real -> int
+	// real -> int_
 	{
 		xoroshiro256ss rng(1337);
-		for (int i = 0; i < 100'000; i++)
+		for (int_ i = 0; i < 100'000; i++)
 		{
-			unsigned x = rng() >> 32;
+			uint_ x = rng() >> 32;
 			float f;
 			std::memcpy(&f, &x, sizeof(x));
 			if (!std::isnan(f))
@@ -159,7 +160,7 @@ TEST( TypeTraits, Narrow )
 			}
 
 			double d = static_cast<double>(x);
-			ASSERT_EQ(x, narrow<unsigned>(d));
+			ASSERT_EQ(x, narrow<uint_>(d));
 		}
 	}
 

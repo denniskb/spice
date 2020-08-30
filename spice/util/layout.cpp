@@ -2,6 +2,7 @@
 
 #include <spice/cuda/util/defs.h>
 #include <spice/util/assert.h>
+#include <spice/util/stdint.h>
 #include <spice/util/type_traits.h>
 
 #include <cmath>
@@ -9,13 +10,13 @@
 #include <numeric>
 
 
-static constexpr std::size_t operator"" _sz( unsigned long long int n ) { return n; }
+static constexpr std::size_t operator"" _sz( unsigned long long n ) { return n; }
 
 static std::size_t estimate_max_deg( std::vector<spice::util::layout::edge> const & connections )
 {
 	using namespace spice::util;
 
-	int src = connections.empty() ? 0 : std::get<0>( connections.front() );
+	int_ src = connections.empty() ? 0 : std::get<0>( connections.front() );
 
 	std::size_t result = 0;
 	double m = 0.0, s2 = 0.0;
@@ -165,8 +166,8 @@ layout::slice<> layout::cut( std::size_t n, std::size_t i )
 		       ( i ? szs[i - 1] : 0 );
 	};
 
-	int const first = narrow<int>( partition( costs.back() * i / n ) );
-	int const last = narrow<int>( partition( costs.back() * ( i + 1 ) / n ) );
+	int_ const first = narrow<int>( partition( costs.back() * i / n ) );
+	int_ const last = narrow<int>( partition( costs.back() * ( i + 1 ) / n ) );
 
 	std::vector<layout::edge> part;
 	for( auto c : connections() )

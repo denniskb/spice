@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spice/util/span.hpp>
+#include <spice/util/stdint.h>
 
 #include <tuple>
 #include <vector>
@@ -24,7 +25,7 @@ class layout
 {
 public:
 	// ([first1, last2), [first2, last2), p)
-	using edge = std::tuple<int, int, int, int, float>;
+	using edge = std::tuple<int, int_, int_, int_, float>;
 
 	layout( std::size_t num_neurons, float connections );
 	layout(
@@ -39,8 +40,8 @@ public:
 	struct slice
 	{
 		T part;
-		int first;
-		int last;
+		int_ first;
+		int_ last;
 	};
 	slice<> cut( std::size_t n, std::size_t i );
 

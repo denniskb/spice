@@ -13,10 +13,10 @@ class warp
 {
 public:
 	template <typename T>
-	static __device__ T inclusive_scan( T val, T & out_total, unsigned const mask )
+	static __device__ T inclusive_scan( T val, T & out_total, uint_ const mask )
 	{
 #pragma unroll
-		for( int delta = 1; delta <= WARP_SZ / 2; delta *= 2 )
+		for( int_ delta = 1; delta <= WARP_SZ / 2; delta *= 2 )
 		{
 			T tmp = __shfl_up_sync( mask, val, delta );
 			val += ( laneid() >= delta ) * tmp;

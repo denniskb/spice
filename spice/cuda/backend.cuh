@@ -9,7 +9,7 @@ namespace cuda
 {
 struct backend
 {
-	__device__ explicit backend( unsigned long long seed )
+	__device__ explicit backend( ulong_ seed )
 	    : rng( seed )
 	{
 		spice_assert( seed > 0 );

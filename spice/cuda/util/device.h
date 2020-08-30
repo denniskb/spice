@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spice/util/span.hpp>
+#include <spice/util/stdint.h>
 
 #include <cuda_runtime.h>
 
@@ -25,16 +26,16 @@ public:
 	static device const cpu;
 	static device const none;
 
-	operator int() const;
+	operator int_() const;
 
 	cudaDeviceProp props() const;
 	void set();
 	void synchronize();
 
 private:
-	int _id;
+	int_ _id;
 
-	device( int id ) noexcept;
+	device( int_ id ) noexcept;
 };
 } // namespace util
 } // namespace cuda

@@ -22,7 +22,7 @@ using namespace spice::cuda::util;
 namespace spice::cuda
 {
 template <typename Model>
-int snn<Model>::MAX_HISTORY() const
+int_ snn<Model>::MAX_HISTORY() const
 {
 	return std::max( this->delay() + 1, 48 );
 }
@@ -32,7 +32,7 @@ int snn<Model>::MAX_HISTORY() const
                                   // template inst.
 template <typename Model>
 void snn<Model>::reserve(
-    std::size_t const num_neurons, std::size_t const num_synapses, int const delay )
+    std::size_t const num_neurons, std::size_t const num_synapses, int_ const delay )
 {
 	spice_assert( num_synapses % num_neurons == 0 );
 
@@ -67,9 +67,9 @@ template <typename Model>
 snn<Model>::snn(
     spice::util::layout const & desc,
     float const dt,
-    int const delay /* = 1 */,
-    int first /* = 0 */,
-    int last /* = -1 */ )
+    int_ const delay /* = 1 */,
+    int_ first /* = 0 */,
+    int_ last /* = -1 */ )
     : ::spice::snn<Model>( dt, delay )
     , _first( first )
     , _last( last == -1 ? narrow<int>( desc.size() ) : last )
@@ -94,9 +94,9 @@ snn<Model>::snn(
     std::vector<int> const & adj,
     std::size_t width,
     float const dt,
-    int const delay /* = 1 */,
-    int first /* = 0 */,
-    int last /* = -1 */ )
+    int_ const delay /* = 1 */,
+    int_ first /* = 0 */,
+    int_ last /* = -1 */ )
     : ::spice::snn<Model>( dt, delay )
     , _first( first )
     , _last( last == -1 ? narrow<int>( adj.size() / width ) : last )
@@ -139,17 +139,17 @@ snn<Model>::snn( spice::snn<Model> const & net )
 template <typename Model>
 void snn<Model>::step( std::vector<int> * out_spikes )
 {
-	int * spikes;
-	unsigned * num_spikes;
+	int_ * spikes;
+	uint_ * num_spikes;
 
 	step( &spikes, &num_spikes, out_spikes );
 }
 
 template <typename Model>
 void snn<Model>::step(
-    int ** out_dspikes, unsigned ** out_dnum_spikes, std::vector<int> * out_spikes /* = nullptr */ )
+    int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes /* = nullptr */ )
 {
-	this->_step( [&]( int const i, float const dt ) {
+	this->_step( [&]( int_ const i, float const dt ) {
 		if( i >= this->delay() )
 		{
 			receive<Model>(
@@ -192,11 +192,11 @@ void snn<Model>::step(
 
 		if( out_spikes )
 		{
-			unsigned count;
-			cudaMemcpy( &count, *out_dnum_spikes, sizeof( unsigned ), cudaMemcpyDefault );
+			uint_ count;
+			cudaMemcpy( &count, *out_dnum_spikes, sizeof( uint_ ), cudaMemcpyDefault );
 			out_spikes->resize( count );
 			cudaMemcpy(
-			    out_spikes->data(), *out_dspikes, count * sizeof( int ), cudaMemcpyDefault );
+			    out_spikes->data(), *out_dspikes, count * sizeof( int_ ), cudaMemcpyDefault );
 		}
 	} );
 }

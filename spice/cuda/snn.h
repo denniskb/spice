@@ -16,18 +16,18 @@ template <typename Model>
 class snn : public ::spice::snn<Model>
 {
 public:
-	snn( spice::util::layout const & desc, float dt, int delay = 1, int first = 0, int last = -1 );
+	snn( spice::util::layout const & desc, float dt, int_ delay = 1, int_ first = 0, int_ last = -1 );
 	snn( std::vector<int> const & adj,
 	     std::size_t width,
 	     float dt,
-	     int delay = 1,
-	     int first = 0,
-	     int last = -1 );
+	     int_ delay = 1,
+	     int_ first = 0,
+	     int_ last = -1 );
 	snn( spice::snn<Model> const & net );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
 	void step(
-	    int ** out_dspikes, unsigned ** out_dnum_spikes, std::vector<int> * out_spikes = nullptr );
+	    int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes = nullptr );
 
 	std::size_t num_neurons() const override;
 	std::size_t num_synapses() const override;
@@ -51,20 +51,20 @@ private:
 		// TODO: Optimize memory consumption (low-priority)
 		util::dbuffer<int> ids_data;
 		spice::util::span2d<int> ids;
-		util::dbuffer<unsigned> counts;
+		util::dbuffer<uint_> counts;
 
-		util::dbuffer<unsigned> history_data;
-		spice::util::span2d<unsigned> history;
+		util::dbuffer<uint_> history_data;
+		spice::util::span2d<uint_> history;
 
 		util::dbuffer<int> updates;
-		util::dvar<unsigned> num_updates;
+		util::dvar<uint_> num_updates;
 	} _spikes;
 
-	int const _first;
-	int const _last;
+	int_ const _first;
+	int_ const _last;
 
-	int MAX_HISTORY() const;
+	int_ MAX_HISTORY() const;
 
-	void reserve( std::size_t num_neurons, std::size_t max_degree, int delay );
+	void reserve( std::size_t num_neurons, std::size_t max_degree, int_ delay );
 };
 } // namespace spice::cuda

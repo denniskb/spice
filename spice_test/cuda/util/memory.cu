@@ -1,3 +1,6 @@
-__global__ void write( int * p ) { *p = 23; }
+#include <spice/util/stdint.h>
 
-void write_23( int * p ) { write<<<1, 1>>>( p ); }
+
+__global__ void write( int_ * p ) { *p = 23; }
+
+void write_23( int_ * p ) { write<<<1, 1>>>( p ); }

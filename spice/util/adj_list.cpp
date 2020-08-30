@@ -8,12 +8,12 @@
 #include <numeric>
 
 
-static unsigned long long _seed = 1337;
+static ulong_ _seed = 1337;
 
 
 namespace spice::util
 {
-adj_list::adj_list( std::size_t num_nodes, std::size_t max_degree, int const * edges )
+adj_list::adj_list( std::size_t num_nodes, std::size_t max_degree, int_ const * edges )
     : _num_nodes( num_nodes )
     , _max_degree( max_degree )
     , _edges( edges )
@@ -21,12 +21,12 @@ adj_list::adj_list( std::size_t num_nodes, std::size_t max_degree, int const * e
 	spice_assert( num_nodes <= std::numeric_limits<int>::max(), "invalid node count" );
 	spice_assert( max_degree <= std::numeric_limits<int>::max(), "invalid degree" );
 	spice_assert(
-	    num_nodes * max_degree <= std::numeric_limits<unsigned>::max(),
+	    num_nodes * max_degree <= std::numeric_limits<uint_>::max(),
 	    "no. of edges out of boudns" );
 }
 
 
-nonstd::span<int const> adj_list::neighbors( std::size_t i_node ) const
+nonstd::span<int_ const> adj_list::neighbors( std::size_t i_node ) const
 {
 	spice_assert( i_node < num_nodes(), "index out of bounds" );
 
@@ -53,20 +53,20 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 
 	xoroshiro256ss gen( _seed++ );
 
-	int const N = narrow<int>( desc.size() );
+	int_ const N = narrow<int>( desc.size() );
 
 	std::size_t offset = 0;
-	for( int i = 0; i < N; i++ )
+	for( int_ i = 0; i < N; i++ )
 	{
-		int total_degree = 0;
+		int_ total_degree = 0;
 		for( auto const c : desc.connections() )
 		{
 			if( i < std::get<0>( c ) || i >= std::get<1>( c ) ) continue;
 
-			int const first = std::get<2>( c );
-			int const range = std::get<3>( c ) - first;
+			int_ const first = std::get<2>( c );
+			int_ const range = std::get<3>( c ) - first;
 
-			int const degree = std::min(
+			int_ const degree = std::min(
 			    narrow<int>( desc.max_degree() - total_degree ),
 			    binornd( gen, range, std::get<4>( c ) ) );
 
@@ -75,14 +75,14 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 			float * neighbor_ids = reinterpret_cast<float *>( edges.data() + offset );
 
 			float total = exprnd( gen );
-			for( int k = 0; k < degree; k++ )
+			for( int_ k = 0; k < degree; k++ )
 			{
 				neighbor_ids[k] = total;
 				total += exprnd( gen );
 			}
 
 			float const scale = ( range - degree ) / total;
-			for( int k = 0; k < degree; k++ )
+			for( int_ k = 0; k < degree; k++ )
 				edges[offset++] = first + narrow_cast<int>( neighbor_ids[k] * scale ) + k;
 		}
 
@@ -90,7 +90,7 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 	}
 }
 
-int const * adj_list::edges() const { return _edges; }
+int_ const * adj_list::edges() const { return _edges; }
 
 std::size_t adj_list::num_nodes() const { return _num_nodes; }
 std::size_t adj_list::max_degree() const { return _max_degree; }

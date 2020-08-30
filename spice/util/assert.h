@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spice/util/host_defines.h>
+#include <spice/util/stdint.h>
 
 #include <cstdio>
 #include <cstring>
@@ -23,7 +24,7 @@ inline char separator()
 }
 } // namespace detail
 inline HYBRID void
-_assert( char const * cond, char const * file, int line, char const * msg = nullptr )
+_assert( char const * cond, char const * file, int_ line, char const * msg = nullptr )
 {
 #ifdef __CUDA_ARCH__
 	asm( "trap;" );

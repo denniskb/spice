@@ -18,7 +18,7 @@ template <typename Model>
 class snn : public ::spice::snn<Model>
 {
 public:
-	snn( util::layout const & desc, float dt, int delay = 1 );
+	snn( util::layout const & desc, float dt, int_ delay = 1 );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
 

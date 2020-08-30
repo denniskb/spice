@@ -29,7 +29,7 @@ TEST( AdjList, Ctor )
 		ASSERT_EQ( x.max_degree(), 0u );
 		ASSERT_EQ( x.num_edges(), 0u );
 
-		for( int i = 0; i < 100; i++ ) ASSERT_EQ( x.neighbors( i ).size(), 0u );
+		for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( x.neighbors( i ).size(), 0u );
 	}
 
 	{
@@ -44,11 +44,11 @@ TEST( AdjList, Ctor )
 		ASSERT_EQ( x.max_degree(), 128u );
 		ASSERT_EQ( x.num_edges(), deg * 100 );
 
-		for( int i = 0; i < 100; i++ )
+		for( int_ i = 0; i < 100; i++ )
 		{
 			ASSERT_EQ( x.neighbors( i ).size(), 100u );
 
-			int j = 0;
+			int_ j = 0;
 			for( auto n : x.neighbors( i ) )
 			{
 				ASSERT_EQ( n, j );
@@ -70,9 +70,9 @@ TEST( AdjList, Ctor )
 		ASSERT_LE( x.max_degree(), 128u );
 		ASSERT_EQ( x.num_edges(), deg * 100 );
 
-		for( int i = 0; i < 100; i++ )
+		for( int_ i = 0; i < 100; i++ )
 		{
-			int prev = -1;
+			int_ prev = -1;
 			for( auto y : x.neighbors( i ) )
 			{
 				ASSERT_GE( y, 0 );
@@ -107,8 +107,8 @@ TEST( AdjList, Ctor )
 			ASSERT_TRUE( degree >= 0 && degree <= 60 );
 			EXPECT_TRUE( degree >= 12 && degree <= 32 ) << degree << " (rng)";
 
-			int prev = -1;
-			int j = 0;
+			int_ prev = -1;
+			int_ j = 0;
 			for( auto n : adj.neighbors( i ) )
 			{
 				ASSERT_TRUE( n >= 0 && n < 60 );
@@ -126,8 +126,8 @@ TEST( AdjList, Ctor )
 			ASSERT_TRUE( degree >= 10 && degree <= 40 );
 			EXPECT_TRUE( degree >= 15 && degree <= 35 ) << degree << " (rng)";
 
-			int prev = -1;
-			int j = 0;
+			int_ prev = -1;
+			int_ j = 0;
 			for( auto n : adj.neighbors( i ) )
 			{
 				ASSERT_TRUE( n < 10 || n >= 30 );

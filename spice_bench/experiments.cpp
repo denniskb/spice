@@ -33,7 +33,7 @@ static void cache_synth( benchmark::State & state )
 		for( auto _ : state )
 		{
 			start.record();
-			for( int i = 0; i < 100; i++ ) net.step();
+			for( int_ i = 0; i < 100; i++ ) net.step();
 			stop.record();
 			stop.synchronize();
 
@@ -73,7 +73,7 @@ static void cache_brunel( benchmark::State & state )
 		for( auto _ : state )
 		{
 			start.record();
-			for( int i = 0; i < 1000; i++ ) net.step();
+			for( int_ i = 0; i < 1000; i++ ) net.step();
 			stop.record();
 			stop.synchronize();
 

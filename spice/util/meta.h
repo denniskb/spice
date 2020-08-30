@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spice/util/host_defines.h>
+#include <spice/util/stdint.h>
 
 #include <tuple>
 #include <type_traits>
@@ -122,7 +123,7 @@ struct type_list
 	using soa_t = std::tuple<Cont<T>...>;
 };
 
-template <int I, typename Iter>
+template <int_ I, typename Iter>
 HYBRID auto & get( Iter it )
 {
 	return it.template get<I>();
@@ -161,7 +162,7 @@ struct soa_t
 		return std::get<0>( _data ).size();
 	}
 
-	template <std::size_t sz = TypeList::size, std::enable_if_t<sz == 0, int> * = nullptr>
+	template <std::size_t sz = TypeList::size, std::enable_if_t<sz == 0, int_> * = nullptr>
 	std::size_t size() const
 	{
 		return 0;

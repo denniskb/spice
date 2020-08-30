@@ -7,15 +7,15 @@
 
 using namespace spice::util;
 
-unsigned zerorng() { return 0; }
-unsigned maxrng() { return std::numeric_limits<unsigned>::max(); }
+uint_ zerorng() { return 0; }
+uint_ maxrng() { return std::numeric_limits<uint_>::max(); }
 
 
-unsigned long long seed()
+ulong_ seed()
 {
-	unsigned long long result;
+	ulong_ result;
 	static std::random_device rd;
-	result = rd() | (unsigned long long)rd() << 32;
+	result = rd() | (ulong_)rd() << 32;
 	std::cerr << "seed: " << result << std::endl;
 	return result;
 }
@@ -32,7 +32,7 @@ TEST( Random, uniform )
 
 	{
 		double m = 0.0;
-		for( int i = 0; i < 10000; i++ )
+		for( int_ i = 0; i < 10000; i++ )
 		{
 			auto x = uniform_left_inc( rng );
 			ASSERT_LT( x, 1.0f );
@@ -43,7 +43,7 @@ TEST( Random, uniform )
 
 	{
 		double m = 0.0;
-		for( int i = 0; i < 10000; i++ )
+		for( int_ i = 0; i < 10000; i++ )
 		{
 			auto x = uniform_right_inc( rng );
 			ASSERT_GT( x, 0.0f );
@@ -61,19 +61,19 @@ TEST( Random, Normal )
 
 	{
 		double m = 0.0;
-		for( int i = 0; i < 10000; i++ ) m += normrnd( rng );
+		for( int_ i = 0; i < 10000; i++ ) m += normrnd( rng );
 		EXPECT_NEAR( m / 10000, 0.0, 0.02 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		double m = 0.0;
-		for( int i = 0; i < 10000; i++ ) m += normrnd( rng, 5 );
+		for( int_ i = 0; i < 10000; i++ ) m += normrnd( rng, 5 );
 		EXPECT_NEAR( m / 10000, 5, 0.02 ) << "Test depends on rng, repeat it.";
 	}
 
 	{
 		double m = 0.0;
-		for( int i = 0; i < 10000; i++ ) m += normrnd( rng, -5 );
+		for( int_ i = 0; i < 10000; i++ ) m += normrnd( rng, -5 );
 		EXPECT_NEAR( m / 10000, -5, 0.02 ) << "Test depends on rng, repeat it.";
 	}
 }
@@ -82,19 +82,19 @@ TEST( Random, Binom )
 {
 	xoroshiro128p rng( seed() );
 
-	for( int i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 0, 0 ), 0 );
-	for( int i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 0, 0.5f ), 0 );
-	for( int i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 0, 1.0f ), 0 );
+	for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 0, 0 ), 0 );
+	for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 0, 0.5f ), 0 );
+	for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 0, 1.0f ), 0 );
 
-	for( int i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 1, 0 ), 0 );
-	for( int i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 1, 1.0f ), 1 );
+	for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 1, 0 ), 0 );
+	for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, 1, 1.0f ), 1 );
 
-	for( int i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, i, 0 ), 0 );
-	for( int i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, i, 1.0f ), i );
+	for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, i, 0 ), 0 );
+	for( int_ i = 0; i < 100; i++ ) ASSERT_EQ( binornd( rng, i, 1.0f ), i );
 
 	{
-		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ )
+		uint_ m = 0;
+		for( int_ i = 0; i < 10000; i++ )
 		{
 			auto x = binornd( rng, 1, 0.5f );
 			ASSERT_GE( x, 0 );
@@ -105,8 +105,8 @@ TEST( Random, Binom )
 	}
 
 	{
-		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ )
+		uint_ m = 0;
+		for( int_ i = 0; i < 10000; i++ )
 		{
 			auto x = binornd( rng, 100, 0.1f );
 			ASSERT_GE( x, 0 );
@@ -117,8 +117,8 @@ TEST( Random, Binom )
 	}
 
 	{
-		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ )
+		uint_ m = 0;
+		for( int_ i = 0; i < 10000; i++ )
 		{
 			auto x = binornd( rng, 100, 0.5f );
 			ASSERT_GE( x, 0 );
@@ -129,8 +129,8 @@ TEST( Random, Binom )
 	}
 
 	{
-		unsigned m = 0;
-		for( int i = 0; i < 10000; i++ )
+		uint_ m = 0;
+		for( int_ i = 0; i < 10000; i++ )
 		{
 			auto x = binornd( rng, 100, 0.9f );
 			ASSERT_GE( x, 0 );

@@ -17,11 +17,11 @@ using namespace spice::cuda::util;
 void dummy_kernel( cudaStream_t s );
 void dummy_copy( cudaStream_t s )
 {
-	int const N = 3'000'000;
+	int_ const N = 3'000'000;
 	static std::unique_ptr<int, cudaError_t ( * )( void * )> host(
-	    static_cast<int *>( cuda_malloc_host( N * 4 ) ), cudaFree );
+	    static_cast<int_ *>( cuda_malloc_host( N * 4 ) ), cudaFree );
 	static std::unique_ptr<int, cudaError_t ( * )( void * )> device(
-	    static_cast<int *>( cuda_malloc( N * 4 ) ), cudaFree );
+	    static_cast<int_ *>( cuda_malloc( N * 4 ) ), cudaFree );
 
 	cudaMemcpyAsync( device.get(), host.get(), N * 4, cudaMemcpyDefault, s ); // ~1ms
 }

@@ -17,10 +17,10 @@ nonstd::span<device> device::devices()
 {
 	static std::array<device, 8> _devices{ 0, 1, 2, 3, 4, 5, 6, 7 };
 	static std::size_t const n = [] {
-		int i = 0;
+		int_ i = 0;
 		success_or_throw( cudaGetDeviceCount( &i ) );
 		spice_assert(
-		    spice::util::narrow<unsigned>( i ) <= _devices.size(),
+		    spice::util::narrow<uint_>( i ) <= _devices.size(),
 		    "spice does not support more than 8 gpus per node." );
 		return i;
 	}();
@@ -36,7 +36,7 @@ device & device::devices( std::size_t i )
 
 device & device::active()
 {
-	int d;
+	int_ d;
 	success_or_throw( cudaGetDevice( &d ) );
 
 	return devices( d );
@@ -46,7 +46,7 @@ device const device::cpu = device( cudaCpuDeviceId );
 device const device::none = device( -2 );
 
 
-device::operator int() const { return _id; }
+device::operator int_() const { return _id; }
 
 
 cudaDeviceProp device::props() const
@@ -65,7 +65,7 @@ void device::synchronize()
 }
 
 
-device::device( int id ) noexcept
+device::device( int_ id ) noexcept
     : _id( id )
 {
 }
