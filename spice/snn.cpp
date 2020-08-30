@@ -38,6 +38,8 @@ snn<Model>::snn( float dt, int_ delay /* = 1 */ )
 template <typename Model>
 void snn<Model>::_step( std::function<void( int_, float )> impl )
 {
+	spice_assert( _i < std::numeric_limits<decltype( _i )>::max() );
+
 	impl( _i++, _simtime.add( dt() ) );
 }
 
