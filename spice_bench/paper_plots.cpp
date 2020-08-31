@@ -102,7 +102,7 @@ static void plot0_AdjGen( benchmark::State & state )
 BENCHMARK( plot0_AdjGen )
     ->UseManualTime()
     ->Unit( benchmark::kMillisecond )
-    ->ExpRange( 1'000'000, 512'000'000 );
+    ->ExpRange( 1'000'000, 2048'000'000 );
 
 
 // Absolute runtime per iteration as a function of synapse count

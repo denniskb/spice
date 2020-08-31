@@ -137,7 +137,7 @@ static __global__ void _generate_adj_ids(
 				float f = exprnd( rng );
 
 				float sum;
-				f = total + warp::inclusive_scan( f, sum, __activemask() );
+				f = total + warp::inclusive_scan( f, sum, active_mask( i, d ) );
 				total += sum;
 
 				row[i] = f;
@@ -200,7 +200,7 @@ static __global__ void _process_neurons(
 
 			if( Model::synapse::size > 0 ) // plast.
 			{
-				uint_ const flag = __ballot_sync( __activemask(), spiked );
+				uint_ const flag = __ballot_sync( active_mask( i, last ), spiked );
 				if( laneid() == 0 ) history[i / 32] = flag;
 
 				bool const delayed_spike = delayed_history[i / 32] >> ( i % 32 ) & 1u;
