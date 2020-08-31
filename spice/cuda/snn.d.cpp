@@ -24,7 +24,7 @@ namespace spice::cuda
 template <typename Model>
 int_ snn<Model>::MAX_HISTORY() const
 {
-	return std::max( this->delay() + 1, 48 );
+	return std::max( this->delay() + 1, 32 );
 }
 
 #pragma warning( push )
@@ -162,7 +162,7 @@ void snn<Model>::step(
 			    _graph.ages.data(),
 			    _spikes.history,
 			    MAX_HISTORY(),
-			    i,
+			    i - 1,
 			    this->delay(),
 			    dt );
 		}

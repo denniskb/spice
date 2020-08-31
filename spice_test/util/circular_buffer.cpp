@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <spice/util/circular_buffer.h>
+#include <spice/util/stdint.h>
 
 
 using namespace spice::util;

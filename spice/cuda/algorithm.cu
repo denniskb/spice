@@ -203,9 +203,9 @@ static __global__ void _process_neurons(
 				uint_ const flag = __ballot_sync( active_mask( i, last ), spiked );
 				if( laneid() == 0 ) history[i / 32] = flag;
 
-				bool const delayed_spike = delayed_history[i / 32] >> ( i % 32 ) & 1u;
-
-				if( iter - ages[i] == max_history - 1 && !delayed_spike )
+				bool const delayed_spike =
+				    delay == 1 ? spiked : delayed_history[i / 32] >> ( i % 32 ) & 1u;
+				if( iter - ages[i] + 1 == max_history && !delayed_spike )
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
@@ -254,12 +254,13 @@ static __global__ void _process_spikes(
 					Model::synapse::template init(
 					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
 				else if constexpr( Model::synapse::size > 0 )
-					for( int_ k = ages[src]; k < iter; k++ )
+					for( int_ k = ages[src]; k <= iter; k++ )
 						Model::synapse::template update(
 						    synapse_iter<typename Model::synapse>( isyn ),
 						    src,
 						    dst,
-						    MODE == HNDL_SPKS && k == iter - 1,
+						    history( circidx( k - delay, max_history ), src / 32 ) >> ( src % 32 ) &
+						        1u,
 						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
 						    dt,
 						    info,
@@ -279,7 +280,7 @@ static __global__ void _process_spikes(
 		{
 			__syncthreads();
 
-			if( threadIdx.x == 0 ) ages[src] = iter;
+			if( threadIdx.x == 0 ) ages[src] = iter + 1;
 		}
 	}
 }
@@ -455,7 +456,7 @@ void update(
 		    iter,
 		    delay,
 		    max_history,
-		    history.row( circidx( iter - delay, max_history ) ) );
+		    history.row( circidx( iter - delay + 1, max_history ) ) );
 	} );
 
 	if constexpr( Model::synapse::size > 0 )

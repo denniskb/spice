@@ -11,7 +11,7 @@ endif()
 set(CPP_STD 17)
 set(CUDA_ARCH 50)
 
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda --generate-code=arch=compute_${CUDA_ARCH},code=sm_50 -arch=sm_${CUDA_ARCH} --use_fast_math -std=c++17")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_${CUDA_ARCH},code=sm_${CUDA_ARCH} -arch=sm_${CUDA_ARCH} --use_fast_math -std=c++17")
 if(CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -DNDEBUG")
 endif()

@@ -73,7 +73,7 @@ int main( int const argc, char const ** argv )
 			    15 ) );
 		// Initialize a snn with the brunel model (with plasticity turned on)
 		else if( !strcmp( argv[1], "brunel+" ) )
-			run_sim( cuda::multi_snn<brunel_with_plasticity>(
+			run_sim( cuda::snn<brunel_with_plasticity>(
 			    layout( { NNEURON / 2, NNEURON / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ),
 			    0.0001f,
 			    15 ) );
