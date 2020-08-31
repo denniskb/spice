@@ -15,6 +15,8 @@ public:
 	template <typename T>
 	static __device__ T inclusive_scan( T val, T & out_total, uint_ const mask )
 	{
+		spice_assert( mask );
+
 #pragma unroll
 		for( int_ delta = 1; delta <= WARP_SZ / 2; delta *= 2 )
 		{
@@ -22,7 +24,7 @@ public:
 			val += ( laneid() >= delta ) * tmp;
 		}
 
-		out_total = __shfl_sync( mask, val, __popc( mask ) - 1 );
+		out_total = __shfl_sync( mask, val, 31 - __clz( mask ) );
 
 		return val;
 	}
