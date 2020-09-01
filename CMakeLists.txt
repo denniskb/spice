@@ -9,9 +9,9 @@ else()
 endif()
 
 set(CPP_STD 17)
-set(CUDA_ARCH 50)
+set(CUDA_ARCH 52)
 
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_${CUDA_ARCH},code=sm_${CUDA_ARCH} -arch=sm_${CUDA_ARCH} --use_fast_math -std=c++17")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_${CUDA_ARCH} --use_fast_math -std=c++${CPP_STD}")
 if(CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -DNDEBUG")
 endif()
