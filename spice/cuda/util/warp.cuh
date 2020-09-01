@@ -18,7 +18,7 @@ public:
 		spice_assert( mask );
 
 #pragma unroll
-		for( int_ delta = 1; delta <= WARP_SZ / 2; delta *= 2 )
+		for( int_ delta = 1; delta < WARP_SZ; delta *= 2 )
 		{
 			T tmp = __shfl_up_sync( mask, val, delta );
 			val += ( laneid() >= delta ) * tmp;
