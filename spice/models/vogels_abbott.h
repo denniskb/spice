@@ -37,7 +37,7 @@ struct vogels_abbott : model
 		{
 			using util::get;
 
-			int_ const Tref = 50;                // dt
+			int_ const Tref = 50;               // dt
 			float const Vrest = -0.06f;         // v
 			float const Vthres = -0.05f;        // v
 			float const TmemInv = 1.0f / 0.02f; // s
