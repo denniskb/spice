@@ -7,6 +7,8 @@
 #include <spice/models/synth.h>
 #include <spice/models/vogels_abbott.h>
 
+#include <cuda_runtime.h>
+
 
 using namespace spice::util;
 using namespace spice::cuda::util;
@@ -15,8 +17,21 @@ using namespace spice::cuda::util;
 namespace spice::cuda
 {
 template <typename Model>
-multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* = 1 */ )
+multi_snn<Model>::multi_snn( float dt, int_ delay )
     : ::spice::snn<Model>( dt, delay )
+    , _spikes{ { nullptr, cudaFreeHost } }
+{
+	void * ptr;
+	success_or_throw(
+	    cudaHostAlloc( &ptr, device::devices().size() * sizeof( uint_ ), cudaHostAllocPortable ) );
+
+	_spikes.counts_data.reset( static_cast<uint_ *>( ptr ) );
+	_spikes.counts = { _spikes.counts_data.get(), device::devices().size() };
+}
+
+template <typename Model>
+multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* = 1 */ )
+    : multi_snn<Model>( dt, delay )
 {
 	for( auto & d : device::devices() )
 	{
@@ -29,7 +44,7 @@ multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* =
 
 template <typename Model>
 multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
-    : ::spice::snn<Model>( net )
+    : multi_snn<Model>( net.dt(), net.delay() )
 {
 	auto adj_data = net.adj();
 	adj_list adj( adj_data.first.size() / adj_data.second, adj_data.second, adj_data.first.data() );
@@ -76,8 +91,8 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 template <typename Model>
 void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
-	int_ * spikes[8];
-	uint_ * n_spikes[8];
+	int_ * spikes[device::max_devices];
+	uint_ * n_spikes[device::max_devices];
 
 	{
 		std::vector<int> tmp;
@@ -94,16 +109,17 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	sync();
 
 	// 2 gpus for now:
-	int_ a, b;
-	success_or_throw( cudaMemcpy( &a, n_spikes[0], 4, cudaMemcpyDefault ) );
-	success_or_throw( cudaMemcpy( &b, n_spikes[1], 4, cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy( &_spikes.counts[0], n_spikes[0], 4, cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy( &_spikes.counts[1], n_spikes[1], 4, cudaMemcpyDefault ) );
 
-	success_or_throw( cudaMemcpy( spikes[0] + a, spikes[1], 4 * b, cudaMemcpyDefault ) );
-	success_or_throw( cudaMemcpy( spikes[1] + b, spikes[0], 4 * a, cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy(
+	    spikes[0] + _spikes.counts[0], spikes[1], 4 * _spikes.counts[1], cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy(
+	    spikes[1] + _spikes.counts[1], spikes[0], 4 * _spikes.counts[0], cudaMemcpyDefault ) );
 
-	a += b;
-	success_or_throw( cudaMemcpy( n_spikes[0], &a, 4, cudaMemcpyDefault ) );
-	success_or_throw( cudaMemcpy( n_spikes[1], &a, 4, cudaMemcpyDefault ) );
+	_spikes.counts[0] += _spikes.counts[1];
+	success_or_throw( cudaMemcpy( n_spikes[0], &_spikes.counts[0], 4, cudaMemcpyDefault ) );
+	success_or_throw( cudaMemcpy( n_spikes[1], &_spikes.counts[0], 4, cudaMemcpyDefault ) );
 }
 
 template <typename Model>

@@ -3,6 +3,7 @@
 #include <spice/cuda/snn.h>
 #include <spice/cuda/util/device.h>
 #include <spice/snn.h>
+#include <spice/util/span.hpp>
 
 #include <vector>
 
@@ -27,5 +28,12 @@ public:
 
 private:
 	std::array<std::optional<cuda::snn<Model>>, util::device::max_devices> _nets;
+	struct
+	{
+		std::unique_ptr<uint_, cudaError_t ( * )( void * )> counts_data;
+		nonstd::span<uint_> counts;
+	} _spikes;
+
+	multi_snn( float dt, int_ delay );
 };
 } // namespace spice::cuda
