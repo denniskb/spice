@@ -18,13 +18,12 @@ template <typename Model>
 multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* = 1 */ )
     : ::spice::snn<Model>( dt, delay )
 {
-	_nets.reserve( device::devices().size() );
 	for( auto & d : device::devices() )
 	{
 		d.set();
 
 		auto slice = desc.cut( device::devices().size(), d );
-		_nets.push_back( cuda::snn<Model>( slice.part, dt, delay, slice.first, slice.last ) );
+		_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
 	}
 }
 
@@ -35,7 +34,6 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 	auto adj_data = net.adj();
 	adj_list adj( adj_data.first.size() / adj_data.second, adj_data.second, adj_data.first.data() );
 
-	_nets.reserve( device::devices().size() );
 	std::vector<int> slice;
 	for( auto & d : device::devices() )
 	{
@@ -69,8 +67,8 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 		}
 
 		d.set();
-		_nets.push_back( cuda::snn<Model>(
-		    slice, deg, net.dt(), net.delay(), narrow<int>( first ), narrow<int>( last ) ) );
+		_nets[d].emplace(
+		    slice, deg, net.dt(), net.delay(), narrow<int>( first ), narrow<int>( last ) );
 	}
 }
 
@@ -88,7 +86,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 		for( auto & d : device::devices() )
 		{
 			d.set();
-			_nets[d].step( &spikes[d], &n_spikes[d], out_spikes ? &tmp : nullptr );
+			_nets[d]->step( &spikes[d], &n_spikes[d], out_spikes ? &tmp : nullptr );
 			if( out_spikes ) out_spikes->insert( out_spikes->end(), tmp.begin(), tmp.end() );
 		}
 	}
@@ -117,7 +115,7 @@ void multi_snn<Model>::sync()
 template <typename Model>
 std::size_t multi_snn<Model>::num_neurons() const
 {
-	return _nets.front().num_neurons();
+	return _nets.front().value().num_neurons();
 }
 template <typename Model>
 std::size_t multi_snn<Model>::num_synapses() const
@@ -130,14 +128,15 @@ std::pair<std::vector<int>, std::size_t> multi_snn<Model>::adj() const
 {
 	// TODO: Load-balanced split
 	std::vector<std::pair<std::vector<int>, std::size_t>> adj_data;
-	adj_data.reserve( _nets.size() );
+	adj_data.reserve( device::devices().size() );
 
-	for( std::size_t i = 0; i < _nets.size(); i++ ) adj_data.push_back( _nets[i].adj() );
+	for( std::size_t i = 0; i < device::devices().size(); i++ )
+		adj_data.push_back( _nets[i]->adj() );
 
 	std::vector<adj_list> adj;
-	adj.reserve( _nets.size() );
+	adj.reserve( device::devices().size() );
 
-	for( std::size_t i = 0; i < _nets.size(); i++ )
+	for( std::size_t i = 0; i < device::devices().size(); i++ )
 		adj.push_back(
 		    { adj_data[i].first.size() / adj_data[i].second,
 		      adj_data[i].second,
@@ -173,12 +172,12 @@ std::vector<typename Model::neuron::tuple_t> multi_snn<Model>::neurons() const
 {
 	// TODO: Load-balanced split
 	std::vector<typename Model::neuron::tuple_t> result;
-	for( std::size_t i = 0; i < _nets.size(); i++ )
+	for( std::size_t i = 0; i < device::devices().size(); i++ )
 	{
 		std::size_t const first = i * num_neurons() / device::devices().size();
 		std::size_t const last = ( i + 1 ) * num_neurons() / device::devices().size();
 
-		auto tmp = _nets[i].neurons();
+		auto tmp = _nets[i]->neurons();
 		result.insert( result.end(), tmp.begin() + first, tmp.begin() + last );
 	}
 	return result;

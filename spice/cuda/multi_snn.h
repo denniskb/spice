@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spice/cuda/snn.h>
+#include <spice/cuda/util/device.h>
 #include <spice/snn.h>
 
 #include <vector>
@@ -25,6 +26,6 @@ public:
 	std::vector<typename Model::synapse::tuple_t> synapses() const override;
 
 private:
-	std::vector<cuda::snn<Model>> _nets;
+	std::array<std::optional<cuda::snn<Model>>, util::device::max_devices> _nets;
 };
 } // namespace spice::cuda
