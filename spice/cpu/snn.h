@@ -22,10 +22,10 @@ public:
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
 
-	std::size_t num_neurons() const override;
-	std::size_t num_synapses() const override;
+	size_ num_neurons() const override;
+	size_ num_synapses() const override;
 	// (edges, width)
-	std::pair<std::vector<int>, std::size_t> adj() const override;
+	std::pair<std::vector<int>, size_> adj() const override;
 	std::vector<typename Model::neuron::tuple_t> neurons() const override;
 	std::vector<typename Model::synapse::tuple_t> synapses() const override;
 
@@ -41,7 +41,7 @@ private:
 	struct
 	{
 		std::vector<int> ids;
-		std::vector<std::size_t> counts;
+		std::vector<size_> counts;
 		std::optional<std::vector<std::vector<bool>>> flags;
 	} _spikes;
 

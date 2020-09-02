@@ -17,8 +17,8 @@ using namespace spice::util;
 static void cache_synth( benchmark::State & state )
 {
 	float const P = 0.005f;
-	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
+	size_ const NSYN = state.range( 0 );
+	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -54,8 +54,8 @@ BENCHMARK( cache_synth )
 static void cache_brunel( benchmark::State & state )
 {
 	float const P = 0.05f;
-	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
+	size_ const NSYN = state.range( 0 );
+	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );

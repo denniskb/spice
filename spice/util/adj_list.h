@@ -16,22 +16,22 @@ class adj_list
 {
 public:
 	adj_list() = default;
-	adj_list( std::size_t num_nodes, std::size_t max_degree, int_ const * edges );
+	adj_list( size_ num_nodes, size_ max_degree, int_ const * edges );
 
-	nonstd::span<int_ const> neighbors( std::size_t i_node ) const;
-	std::size_t edge_index( std::size_t i_src, std::size_t i_dst ) const;
+	nonstd::span<int_ const> neighbors( size_ i_node ) const;
+	size_ edge_index( size_ i_src, size_ i_dst ) const;
 
 	static void generate( layout const & desc, std::vector<int> & edges );
 
 	int_ const * edges() const;
 
-	std::size_t num_nodes() const;
-	std::size_t max_degree() const;
-	std::size_t num_edges() const;
+	size_ num_nodes() const;
+	size_ max_degree() const;
+	size_ num_edges() const;
 
 private:
-	std::size_t _num_nodes = 0;
-	std::size_t _max_degree = 0;
+	size_ _num_nodes = 0;
+	size_ _max_degree = 0;
 	int_ const * _edges = nullptr;
 };
 } // namespace util

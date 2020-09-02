@@ -27,14 +27,14 @@ public:
 	// ([first1, last2), [first2, last2), p)
 	using edge = std::tuple<int, int_, int_, int_, float>;
 
-	layout( std::size_t num_neurons, float connections );
+	layout( size_ num_neurons, float connections );
 	layout(
-	    std::vector<std::size_t> const & group_sizes,
-	    std::vector<std::tuple<std::size_t, std::size_t, float>> connectivity );
+	    std::vector<size_> const & group_sizes,
+	    std::vector<std::tuple<size_, size_, float>> connectivity );
 
-	std::size_t size() const;
+	size_ size() const;
 	std::vector<edge> const & connections() const;
-	std::size_t max_degree() const;
+	size_ max_degree() const;
 
 	template <typename T = layout>
 	struct slice
@@ -43,14 +43,14 @@ public:
 		int_ first;
 		int_ last;
 	};
-	slice<> cut( std::size_t n, std::size_t i );
+	slice<> cut( size_ n, size_ i );
 
 private:
-	std::size_t _n;
+	size_ _n;
 	std::vector<edge> _connections;
-	std::size_t _max_degree;
+	size_ _max_degree;
 
-	layout( std::size_t n, std::vector<edge> flat );
+	layout( size_ n, std::vector<edge> flat );
 };
 } // namespace util
 } // namespace spice

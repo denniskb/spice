@@ -16,9 +16,13 @@ template <typename Model>
 class snn : public ::spice::snn<Model>
 {
 public:
-	snn( spice::util::layout const & desc, float dt, int_ delay = 1, int_ first = 0, int_ last = -1 );
+	snn( spice::util::layout const & desc,
+	     float dt,
+	     int_ delay = 1,
+	     int_ first = 0,
+	     int_ last = -1 );
 	snn( std::vector<int> const & adj,
-	     std::size_t width,
+	     size_ width,
 	     float dt,
 	     int_ delay = 1,
 	     int_ first = 0,
@@ -26,12 +30,12 @@ public:
 	snn( spice::snn<Model> const & net );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
-	void step(
-	    int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes = nullptr );
+	void
+	step( int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes = nullptr );
 
-	std::size_t num_neurons() const override;
-	std::size_t num_synapses() const override;
-	std::pair<std::vector<int>, std::size_t> adj() const override;
+	size_ num_neurons() const override;
+	size_ num_synapses() const override;
+	std::pair<std::vector<int>, size_> adj() const override;
 	std::vector<typename Model::neuron::tuple_t> neurons() const override;
 	std::vector<typename Model::synapse::tuple_t> synapses() const override;
 
@@ -65,6 +69,6 @@ private:
 
 	int_ MAX_HISTORY() const;
 
-	void reserve( std::size_t num_neurons, std::size_t max_degree, int_ delay );
+	void reserve( size_ num_neurons, size_ max_degree, int_ delay );
 };
 } // namespace spice::cuda

@@ -6,7 +6,7 @@
 
 namespace spice::cuda::util
 {
-void * cuda_malloc( std::size_t n )
+void * cuda_malloc( size_ n )
 {
 	void * p = nullptr;
 	success_or_throw( cudaMalloc( &p, n ), std::bad_alloc() );
@@ -14,7 +14,7 @@ void * cuda_malloc( std::size_t n )
 	return p;
 }
 
-void * cuda_malloc_host( std::size_t n )
+void * cuda_malloc_host( size_ n )
 {
 	void * p = nullptr;
 	success_or_throw( cudaMallocHost( &p, n ), std::bad_alloc() );
@@ -22,7 +22,7 @@ void * cuda_malloc_host( std::size_t n )
 	return p;
 }
 
-void * cuda_malloc_managed( std::size_t n, uint_ flags /* = cudaMemAttachGlobal */ )
+void * cuda_malloc_managed( size_ n, uint_ flags /* = cudaMemAttachGlobal */ )
 {
 	void * p = nullptr;
 	success_or_throw( cudaMallocManaged( &p, n, flags ), std::bad_alloc() );

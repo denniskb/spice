@@ -101,7 +101,7 @@ TEST( AdjList, Ctor )
 		adj_list adj( 60, desc.max_degree(), e.data() );
 		auto const deg = desc.max_degree();
 
-		for( std::size_t i = 0; i < 10; i++ )
+		for( size_ i = 0; i < 10; i++ )
 		{
 			auto const degree = adj.neighbors( i ).size();
 			ASSERT_TRUE( degree >= 0 && degree <= 60 );
@@ -120,7 +120,7 @@ TEST( AdjList, Ctor )
 			}
 		}
 
-		for( std::size_t i = 10; i < 30; i++ )
+		for( size_ i = 10; i < 30; i++ )
 		{
 			auto const degree = adj.neighbors( i ).size();
 			ASSERT_TRUE( degree >= 10 && degree <= 40 );
@@ -139,7 +139,7 @@ TEST( AdjList, Ctor )
 			}
 		}
 
-		for( std::size_t i = 30; i < 60; i++ )
+		for( size_ i = 30; i < 60; i++ )
 		{
 			auto const degree = adj.neighbors( i ).size();
 			ASSERT_EQ( degree, 0u );

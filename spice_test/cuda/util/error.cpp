@@ -16,7 +16,7 @@ TEST( Error, ThrowOnError )
 	    success_or_throw( cudaSuccess, { cudaErrorNoDevice, cudaErrorAddressOfConstant } ),
 	    std::exception );
 
-	for( std::size_t i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 100; i++ )
 	{
 		auto err = static_cast<cudaError>( i );
 

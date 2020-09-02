@@ -17,7 +17,7 @@ TEST( Layout, DefaultCtor )
 
 TEST( Layout, DefaultCtor2 )
 {
-	std::vector<std::tuple<std::size_t, std::size_t, float>> connects;
+	std::vector<std::tuple<size_, size_, float>> connects;
 	layout l( { 1 }, connects );
 
 	ASSERT_EQ( l.size(), 1u );

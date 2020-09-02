@@ -38,8 +38,8 @@ public:
 
 static void gen( benchmark::State & state )
 {
-	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / 0.1 ) );
+	size_ const NSYN = state.range( 0 );
+	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / 0.1 ) );
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -66,8 +66,8 @@ BENCHMARK( gen )->Unit( benchmark::kMillisecond )->ExpRange( 1'000'000, 2048'000
 static void plot0_AdjGen( benchmark::State & state )
 {
 	float const P = 0.1f;
-	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
+	size_ const NSYN = state.range( 0 );
+	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -110,9 +110,9 @@ template <typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
 	float const P = std::is_same_v<Model, vogels_abbott> ? 0.02f : 0.05f;
-	std::size_t const NSYN = state.range( 0 );
-	std::size_t const N = narrow_cast<std::size_t>( std::sqrt( NSYN / P ) );
-	std::size_t const ITER = 1000;
+	size_ const NSYN = state.range( 0 );
+	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
+	size_ const ITER = 1000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -128,11 +128,11 @@ static void plot2_RunTime( benchmark::State & state )
 
 		for( auto _ : state )
 		{
-			for( std::size_t i = 0; i < ITER; i++ ) net->step();
+			for( size_ i = 0; i < ITER; i++ ) net->step();
 			// net->sync();
 			cudaDeviceSynchronize();
 			timer t;
-			for( std::size_t i = 0; i < ITER; i++ ) net->step();
+			for( size_ i = 0; i < ITER; i++ ) net->step();
 			// net->sync();
 			cudaDeviceSynchronize();
 			state.SetIterationTime( t.time() / ITER );

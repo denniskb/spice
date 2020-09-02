@@ -50,7 +50,7 @@ TEST( Stream, Query )
 {
 	stream s;
 
-	for( std::size_t i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 100; i++ )
 	{
 		dummy_kernel( s );
 		EXPECT_EQ( s.query(), cudaErrorNotReady );
@@ -65,7 +65,7 @@ TEST( Stream, Wait )
 	stream s1, s2;
 	event s1start, s1stop, s2start, s2stop;
 
-	for( std::size_t i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 100; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );
@@ -86,7 +86,7 @@ TEST( Stream, Wait )
 		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0f );
 	}
 
-	for( std::size_t i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 100; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );
@@ -112,7 +112,7 @@ TEST( Stream, Synchronize )
 	stream s1, s2;
 	event s1start, s1stop, s2start, s2stop;
 
-	for( std::size_t i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 100; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );
@@ -131,7 +131,7 @@ TEST( Stream, Synchronize )
 		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0f );
 	}
 
-	for( std::size_t i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 100; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );

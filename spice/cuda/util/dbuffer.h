@@ -21,7 +21,7 @@ public:
 	static_assert( std::is_trivially_copyable_v<T>, "copy does not invoke ctors" );
 
 	dbuffer() = default;
-	explicit dbuffer( std::size_t size ) { resize( size ); }
+	explicit dbuffer( size_ size ) { resize( size ); }
 	dbuffer( dbuffer const & copy ) { copy_from( copy ); }
 	dbuffer( std::vector<T> const & copy ) { copy_from( copy ); }
 	dbuffer( dbuffer && tmp ) = default;
@@ -47,11 +47,11 @@ public:
 
 	T * data() { return _data.get(); }
 	T const * data() const { return _data.get(); }
-	std::size_t size() const { return _size; }
-	std::size_t size_in_bytes() const { return size() * sizeof( T ); }
+	size_ size() const { return _size; }
+	size_ size_in_bytes() const { return size() * sizeof( T ); }
 
 	// if n > size(), deletes the memory! (basic exception guarantee)
-	void resize( std::size_t n )
+	void resize( size_ n )
 	{
 		if( n > size() )
 		{
@@ -77,7 +77,7 @@ public:
 
 private:
 	std::unique_ptr<T, cudaError_t ( * )( void * )> _data{ nullptr, cudaFree };
-	std::size_t _size = 0;
+	size_ _size = 0;
 
 	template <typename Cont>
 	void copy_from( Cont const & cont )

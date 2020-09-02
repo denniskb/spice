@@ -10,21 +10,21 @@
 #include <numeric>
 
 
-static constexpr std::size_t operator"" _sz( unsigned long long n ) { return n; }
+static constexpr size_ operator"" _sz( unsigned long long n ) { return n; }
 
-static std::size_t estimate_max_deg( std::vector<spice::util::layout::edge> const & connections )
+static size_ estimate_max_deg( std::vector<spice::util::layout::edge> const & connections )
 {
 	using namespace spice::util;
 
 	int_ src = connections.empty() ? 0 : std::get<0>( connections.front() );
 
-	std::size_t result = 0;
+	size_ result = 0;
 	double m = 0.0, s2 = 0.0;
 	for( auto c : connections )
 	{
 		if( std::get<0>( c ) != src )
 		{
-			result = std::max( result, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) );
+			result = std::max( result, narrow_cast<size_>( m + 3 * std::sqrt( s2 ) ) );
 			src = std::get<0>( c );
 			m = 0.0;
 			s2 = 0.0;
@@ -35,12 +35,12 @@ static std::size_t estimate_max_deg( std::vector<spice::util::layout::edge> cons
 		s2 += dst_range * std::get<4>( c ) * ( 1.0 - std::get<4>( c ) );
 	}
 
-	return ( std::max( result, narrow_cast<std::size_t>( m + 3 * std::sqrt( s2 ) ) ) + WARP_SZ -
+	return ( std::max( result, narrow_cast<size_>( m + 3 * std::sqrt( s2 ) ) ) + WARP_SZ -
 	         1 ) /
 	       WARP_SZ * WARP_SZ;
 }
 
-static std::vector<std::tuple<std::size_t, std::size_t, float>> p2connect( float p )
+static std::vector<std::tuple<size_, size_, float>> p2connect( float p )
 {
 	if( p )
 		return { { 0, 0, p } };
@@ -51,7 +51,7 @@ static std::vector<std::tuple<std::size_t, std::size_t, float>> p2connect( float
 
 namespace spice::util
 {
-layout::layout( std::size_t const num_neurons, float const connections )
+layout::layout( size_ const num_neurons, float const connections )
     : layout( { num_neurons }, p2connect( connections ) )
 {
 	spice_assert( num_neurons > 0, "layout must contain at least 1 neuron" );
@@ -60,8 +60,8 @@ layout::layout( std::size_t const num_neurons, float const connections )
 #pragma warning( push )
 #pragma warning( disable : 4189 4457 ) // unreferenced variable 'gs' in assert, hidden variable
 layout::layout(
-    std::vector<std::size_t> const & pops,
-    std::vector<std::tuple<std::size_t, std::size_t, float>> connections )
+    std::vector<size_> const & pops,
+    std::vector<std::tuple<size_, size_, float>> connections )
 {
 	spice_assert( pops.size() > 0, "layout must contain at least 1 (non-empty) population" );
 
@@ -85,7 +85,7 @@ layout::layout(
 			       ( std::get<0>( a ) == std::get<0>( b ) && std::get<1>( a ) < std::get<1>( b ) );
 		} );
 
-		for( std::size_t i = 1; i < connections.size(); i++ )
+		for( size_ i = 1; i < connections.size(); i++ )
 		{
 			spice_assert(
 			    std::get<0>( connections[i] ) != std::get<0>( connections[i - 1] ) ||
@@ -94,11 +94,11 @@ layout::layout(
 		}
 
 		// Initialize
-		auto const first = [&]( std::size_t i ) {
+		auto const first = [&]( size_ i ) {
 			spice_assert( i < pops.size(), "index out of range" );
 			return std::accumulate( pops.begin(), pops.begin() + i, 0_sz );
 		};
-		auto const last = [&]( std::size_t i ) {
+		auto const last = [&]( size_ i ) {
 			spice_assert( i < pops.size(), "index out of range" );
 			return std::accumulate( pops.begin(), pops.begin() + i + 1, 0_sz );
 		};
@@ -122,11 +122,11 @@ layout::layout(
 }
 #pragma warning( pop )
 
-std::size_t layout::size() const { return _n; }
+size_ layout::size() const { return _n; }
 std::vector<layout::edge> const & layout::connections() const { return _connections; }
-std::size_t layout::max_degree() const { return _max_degree; }
+size_ layout::max_degree() const { return _max_degree; }
 
-layout::slice<> layout::cut( std::size_t n, std::size_t i )
+layout::slice<> layout::cut( size_ n, size_ i )
 {
 	spice_assert( n > 0 );
 	spice_assert( i < n );
@@ -154,7 +154,7 @@ layout::slice<> layout::cut( std::size_t n, std::size_t i )
 	std::inclusive_scan( szs.begin(), szs.end(), szs.begin() );
 	std::inclusive_scan( costs.begin(), costs.end(), costs.begin() );
 
-	auto partition = [&]( std::size_t pivot ) -> std::size_t {
+	auto partition = [&]( size_ pivot ) -> size_ {
 		if( !pivot ) return 0;
 		auto I = std::lower_bound( costs.begin(), costs.end(), pivot );
 		auto i = I - costs.begin();
@@ -180,7 +180,7 @@ layout::slice<> layout::cut( std::size_t n, std::size_t i )
 	return { layout( size(), part ), first, last };
 }
 
-layout::layout( std::size_t n, std::vector<edge> flat )
+layout::layout( size_ n, std::vector<edge> flat )
     : _n( n )
     , _connections( flat )
     , _max_degree( estimate_max_deg( flat ) )

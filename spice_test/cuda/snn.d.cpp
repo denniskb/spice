@@ -31,7 +31,7 @@ static bool close( Pop const & lhs, Pop const & rhs, double thres )
 
 	if( lhs.size() != rhs.size() ) return false;
 
-	for( std::size_t i = 0; i < lhs.size(); i++ )
+	for( size_ i = 0; i < lhs.size(); i++ )
 		if( util::reduce(
 		        util::map( lhs[i], rhs[i], []( auto x, auto y ) { return std::abs( x - y ); } ),
 		        0,

@@ -31,7 +31,7 @@ TEST( dAlgorithm, AdjList )
 	std::vector<int> h_e( d_e );
 	adj_list adj( 60, deg, h_e.data() );
 
-	for( std::size_t i = 0; i < 10; i++ )
+	for( size_ i = 0; i < 10; i++ )
 	{
 		int_ prev = -1;
 		for( auto n : adj.neighbors( i ) )
@@ -42,7 +42,7 @@ TEST( dAlgorithm, AdjList )
 		}
 	}
 
-	for( std::size_t i = 10; i < 30; i++ )
+	for( size_ i = 10; i < 30; i++ )
 	{
 		int_ prev = -1;
 		for( auto n : adj.neighbors( i ) )
@@ -53,5 +53,5 @@ TEST( dAlgorithm, AdjList )
 		}
 	}
 
-	for( std::size_t i = 30; i < 60; i++ ) ASSERT_EQ( adj.neighbors( i ).size(), 0u );
+	for( size_ i = 30; i < 60; i++ ) ASSERT_EQ( adj.neighbors( i ).size(), 0u );
 }

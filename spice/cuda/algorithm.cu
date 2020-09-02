@@ -336,7 +336,7 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges )
 
 	std::array<int4, 20> tmp_range;
 	std::array<float, 20> tmp_p;
-	for( std::size_t i = 0; i < desc.connections().size(); i++ )
+	for( size_ i = 0; i < desc.connections().size(); i++ )
 	{
 		tmp_range[i].x = std::get<0>( desc.connections().at( i ) );
 		tmp_range[i].y = std::get<1>( desc.connections().at( i ) );

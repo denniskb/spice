@@ -8,7 +8,7 @@
 using namespace spice;
 
 
-std::size_t const N = 1000;
+size_ const N = 1000;
 float const P = 0.1f;
 float const DT = 0.0001f;
 int_ const DELAY = 15;

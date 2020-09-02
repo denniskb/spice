@@ -13,7 +13,7 @@ static ulong_ _seed = 1337;
 
 namespace spice::util
 {
-adj_list::adj_list( std::size_t num_nodes, std::size_t max_degree, int_ const * edges )
+adj_list::adj_list( size_ num_nodes, size_ max_degree, int_ const * edges )
     : _num_nodes( num_nodes )
     , _max_degree( max_degree )
     , _edges( edges )
@@ -26,7 +26,7 @@ adj_list::adj_list( std::size_t num_nodes, std::size_t max_degree, int_ const * 
 }
 
 
-nonstd::span<int_ const> adj_list::neighbors( std::size_t i_node ) const
+nonstd::span<int_ const> adj_list::neighbors( size_ i_node ) const
 {
 	spice_assert( i_node < num_nodes(), "index out of bounds" );
 
@@ -35,10 +35,10 @@ nonstd::span<int_ const> adj_list::neighbors( std::size_t i_node ) const
 	std::ptrdiff_t d = narrow<ptrdiff_t>( max_degree() ) - 1;
 	while( d >= 0 && first[d] < 0 ) --d;
 
-	return { first, static_cast<std::size_t>( d + 1 ) };
+	return { first, static_cast<size_>( d + 1 ) };
 }
 
-std::size_t adj_list::edge_index( std::size_t i_src, std::size_t i_dst ) const
+size_ adj_list::edge_index( size_ i_src, size_ i_dst ) const
 {
 	spice_assert( i_src < num_nodes(), "index out of bounds" );
 	spice_assert( i_dst < neighbors( i_src ).size(), "index out of bounds" );
@@ -55,7 +55,7 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 
 	int_ const N = narrow<int>( desc.size() );
 
-	std::size_t offset = 0;
+	size_ offset = 0;
 	for( int_ i = 0; i < N; i++ )
 	{
 		int_ total_degree = 0;
@@ -92,7 +92,7 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 
 int_ const * adj_list::edges() const { return _edges; }
 
-std::size_t adj_list::num_nodes() const { return _num_nodes; }
-std::size_t adj_list::max_degree() const { return _max_degree; }
-std::size_t adj_list::num_edges() const { return num_nodes() * max_degree(); }
+size_ adj_list::num_nodes() const { return _num_nodes; }
+size_ adj_list::max_degree() const { return _max_degree; }
+size_ adj_list::num_edges() const { return num_nodes() * max_degree(); }
 } // namespace spice::util

@@ -34,9 +34,9 @@ int main( int const argc, char const ** argv )
 		std::ofstream file( argv[4] );
 		file << net.num_neurons() << std::endl;
 
-		std::size_t avgspikes = 0;
+		size_ avgspikes = 0;
 		std::vector<int> n;
-		for( std::size_t i = 0; i < NITER; i++ )
+		for( size_ i = 0; i < NITER; i++ )
 		{
 			// Advance snn by a single simulation step, store activations in 'n'.
 			net.step( &n );

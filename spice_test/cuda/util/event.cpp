@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <spice/cuda/util/event.h>
+#include <spice/util/stdint.h>
 
 
 using namespace spice::cuda::util;
@@ -23,7 +24,7 @@ TEST( Event, ElapsedTime )
 {
 	event start, stop;
 
-	for( std::size_t i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 100; i++ )
 	{
 		start.record();
 		dummy_kernel( 0 );

@@ -12,9 +12,9 @@ namespace cuda
 {
 namespace util
 {
-void * cuda_malloc( std::size_t n );
-void * cuda_malloc_host( std::size_t n );
-void * cuda_malloc_managed( std::size_t n, uint_ flags = cudaMemAttachGlobal );
+void * cuda_malloc( size_ n );
+void * cuda_malloc_host( size_ n );
+void * cuda_malloc_managed( size_ n, uint_ flags = cudaMemAttachGlobal );
 } // namespace util
 } // namespace cuda
 } // namespace spice

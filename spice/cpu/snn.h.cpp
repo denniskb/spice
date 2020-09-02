@@ -23,13 +23,13 @@ template <typename T, bool Const = false>
 class iter
 {
 public:
-	iter( T * data, std::size_t i )
+	iter( T * data, size_ i )
 	    : _data( data )
 	    , _i( i )
 	{
 	}
 
-	std::size_t id() const { return _i; }
+	size_ id() const { return _i; }
 
 	template <int_ I, bool C = Const>
 	auto const & get( typename std::enable_if_t<C> * dummy = 0 )
@@ -47,7 +47,7 @@ public:
 
 private:
 	T * _data = nullptr;
-	std::size_t _i = 0;
+	size_ _i = 0;
 };
 
 template <typename T>
@@ -87,7 +87,7 @@ snn<Model>::snn( layout const & desc, float const dt, int_ const delay /* = 1 */
 	if constexpr( Model::neuron::size > 0 )
 	{
 		_neurons.emplace( desc.size() );
-		for( std::size_t i = 0; i < desc.size(); i++ )
+		for( size_ i = 0; i < desc.size(); i++ )
 			Model::neuron::template init( iter( _neurons->data(), i ), this->info(), _backend );
 	}
 
@@ -184,17 +184,17 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 
 // TODO: Remove code duplication
 template <typename Model>
-std::size_t snn<Model>::num_neurons() const
+size_ snn<Model>::num_neurons() const
 {
 	return _graph.adj.num_nodes();
 }
 template <typename Model>
-std::size_t snn<Model>::num_synapses() const
+size_ snn<Model>::num_synapses() const
 {
 	return _graph.adj.num_edges();
 }
 template <typename Model>
-std::pair<std::vector<int>, std::size_t> snn<Model>::adj() const
+std::pair<std::vector<int>, size_> snn<Model>::adj() const
 {
 	return { _graph.edges, _graph.adj.max_degree() };
 }

@@ -32,7 +32,7 @@ int_ snn<Model>::MAX_HISTORY() const
                                   // template inst.
 template <typename Model>
 void snn<Model>::reserve(
-    std::size_t const num_neurons, std::size_t const num_synapses, int_ const delay )
+    size_ const num_neurons, size_ const num_synapses, int_ const delay )
 {
 	spice_assert( num_synapses % num_neurons == 0 );
 
@@ -92,7 +92,7 @@ snn<Model>::snn(
 template <typename Model>
 snn<Model>::snn(
     std::vector<int> const & adj,
-    std::size_t width,
+    size_ width,
     float const dt,
     int_ const delay /* = 1 */,
     int_ first /* = 0 */,
@@ -203,17 +203,17 @@ void snn<Model>::step(
 
 
 template <typename Model>
-std::size_t snn<Model>::num_neurons() const
+size_ snn<Model>::num_neurons() const
 {
 	return _graph.adj.num_nodes();
 }
 template <typename Model>
-std::size_t snn<Model>::num_synapses() const
+size_ snn<Model>::num_synapses() const
 {
 	return _graph.adj.num_edges();
 }
 template <typename Model>
-std::pair<std::vector<int>, std::size_t> snn<Model>::adj() const
+std::pair<std::vector<int>, size_> snn<Model>::adj() const
 {
 	return { _graph.edges, _graph.adj.max_degree() };
 }

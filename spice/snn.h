@@ -21,15 +21,15 @@ public:
 
 	virtual void step( std::vector<int> * out_spikes = nullptr ) = 0;
 
-	virtual std::size_t num_neurons() const = 0;
-	virtual std::size_t num_synapses() const = 0;
+	virtual size_ num_neurons() const = 0;
+	virtual size_ num_synapses() const = 0;
 	float dt() const;
 	int_ delay() const;
 	snn_info info() const;
 
 	// TODO: return variants instead (cpu::snn returns span, gpu::snn returns vector)
 	// (edges, width)
-	virtual std::pair<std::vector<int>, std::size_t> adj() const = 0;
+	virtual std::pair<std::vector<int>, size_> adj() const = 0;
 	virtual std::vector<typename Model::neuron::tuple_t> neurons() const = 0;
 	virtual std::vector<typename Model::synapse::tuple_t> synapses() const = 0;
 

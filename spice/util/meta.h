@@ -16,20 +16,20 @@ namespace util
 {
 namespace detail
 {
-template <std::size_t I>
+template <size_ I>
 struct integral_constant
 {
-	constexpr operator std::size_t() const { return I; }
+	constexpr operator size_() const { return I; }
 };
 
-template <typename Tuple, typename Fn, std::size_t... I>
+template <typename Tuple, typename Fn, size_... I>
 auto map_i( Tuple && t, Fn && f, std::index_sequence<I...> )
 {
 	return std::make_tuple( std::forward<Fn>( f )(
 	    std::get<I>( std::forward<Tuple>( t ) ), integral_constant<I>() )... );
 }
 
-template <typename Tuple1, typename Tuple2, typename Fn, std::size_t... I>
+template <typename Tuple1, typename Tuple2, typename Fn, size_... I>
 auto map_i( Tuple1 && t1, Tuple2 && t2, Fn && f, std::index_sequence<I...> )
 {
 	static_assert(
@@ -98,7 +98,7 @@ void for_each( Tuple & t, Fn && f )
 	} );
 }
 
-template <typename Tuple, typename T, typename Fn, std::size_t I = 0>
+template <typename Tuple, typename T, typename Fn, size_ I = 0>
 auto reduce( Tuple && t, T && init, Fn && f )
 {
 	if constexpr( I == std::tuple_size<std::decay_t<Tuple>>::value )
@@ -117,7 +117,7 @@ struct type_list
 	using tuple_t = std::tuple<T...>;
 	using ptuple_t = std::tuple<T *...>;
 	using cptuple_t = std::tuple<const T *...>;
-	static constexpr std::size_t size = sizeof...( T );
+	static constexpr size_ size = sizeof...( T );
 
 	template <template <typename> typename Cont>
 	using soa_t = std::tuple<Cont<T>...>;
@@ -139,9 +139,9 @@ auto make_soa( type_list<Fields...> )
 template <template <typename> typename Cont, typename TypeList>
 struct soa_t
 {
-	explicit soa_t( std::size_t n = 0 ) { resize( n ); }
+	explicit soa_t( size_ n = 0 ) { resize( n ); }
 
-	void resize( std::size_t n )
+	void resize( size_ n )
 	{
 		for_each( _data, [n]( auto & cont ) { cont.resize( n ); } );
 	}
@@ -156,14 +156,14 @@ struct soa_t
 		return map( _data, []( auto & cont ) { return cont.data(); } );
 	}
 
-	template <std::size_t sz = TypeList::size, std::enable_if_t<sz != 0> * = nullptr>
-	std::size_t size() const
+	template <size_ sz = TypeList::size, std::enable_if_t<sz != 0> * = nullptr>
+	size_ size() const
 	{
 		return std::get<0>( _data ).size();
 	}
 
-	template <std::size_t sz = TypeList::size, std::enable_if_t<sz == 0, int_> * = nullptr>
-	std::size_t size() const
+	template <size_ sz = TypeList::size, std::enable_if_t<sz == 0, int_> * = nullptr>
+	size_ size() const
 	{
 		return 0;
 	}
@@ -175,7 +175,7 @@ struct soa_t
 		for_each_i( _data, [&]( auto const & cont, auto I ) {
 			std::vector<typename std::tuple_element<I, typename TypeList::tuple_t>::type> tmp =
 			    cont;
-			for( std::size_t i = 0; i < result.size(); i++ ) std::get<I>( result[i] ) = tmp[i];
+			for( size_ i = 0; i < result.size(); i++ ) std::get<I>( result[i] ) = tmp[i];
 		} );
 
 		return result;
@@ -185,7 +185,7 @@ struct soa_t
 	{
 		for_each_i( _data, [&]( auto & cont, auto I ) {
 			std::vector<std::tuple_element_t<I, typename TypeList::tuple_t>> tmp( src.size() );
-			for( std::size_t i = 0; i < tmp.size(); i++ ) tmp[i] = std::get<I>( src[i] );
+			for( size_ i = 0; i < tmp.size(); i++ ) tmp[i] = std::get<I>( src[i] );
 
 			cont = tmp;
 		} );
