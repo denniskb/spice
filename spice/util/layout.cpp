@@ -10,8 +10,6 @@
 #include <numeric>
 
 
-static constexpr size_ operator"" _sz( unsigned long long n ) { return n; }
-
 static size_ estimate_max_deg( std::vector<spice::util::layout::edge> const & connections )
 {
 	using namespace spice::util;
@@ -35,8 +33,7 @@ static size_ estimate_max_deg( std::vector<spice::util::layout::edge> const & co
 		s2 += dst_range * std::get<4>( c ) * ( 1.0 - std::get<4>( c ) );
 	}
 
-	return ( std::max( result, narrow_cast<size_>( m + 3 * std::sqrt( s2 ) ) ) + WARP_SZ -
-	         1 ) /
+	return ( std::max( result, narrow_cast<size_>( m + 3 * std::sqrt( s2 ) ) ) + WARP_SZ - 1 ) /
 	       WARP_SZ * WARP_SZ;
 }
 
@@ -60,8 +57,7 @@ layout::layout( size_ const num_neurons, float const connections )
 #pragma warning( push )
 #pragma warning( disable : 4189 4457 ) // unreferenced variable 'gs' in assert, hidden variable
 layout::layout(
-    std::vector<size_> const & pops,
-    std::vector<std::tuple<size_, size_, float>> connections )
+    std::vector<size_> const & pops, std::vector<std::tuple<size_, size_, float>> connections )
 {
 	spice_assert( pops.size() > 0, "layout must contain at least 1 (non-empty) population" );
 

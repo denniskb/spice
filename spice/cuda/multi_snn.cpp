@@ -120,7 +120,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	{
 		for( size_ i = 0; i < device::devices().size() - delta; i += 2 * delta )
 		{
-			bool const last_iter = delta >= device::devices().size() / 2;
+			bool const last_iter = ( 2 * delta >= device::devices().size() );
 
 			copy( spikes[i] + _spikes.counts[i], spikes[i + delta], _spikes.counts[i + delta] );
 			if( last_iter )
@@ -133,7 +133,10 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	}
 
 	// scatter spikes
-	for( size_ delta = ( device::devices().size() + 1 ) / 4; delta >= 1; delta /= 2 )
+	for( size_ delta =
+	         narrow_cast<size_>( std::log2( std::max( 1_sz, device::devices().size() - 1 ) ) );
+	     delta >= 1;
+	     delta /= 2 )
 	{
 		for( size_ i = 0; i < device::devices().size() - delta; i += 2 * delta )
 			copy( spikes[i + delta], spikes[i], _spikes.counts[0] );
