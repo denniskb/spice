@@ -3,9 +3,19 @@
 
 __global__ void dummy()
 {
+start:
 	clock_t s = clock();
+	if( s == -1 ) return;
 
-	while( clock() - s < 1'000'000 ) {} // ~1ms
+	while( true )
+	{
+		clock_t e = clock();
+		if( e == -1 ) return;
+
+		if( e < s ) goto start;
+
+		if( e - s > 250'000 ) return;
+	}
 }
 
 void dummy_kernel( cudaStream_t s ) { dummy<<<1, 1, 0, s>>>(); }
