@@ -5,7 +5,7 @@ project(spice LANGUAGES CXX CUDA)
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /wd4068 /WX /fp:fast")
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unknown-pragmas -Wno-deprecated-declarations -Werror -ffast-math")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unknown-pragmas -Wno-deprecated-declarations -Wno-sign-compare -Werror -ffast-math")
 endif()
 
 set(CPP_STD 17)
