@@ -181,8 +181,7 @@ static __global__ void _process_neurons(
     uint_ * num_updates = nullptr,
     int_ const iter = 0,
     int_ const delay = 0,
-    int_ const max_history = 0,
-    uint_ * delayed_history = nullptr )
+    int_ const max_history = 0 )
 {
 	spice_assert( info.num_neurons < INT_MAX - num_threads() );
 
@@ -198,14 +197,12 @@ static __global__ void _process_neurons(
 		{
 			bool const spiked = Model::neuron::template update( it, dt, info, bak );
 
-			if( Model::synapse::size > 0 ) // plast.
+			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
 				uint_ const flag = __ballot_sync( active_mask( i, last ), spiked );
 				if( laneid() == 0 ) history[i / 32] = flag;
 
-				bool const delayed_spike =
-				    delay == 1 ? spiked : delayed_history[i / 32] >> ( i % 32 ) & 1u;
-				if( iter - ages[i] + 1 == max_history && !delayed_spike )
+				if( iter - ages[i] + 1 == max_history )
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
@@ -455,8 +452,7 @@ void update(
 		    num_updates,
 		    iter,
 		    delay,
-		    max_history,
-		    history.row( circidx( iter - delay + 1, max_history ) ) );
+		    max_history );
 	} );
 
 	if constexpr( Model::synapse::size > 0 )
