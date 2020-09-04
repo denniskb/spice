@@ -1,0 +1,65 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Test",
+            "type": "process",
+            "command": "./build/release/spice_test",
+            "args": [
+                "--gtest_filter=${input:test_filter}"
+            ],
+            "group": "test",
+            "dependsOn": "Build Release",
+            "presentation": {
+                "focus": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Bench",
+            "type": "process",
+            "command": "./build/release/spice_bench",
+            "args": [
+                "--benchmark_filter=${input:bench_filter}",
+                "--benchmark_min_time=0",
+                "--benchmark_counters_tabular=true"
+            ],
+            "group": "test",
+            "dependsOn": "Build Release",
+            "presentation": {
+                "focus": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Build Release",
+            "type": "shell",
+            "command": "cd build/release && make",
+            "group": "build",
+            "problemMatcher": "[]"
+        }
+        {
+            "label": "Build Debug",
+            "type": "shell",
+            "command": "cd build/debug && make",
+            "group": "build",
+            "problemMatcher": "[]"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "test_filter",
+            "type": "promptString",
+            "default": "*",
+            "description": "run only those test that match regex"
+        },
+        {
+            "id": "bench_filter",
+            "type": "promptString",
+            "default": "",
+            "description": "run only those benchmarks that match regex"
+        }
+    ]
+}
