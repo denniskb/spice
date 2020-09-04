@@ -1,2 +1,5 @@
 /build*
-.gitignore
+
+.vscode
+!.vscode/launch.json
+!.vscode/tasks.json

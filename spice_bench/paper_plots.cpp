@@ -78,7 +78,7 @@ static void plot0_AdjGen( benchmark::State & state )
 
 		dbuffer<int> e( desc.size() * desc.max_degree() );
 
-		event start, stop;
+		time_event start, stop;
 		for( auto _ : state )
 		{
 			generate_rnd_adj_list( desc, e.data() );
@@ -88,7 +88,7 @@ static void plot0_AdjGen( benchmark::State & state )
 			stop.record();
 			stop.synchronize();
 
-			state.SetIterationTime( stop.elapsed_time( start ) * 0.001 / 10 );
+			state.SetIterationTime( stop.elapsed_time( start ) / 10 );
 		}
 	}
 	catch( std::exception & e )

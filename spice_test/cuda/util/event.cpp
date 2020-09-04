@@ -9,20 +9,34 @@ using namespace spice::cuda::util;
 
 void dummy_kernel( cudaStream_t s );
 
-TEST( Event, Ctor )
+template <typename T>
+struct Event : ::testing::Test
 {
-	event e;
+};
+using events = ::testing::Types<sync_event, time_event>;
+TYPED_TEST_CASE( Event, events );
 
-	e.record();
-	ASSERT_TRUE( e.query() == cudaErrorNotReady ); // no prior work submitted
+TYPED_TEST( Event, Ctor )
+{
+	{
+		TypeParam e;
+		ASSERT_TRUE( e.query() == cudaSuccess );
 
-	e.synchronize();
-	ASSERT_TRUE( e.query() == cudaSuccess );
+		for( int_ i = 0; i < 10; i++ )
+		{
+			dummy_kernel( 0 );
+			e.record();
+			EXPECT_TRUE( e.query() == cudaErrorNotReady ) << "Test is timing-dependent, repeat it";
+		}
+
+		e.synchronize();
+		ASSERT_TRUE( e.query() == cudaSuccess );
+	}
 }
 
-TEST( Event, ElapsedTime )
+TEST( EventTime, ElapsedTime )
 {
-	event start, stop;
+	time_event start, stop;
 
 	for( size_ i = 0; i < 100; i++ )
 	{
@@ -31,7 +45,7 @@ TEST( Event, ElapsedTime )
 		stop.record();
 		stop.synchronize();
 
-		ASSERT_GT( stop.elapsed_time( start ), 0.0f );
-		ASSERT_LT( start.elapsed_time( stop ), 0.0f );
+		ASSERT_GT( stop.elapsed_time( start ), 0.0 );
+		ASSERT_LT( start.elapsed_time( stop ), 0.0 );
 	}
 }

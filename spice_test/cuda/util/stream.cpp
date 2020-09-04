@@ -29,7 +29,7 @@ void dummy_copy( cudaStream_t s )
 TEST( Stream, Ctor )
 {
 	stream s1, s2;
-	event s1start, s1stop, s2start, s2stop;
+	time_event s1start, s1stop, s2start, s2stop;
 
 	s1start.record( s1 );
 	dummy_kernel( s1 );
@@ -42,8 +42,8 @@ TEST( Stream, Ctor )
 	s1stop.synchronize();
 	s2stop.synchronize();
 
-	ASSERT_TRUE( s1stop.elapsed_time( s1start ) > 0.0f );
-	ASSERT_TRUE( s2stop.elapsed_time( s2start ) > 0.0f );
+	ASSERT_TRUE( s1stop.elapsed_time( s1start ) > 0.0 );
+	ASSERT_TRUE( s2stop.elapsed_time( s2start ) > 0.0 );
 }
 
 TEST( Stream, Query )
@@ -63,7 +63,7 @@ TEST( Stream, Query )
 TEST( Stream, Wait )
 {
 	stream s1, s2;
-	event s1start, s1stop, s2start, s2stop;
+	time_event s1start, s1stop, s2start, s2stop;
 
 	for( size_ i = 0; i < 100; i++ )
 	{
@@ -80,10 +80,10 @@ TEST( Stream, Wait )
 
 		ASSERT_EQ( s1stop.query(), cudaSuccess );
 
-		ASSERT_GT( s1stop.elapsed_time( s1start ), 0.0f );
-		ASSERT_GT( s2stop.elapsed_time( s2start ), 0.0f );
+		ASSERT_GT( s1stop.elapsed_time( s1start ), 0.0 );
+		ASSERT_GT( s2stop.elapsed_time( s2start ), 0.0 );
 
-		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0f );
+		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0 );
 	}
 
 	for( size_ i = 0; i < 100; i++ )
@@ -100,17 +100,17 @@ TEST( Stream, Wait )
 		s2stop.synchronize();
 		s1stop.synchronize(); // ASSERT_TRUE(s1stop.query() == cudaSuccess);
 
-		ASSERT_GT( s1stop.elapsed_time( s1start ), 0.0f );
-		ASSERT_GT( s2stop.elapsed_time( s2start ), 0.0f );
+		ASSERT_GT( s1stop.elapsed_time( s1start ), 0.0 );
+		ASSERT_GT( s2stop.elapsed_time( s2start ), 0.0 );
 
-		EXPECT_LT( s2start.elapsed_time( s1stop ), 0.0f ) << "test is timing-dependent, repeat it";
+		EXPECT_LT( s2start.elapsed_time( s1stop ), 0.0 ) << "test is timing-dependent, repeat it";
 	}
 }
 
 TEST( Stream, Synchronize )
 {
 	stream s1, s2;
-	event s1start, s1stop, s2start, s2stop;
+	time_event s1start, s1stop, s2start, s2stop;
 
 	for( size_ i = 0; i < 100; i++ )
 	{
@@ -128,7 +128,7 @@ TEST( Stream, Synchronize )
 		ASSERT_EQ( s1stop.query(), cudaSuccess );
 		ASSERT_EQ( s2stop.query(), cudaSuccess );
 
-		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0f );
+		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0 );
 	}
 
 	for( size_ i = 0; i < 100; i++ )
@@ -145,7 +145,7 @@ TEST( Stream, Synchronize )
 
 		s2.synchronize();
 		s1.synchronize();
-		EXPECT_LT( s2start.elapsed_time( s1stop ), 0.0f ) << "test is time-dependent, repeat it";
+		EXPECT_LT( s2start.elapsed_time( s1stop ), 0.0 ) << "test is time-dependent, repeat it";
 	}
 }
 
