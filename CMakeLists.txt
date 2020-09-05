@@ -23,7 +23,7 @@ set(with_tests FALSE CACHE BOOL "Build unit tests (optional, intended for develo
 
 if(with_release_asserts)
 	add_definitions(-DSPICE_ASSERT_RELEASE)
-elseif(!MSVC)
+elseif(NOT MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable -Wno-unused-but-set-variable")
 endif()
 
