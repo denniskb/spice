@@ -34,6 +34,26 @@
             }
         },
         {
+            "label": "NVVP",
+            "type": "shell",
+            "command": "nvprof",
+            "args": [
+                "-o",
+                "~/spice.nvvp",
+                "-f",
+                "./build/release/spice_bench",
+                "--benchmark_filter=${input:bench_filter}",
+                "--benchmark_min_time=0",
+                "--benchmark_counters_tabular=true"
+            ],
+            "group": "test",
+            "dependsOn": "Build Release",
+            "presentation": {
+                "focus": true,
+                "clear": true
+            }
+        },
+        {
             "label": "Build Release",
             "type": "shell",
             "command": "cd build/release && cmake . && make",
