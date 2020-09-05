@@ -36,16 +36,24 @@
         {
             "label": "Build Release",
             "type": "shell",
-            "command": "cd build/release && make",
+            "command": "cd build/release && cmake . && make",
             "group": "build",
-            "problemMatcher": "[]"
+            "problemMatcher": "[]",
+            "presentation": {
+                "focus": true,
+                "clear": true
+            }
         }
         {
             "label": "Build Debug",
             "type": "shell",
-            "command": "cd build/debug && make",
+            "command": "cd build/debug && cmake . && make",
             "group": "build",
-            "problemMatcher": "[]"
+            "problemMatcher": "[]",
+            "presentation": {
+                "focus": true,
+                "clear": true
+            }
         }
     ],
     "inputs": [
