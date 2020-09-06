@@ -24,6 +24,8 @@ void init( int_ first, int_ last, snn_info info, spice::util::span2d<int_ const>
 
 template <typename Model>
 void update(
+    cudaStream_t s,
+
     int_ first,
     int_ last,
     snn_info info,
@@ -42,6 +44,8 @@ void update(
 
 template <typename Model>
 void receive(
+    cudaStream_t s,
+
     snn_info info,
     spice::util::span2d<int_ const> adj,
 

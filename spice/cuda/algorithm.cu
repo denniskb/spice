@@ -421,6 +421,8 @@ template void init<::spice::synth>( int_, int_, snn_info, span2d<int_ const> );
 
 template <typename Model>
 void update(
+    cudaStream_t s,
+
     int_ first,
     int_ last,
     snn_info const info,
@@ -438,7 +440,7 @@ void update(
     span2d<int_ const> adj /* = {} */ )
 {
 	call( [&] {
-		_process_neurons<Model, false><<<nblocks( last - first, 128, 256 ), 256>>>(
+		_process_neurons<Model, false><<<nblocks( last - first, 128, 256 ), 256, 0, s>>>(
 		    first,
 		    last,
 		    info,
@@ -457,7 +459,7 @@ void update(
 
 	if constexpr( Model::synapse::size > 0 )
 		call( [&] {
-			_process_spikes<Model, UPDT_SYNS><<<256, 256>>>(
+			_process_spikes<Model, UPDT_SYNS><<<256, 256, 0, s>>>(
 			    info,
 			    seed(),
 			    adj,
@@ -474,6 +476,7 @@ void update(
 		} );
 }
 template void update<::spice::vogels_abbott>(
+    cudaStream_t,
     int_,
     int_,
     snn_info,
@@ -489,6 +492,7 @@ template void update<::spice::vogels_abbott>(
     int_ const,
     span2d<int_ const> );
 template void update<::spice::brunel>(
+    cudaStream_t,
     int_,
     int_,
     snn_info,
@@ -504,6 +508,7 @@ template void update<::spice::brunel>(
     int_ const,
     span2d<int_ const> );
 template void update<::spice::brunel_with_plasticity>(
+    cudaStream_t,
     int_,
     int_,
     snn_info,
@@ -519,6 +524,7 @@ template void update<::spice::brunel_with_plasticity>(
     int_ const,
     span2d<int_ const> );
 template void update<::spice::synth>(
+    cudaStream_t,
     int_,
     int_,
     snn_info,
@@ -536,6 +542,8 @@ template void update<::spice::synth>(
 
 template <typename Model>
 void receive(
+    cudaStream_t s,
+
     snn_info const info,
     span2d<int_ const> adj,
 
@@ -553,7 +561,9 @@ void receive(
 		call( [&] {
 			_process_spikes<Model, HNDL_SPKS>
 			    <<<( Model::synapse::size > 0 ? 256 : 128 ),
-			       ( (float)info.num_neurons / adj.width() > 40 ? 128 : 256 )>>>(
+			       ( (float)info.num_neurons / adj.width() > 40 ? 128 : 256 ),
+			       0,
+			       s>>>(
 			        info,
 			        seed(),
 			        adj,
@@ -570,7 +580,7 @@ void receive(
 		} );
 	else
 		call( [&] {
-			_process_spikes_cache_aware<Model><<<512, WARP_SZ>>>(
+			_process_spikes_cache_aware<Model><<<512, WARP_SZ, 0, s>>>(
 			    info,
 			    seed(),
 			    adj,
@@ -580,12 +590,11 @@ void receive(
 		} );
 }
 template void receive<::spice::vogels_abbott>(
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-
     int_ const *,
     uint_ const *,
-
     int_ *,
     span2d<uint_>,
     int_ const,
@@ -593,12 +602,11 @@ template void receive<::spice::vogels_abbott>(
     int_ const delay,
     float const dt );
 template void receive<::spice::brunel>(
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-
     int_ const *,
     uint_ const *,
-
     int_ *,
     span2d<uint_>,
     int_ const,
@@ -606,12 +614,11 @@ template void receive<::spice::brunel>(
     int_ const delay,
     float const dt );
 template void receive<::spice::brunel_with_plasticity>(
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-
     int_ const *,
     uint_ const *,
-
     int_ *,
     span2d<uint_>,
     int_ const,
@@ -619,12 +626,11 @@ template void receive<::spice::brunel_with_plasticity>(
     int_ const delay,
     float const dt );
 template void receive<::spice::synth>(
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-
     int_ const *,
     uint_ const *,
-
     int_ *,
     span2d<uint_>,
     int_ const,

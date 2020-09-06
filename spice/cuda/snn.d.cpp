@@ -31,8 +31,7 @@ int_ snn<Model>::MAX_HISTORY() const
 #pragma warning( disable : 4100 ) // unreferenced formal parameter 'num_synapses' for certain
                                   // template inst.
 template <typename Model>
-void snn<Model>::reserve(
-    size_ const num_neurons, size_ const num_synapses, int_ const delay )
+void snn<Model>::reserve( size_ const num_neurons, size_ const num_synapses, int_ const delay )
 {
 	spice_assert( num_synapses % num_neurons == 0 );
 
@@ -153,11 +152,13 @@ void snn<Model>::step(
 		if( i >= this->delay() )
 		{
 			receive<Model>(
+			    _sim,
+
 			    this->info(),
 			    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
 
-			    _spikes.ids.row( circidx( i - this->delay(), this->delay() ) ),
-			    _spikes.counts.data() + circidx( i - this->delay(), this->delay() ),
+			    _spikes.ids.row( circidx( i, this->delay() ) ),
+			    _spikes.counts.data() + circidx( i, this->delay() ),
 
 			    _graph.ages.data(),
 			    _spikes.history,
@@ -167,10 +168,12 @@ void snn<Model>::step(
 			    dt );
 		}
 
-		zero_async( _spikes.counts.data() + circidx( i, this->delay() ) );
-		if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async();
+		zero_async( _spikes.counts.data() + circidx( i, this->delay() ), _sim );
+		if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async( _sim );
 
 		update<Model>(
+		    _sim,
+
 		    _first,
 		    _last,
 		    this->info(),

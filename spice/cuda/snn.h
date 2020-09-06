@@ -3,6 +3,7 @@
 #include <spice/cpu/snn.h>
 #include <spice/cuda/util/dbuffer.h>
 #include <spice/cuda/util/dvar.h>
+#include <spice/cuda/util/stream.h>
 #include <spice/snn.h>
 #include <spice/util/circular_buffer.h>
 #include <spice/util/meta.h>
@@ -66,6 +67,8 @@ private:
 
 	int_ const _first;
 	int_ const _last;
+
+	util::stream _sim;
 
 	int_ MAX_HISTORY() const;
 
