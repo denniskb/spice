@@ -167,4 +167,13 @@ TEST( Layout, Slice )
 			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 10, 20, 14, 20, 0.9f ) );
 		}
 	}
+
+	{
+		layout l( 66'000, 1.0f );
+		auto s = l.cut( 2, 0 );
+		ASSERT_EQ( s.first, 0 );
+		ASSERT_EQ( s.last, 33'000 );
+		ASSERT_EQ( s.part.connections().size(), 1 );
+		ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 66'000, 0, 33'000, 1.0f ) );
+	}
 }

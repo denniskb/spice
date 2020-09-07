@@ -128,7 +128,7 @@ layout::slice<> layout::cut( size_ n, size_ i )
 	spice_assert( i < n );
 
 	std::vector<int> szs;
-	std::vector<int> costs;
+	std::vector<size_> costs;
 	{
 		std::map<int, std::pair<int, double>> pop2sizedeg;
 		for( auto const & c : connections() )
@@ -144,7 +144,7 @@ layout::slice<> layout::cut( size_ n, size_ i )
 		for( auto const & [k, v] : pop2sizedeg )
 		{
 			szs.push_back( v.first );
-			costs.push_back( static_cast<int>( std::round( v.first * v.second ) ) );
+			costs.push_back( static_cast<size_>( std::round( v.first * v.second ) ) );
 		}
 	}
 	std::inclusive_scan( szs.begin(), szs.end(), szs.begin() );
