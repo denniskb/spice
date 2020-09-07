@@ -29,7 +29,7 @@ struct synth : model
 		template <typename Iter, typename Backend>
 		HYBRID static bool update( Iter, float const, snn_info, Backend & bak )
 		{
-			return bak.rand() < 0.0001f;
+			return bak.rand() < 0.001f;
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>

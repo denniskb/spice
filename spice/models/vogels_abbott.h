@@ -20,13 +20,13 @@ struct vogels_abbott : model
 
 		// TODO: replace FAT backend with on-demand (lazy-eval) one
 		template <typename Iter, typename Backend>
-		HYBRID static void init( Iter n, snn_info, Backend & )
+		HYBRID static void init( Iter n, snn_info info, Backend & )
 		{
 			using util::get;
 
 			float const Vrest = -0.06f; // v
 
-			get<V>( n ) = Vrest;
+			get<V>( n ) = Vrest + 0.01f * ( n.id() / (float)info.num_neurons );
 			get<Gex>( n ) = 0.0f;
 			get<Gin>( n ) = 0.0f;
 			get<Twait>( n ) = 0;
