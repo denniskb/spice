@@ -110,6 +110,9 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	int_ * spikes[device::max_devices];
 	uint_ * n_spikes[device::max_devices];
 
+	std::fill( _spikes.counts.begin(), _spikes.counts.end(), ~0 );
+
+	// advance sims
 	{
 		std::vector<int> tmp;
 		if( out_spikes ) out_spikes->clear();
@@ -123,39 +126,50 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	}
 
 	// download spike counts
-	// FIX: HOST is blocking until counts are downloaded..
 	for( auto & d : device::devices() )
 	{
 		_cp[d]->wait( *_updt[d] );
 		copy( &_spikes.counts[d], n_spikes[d], 1, *_cp[d] );
 	}
 
-	for( auto & d : device::devices() ) _cp[d]->synchronize();
+	// FIX: HOST is blocking until ALL counts are downloaded..
+	// for( auto & d : device::devices() ) _cp[d]->synchronize();
 
-	// gather spike
+	// gather spikes
 	for( size_ delta = 1; delta < device::devices().size(); delta *= 2 )
 	{
 		for( size_ i = 0; i < device::devices().size() - delta; i += 2 * delta )
 		{
 			bool const last_iter = ( 2 * delta >= device::devices().size() );
 
+			if( _spikes.counts[i] == ~0 ) _cp[i]->synchronize();
+			if( _spikes.counts[i + delta] == ~0 ) _cp[i + delta]->synchronize();
+
+			_cp[i]->wait( *_updt[i + delta] );
 			copy(
 			    spikes[i] + _spikes.counts[i],
 			    spikes[i + delta],
 			    _spikes.counts[i + delta],
-			    *_cp[i + delta] );
+			    *_cp[i] );
+
 			if( last_iter )
+			{
+				_cp[i + delta]->wait( *_updt[i] );
 				copy(
 				    spikes[i + delta] + _spikes.counts[i + delta],
 				    spikes[i],
 				    _spikes.counts[i],
-				    *_cp[i] );
+				    *_cp[i + delta] );
+			}
+
+			_updt[i]->record( *_cp[i] );
+			if( last_iter ) _updt[i + delta]->record( *_cp[i + delta] );
 
 			_spikes.counts[i] += _spikes.counts[i + delta];
 			if( last_iter ) _spikes.counts[i + delta] += _spikes.counts[i];
 		}
 
-		for( auto & d : device::devices() ) _cp[d]->synchronize();
+		// for( auto & d : device::devices() ) _cp[d]->synchronize();
 	}
 
 	// scatter spikes
@@ -165,14 +179,17 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	     delta /= 2 )
 	{
 		for( size_ i = 0; i < device::devices().size() - delta; i += 2 * delta )
-			copy( spikes[i + delta], spikes[i], _spikes.counts[0], *_cp[i] );
+		{
+			_cp[i + delta]->wait( *_updt[i] );
+			copy( spikes[i + delta], spikes[i], _spikes.counts[0], *_cp[i + delta] );
+			_updt[i + delta]->record( *_cp[i + delta] );
+		}
 
-		for( auto & d : device::devices() ) _cp[d]->synchronize();
+		// for( auto & d : device::devices() ) _cp[d]->synchronize();
 	}
 
 	// upload spike counts
 	for( auto & d : device::devices() ) copy( n_spikes[d], &_spikes.counts[0], 1, *_cp[d] );
-
 	for( auto & d : device::devices() ) _cp[d]->synchronize();
 }
 

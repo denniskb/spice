@@ -54,19 +54,16 @@ success_or_throw( cudaError_t result, std::initializer_list<cudaError_t> valid_r
 
 
 // safe-call wrapper for cuda kernels
-// RELEASE: perfect-forwards kernel call without additional error checking
-// SPICE_ASSERT_RELEASE: Retreives cudaGetLastError() and throws if != cudaSuccess
-// DEBUG: like SPICE_ASSERT_RELEASE, but additionally calls cudaDeviceSynchronize()
+// RELEASE: Retreives cudaGetLastError() and throws if != cudaSuccess
+// DEBUG: like RELEASE, but additionally calls cudaDeviceSynchronize()
 template <typename Kernel>
 void call( Kernel && kernel )
 {
 	std::forward<Kernel>( kernel )();
-#if defined( SPICE_ASSERT_RELEASE )
 #ifndef NDEBUG
 	cudaDeviceSynchronize();
 #endif
 	success_or_throw( cudaGetLastError() );
-#endif
 }
 } // namespace util
 } // namespace cuda
