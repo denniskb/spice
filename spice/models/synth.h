@@ -11,14 +11,12 @@ namespace spice
 {
 struct synth : model
 {
-	struct neuron : ::spice::neuron<int, int_>
+	struct neuron : ::spice::neuron<int>
 	{
 		enum attr
 		{
 			N
 		};
-
-		static constexpr float p_fire = 0.01f; // Hz
 
 		template <typename Iter, typename Backend>
 		HYBRID static void init( Iter n, snn_info, Backend & )
@@ -31,7 +29,7 @@ struct synth : model
 		template <typename Iter, typename Backend>
 		HYBRID static bool update( Iter, float const, snn_info, Backend & bak )
 		{
-			return bak.rand() < 0.01f;
+			return bak.rand() < 0.0001f;
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>

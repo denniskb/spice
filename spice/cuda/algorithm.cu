@@ -422,6 +422,7 @@ template void init<::spice::synth>( int_, int_, snn_info, span2d<int_ const> );
 template <typename Model>
 void update(
     cudaStream_t s,
+    cudaEvent_t updt,
 
     int_ first,
     int_ last,
@@ -457,6 +458,8 @@ void update(
 		    max_history );
 	} );
 
+	if( updt ) success_or_throw( cudaEventRecord( updt, s ) );
+
 	if constexpr( Model::synapse::size > 0 )
 		call( [&] {
 			_process_spikes<Model, UPDT_SYNS><<<256, 256, 0, s>>>(
@@ -477,6 +480,7 @@ void update(
 }
 template void update<::spice::vogels_abbott>(
     cudaStream_t,
+    cudaEvent_t,
     int_,
     int_,
     snn_info,
@@ -493,6 +497,7 @@ template void update<::spice::vogels_abbott>(
     span2d<int_ const> );
 template void update<::spice::brunel>(
     cudaStream_t,
+    cudaEvent_t,
     int_,
     int_,
     snn_info,
@@ -509,6 +514,7 @@ template void update<::spice::brunel>(
     span2d<int_ const> );
 template void update<::spice::brunel_with_plasticity>(
     cudaStream_t,
+    cudaEvent_t,
     int_,
     int_,
     snn_info,
@@ -525,6 +531,7 @@ template void update<::spice::brunel_with_plasticity>(
     span2d<int_ const> );
 template void update<::spice::synth>(
     cudaStream_t,
+    cudaEvent_t,
     int_,
     int_,
     snn_info,

@@ -109,8 +109,16 @@ BENCHMARK( plot0_AdjGen )
 template <typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	float const P = std::is_same_v<Model, vogels_abbott> ? 0.02f : 0.05f;
-	size_ const NSYN = state.range( 0 );
+	size_ NSYN = state.range( 0 );
+
+#if 0
+	using net_t = cuda::snn<Model>;
+#else
+	using net_t = cuda::multi_snn<Model>;
+	NSYN *= 2;
+#endif
+
+	float const P = 0.02f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
 	size_ const ITER = 1000;
 
@@ -119,22 +127,25 @@ static void plot2_RunTime( benchmark::State & state )
 
 	try
 	{
-		std::unique_ptr<cuda::snn<Model>> net;
-		if constexpr( std::is_same_v<Model, vogels_abbott> )
-			net.reset( new cuda::snn<Model>( layout( N, 0.02f ), 0.0001f, 8 ) );
-		else
-			net.reset( new cuda::snn<Model>(
-			    layout( { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } ), 0.0001f, 15 ) );
+		net_t net( { N, P }, 0.0001f, 8 );
 
 		for( auto _ : state )
 		{
-			for( size_ i = 0; i < ITER; i++ ) net->step();
-			// net->sync();
-			cudaDeviceSynchronize();
+			for( size_ i = 0; i < ITER; i++ ) net.step();
+
+			if constexpr( std::is_same<net_t, cuda::multi_snn<Model>>::value )
+				net.sync();
+			else
+				cudaDeviceSynchronize();
+
 			timer t;
-			for( size_ i = 0; i < ITER; i++ ) net->step();
-			// net->sync();
-			cudaDeviceSynchronize();
+			for( size_ i = 0; i < ITER; i++ ) net.step();
+
+			if constexpr( std::is_same<net_t, cuda::multi_snn<Model>>::value )
+				net.sync();
+			else
+				cudaDeviceSynchronize();
+
 			state.SetIterationTime( t.time() / ITER );
 		}
 	}
@@ -147,12 +158,12 @@ static void plot2_RunTime( benchmark::State & state )
 BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 1'000'000, 512'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, brunel )
+    ->ExpRange( 768'000'000, 768'000'000 );
+/*BENCHMARK_TEMPLATE( plot2_RunTime, synth )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 1'000'000, 512'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 1'000'000, 128'000'000 );
+    ->ExpRange( 512'000'000, 512'000'000 );*/
+/*BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
+        ->UseManualTime()
+        ->Unit( benchmark::kMicrosecond )
+        ->ExpRange( 1'000'000, 16'000'000 );*/

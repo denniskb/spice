@@ -25,6 +25,7 @@ void init( int_ first, int_ last, snn_info info, spice::util::span2d<int_ const>
 template <typename Model>
 void update(
     cudaStream_t s,
+    cudaEvent_t updt,
 
     int_ first,
     int_ last,
