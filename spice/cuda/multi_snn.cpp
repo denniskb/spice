@@ -164,8 +164,11 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 		for( size_ i = 1; i < device::devices().size(); i++ )
 			copy( spikes[i], spikes[0], _spikes.counts[0], *_cp[0] );
 
-		for( auto & d : device::devices() ) copy( n_spikes[d], &_spikes.counts[0], 1, *_cp[d] );
-		for( auto & d : device::devices() ) _cp[d]->synchronize();
+		if( _spikes.counts[0] )
+		{
+			for( auto & d : device::devices() ) copy( n_spikes[d], &_spikes.counts[0], 1, *_cp[d] );
+			for( auto & d : device::devices() ) _cp[d]->synchronize();
+		}
 	}
 }
 
