@@ -111,23 +111,25 @@ static void plot2_RunTime( benchmark::State & state )
 {
 	size_ NSYN = state.range( 0 );
 
+	uint_ n = 1000;
 #if 0
 	using net_t = cuda::snn<Model>;
 #else
 	using net_t = cuda::multi_snn<Model>;
 	NSYN *= 2;
+	n *= 2;
 #endif
 
 	float const P = 0.02f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
-	size_ const ITER = 100;
+	size_ const ITER = 1000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
 
 	try
 	{
-		net_t net( { N, P }, 0.0001f, 8 );
+		net_t net( { n, 0.0f }, 0.0001f, 8 );
 
 		for( auto _ : state )
 		{
@@ -148,7 +150,7 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
+BENCHMARK_TEMPLATE( plot2_RunTime, synth )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 768'000'000, 768'000'000 );

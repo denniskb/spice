@@ -9,6 +9,7 @@
 
 #include <array>
 #include <atomic>
+#include <mutex>
 #include <thread>
 
 
@@ -50,6 +51,8 @@ private:
 	std::atomic_bool _running{ true };
 	std::atomic_int32_t _iter{ 0 };
 	std::atomic_int32_t _work{ 0 };
+	std::vector<int_> * _out_spikes = nullptr;
+	std::mutex _out_spikes_lock;
 
 	multi_snn( float dt, int_ delay );
 };

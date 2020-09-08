@@ -54,20 +54,31 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 			    device::devices()[ID].set();
 
 			    int iter = 0;
+			    std::vector<int_> tmp;
 			    while( _running )
 			    {
 				    if( iter < _iter )
 				    {
-					    // TODO: out_spikes
-					    _nets[ID]->step( *_updt[ID], &_spikes.ddata[ID], &_spikes.dcounts[ID] );
+					    _nets[ID]->step(
+					        *_updt[ID],
+					        &_spikes.ddata[ID],
+					        &_spikes.dcounts[ID],
+					        _out_spikes ? &tmp : nullptr );
 					    _cp[ID]->wait( *_updt[ID] );
 					    copy( &_spikes.counts[ID], _spikes.dcounts[ID], 1, *_cp[ID] );
+
+					    if( _out_spikes )
+					    {
+						    std::lock_guard _( _out_spikes_lock );
+						    _out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
+						    tmp.clear();
+					    }
 
 					    _work--;
 					    iter++;
 				    }
 				    else
-					    _mm_pause();
+					    std::this_thread::yield();
 			    }
 		    },
 		    static_cast<int_>( d ) );
@@ -142,30 +153,12 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 template <typename Model>
 void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
-#if 0
-	{
-	    std::vector<int> tmp;
-	    if( out_spikes ) out_spikes->clear();
+	_out_spikes = out_spikes;
+	if( out_spikes ) out_spikes->clear();
 
-	    for( auto & d : device::devices() )
-	    {
-	        d.set();
-	        _nets[d]->step(
-	            *_updt[d], &_spikes.ddata[d], &_spikes.dcounts[d], out_spikes ? &tmp : nullptr );
-	        if( out_spikes ) out_spikes->insert( out_spikes->end(), tmp.begin(), tmp.end() );
-	    }
-	}
-
-	for( auto & d : device::devices() )
-	{
-	    _cp[d]->wait( *_updt[d] );
-	    copy( &_spikes.counts[d], _spikes.dcounts[d], 1, *_cp[d] );
-	}
-#else
 	_work += device::devices().size();
 	_iter++;
 	while( _work ) _mm_pause();
-#endif
 
 	if( device::devices().size() == 1 ) return;
 
