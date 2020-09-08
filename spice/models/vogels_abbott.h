@@ -26,7 +26,7 @@ struct vogels_abbott : model
 
 			float const Vrest = -0.06f; // v
 
-			get<V>( n ) = Vrest + 0.01f * ( n.id() / (float)info.num_neurons );
+			get<V>( n ) = Vrest;
 			get<Gex>( n ) = 0.0f;
 			get<Gin>( n ) = 0.0f;
 			get<Twait>( n ) = 0;

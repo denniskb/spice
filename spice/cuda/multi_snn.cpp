@@ -141,13 +141,15 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 		copy( spikes[0] + _spikes.counts[0], spikes[1], _spikes.counts[1], *_cp[0] );
 		copy( spikes[1] + _spikes.counts[1], spikes[0], _spikes.counts[0], *_cp[1] );
 
+		uint_ a = _spikes.counts[0];
+		uint_ b = _spikes.counts[1];
 		_spikes.counts[0] += _spikes.counts[1];
 
-		copy( n_spikes[0], &_spikes.counts[0], 1, *_cp[0] );
-		copy( n_spikes[1], &_spikes.counts[0], 1, *_cp[1] );
+		if( b ) copy( n_spikes[0], &_spikes.counts[0], 1, *_cp[0] );
+		if( a ) copy( n_spikes[1], &_spikes.counts[0], 1, *_cp[1] );
 
-		_cp[0]->synchronize();
-		_cp[1]->synchronize();
+		if( b ) _cp[0]->synchronize();
+		if( a ) _cp[1]->synchronize();
 	}
 	else
 	{
