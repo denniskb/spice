@@ -37,19 +37,11 @@ static size_ estimate_max_deg( std::vector<spice::util::layout::edge> const & co
 	       WARP_SZ * WARP_SZ;
 }
 
-static std::vector<std::tuple<size_, size_, float>> p2connect( float p )
-{
-	if( p )
-		return { { 0, 0, p } };
-	else
-		return {};
-}
-
 
 namespace spice::util
 {
 layout::layout( size_ const num_neurons, float const connections )
-    : layout( { num_neurons }, p2connect( connections ) )
+    : layout( { num_neurons }, { { 0, 0, connections } } )
 {
 	spice_assert( num_neurons > 0, "layout must contain at least 1 neuron" );
 }
@@ -72,7 +64,7 @@ layout::layout(
 		    std::get<0>( c ) < pops.size() && std::get<1>( c ) < pops.size(),
 		    "invalid index in connections matrix" );
 		spice_assert(
-		    std::get<2>( c ) > 0.0f && std::get<2>( c ) <= 1.0f, "invalid connect. prob." );
+		    std::get<2>( c ) >= 0.0f && std::get<2>( c ) <= 1.0f, "invalid connect. prob." );
 	}
 
 	{

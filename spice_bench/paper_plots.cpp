@@ -148,7 +148,7 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-BENCHMARK_TEMPLATE( plot2_RunTime, synth )
+BENCHMARK_TEMPLATE( plot2_RunTime, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 768'000'000, 768'000'000 );

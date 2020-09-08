@@ -329,7 +329,7 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges )
 	spice_assert(
 	    desc.connections().size() <= 20,
 	    "spice doesn't support models with more than 20 connections between neuron populations" );
-	spice_assert( edges || desc.connections().size() == 0 );
+	spice_assert( edges || desc.size() * desc.max_degree() == 0 );
 
 	std::array<int4, 20> tmp_range;
 	std::array<float, 20> tmp_p;

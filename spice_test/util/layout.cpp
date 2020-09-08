@@ -11,8 +11,9 @@ TEST( Layout, DefaultCtor )
 	layout l( 1, 0.0f );
 
 	ASSERT_EQ( l.size(), 1u );
-	ASSERT_EQ( l.connections().size(), 0u );
 	ASSERT_EQ( l.max_degree(), 0u );
+	ASSERT_EQ( l.connections().size(), 1u );
+	ASSERT_EQ(l.connections()[0], std::make_tuple( 0, 1, 0, 1, 0.0f ));
 }
 
 TEST( Layout, DefaultCtor2 )
