@@ -127,11 +127,9 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 
 	if( device::devices().size() == 1 ) return;
 
-	// download spike counts
 	for( auto & d : device::devices() )
 	{
 		_cp[d]->wait( *_updt[d] );
-		// TODO: copy into single stream?
 		copy( &_spikes.counts[d], n_spikes[d], 1, *_cp[d] );
 	}
 
@@ -153,7 +151,6 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	}
 	else
 	{
-		// TODO: single vs multiple streams throughout
 		_cp[0]->synchronize();
 		for( size_ i = 1; i < device::devices().size(); i++ )
 		{
@@ -162,75 +159,12 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 			_spikes.counts[0] += _spikes.counts[i];
 		}
 
-		// TODO: Hierarchical redistribution?
 		for( size_ i = 1; i < device::devices().size(); i++ )
 			copy( spikes[i], spikes[0], _spikes.counts[0], *_cp[0] );
 
-		for( auto & d : device::devices() ) copy( n_spikes[d], &_spikes.counts[0], 1, *_cp[0] );
-
-		_cp[0]->synchronize();
+		for( auto & d : device::devices() ) copy( n_spikes[d], &_spikes.counts[0], 1, *_cp[d] );
+		for( auto & d : device::devices() ) _cp[d]->synchronize();
 	}
-
-
-	// FIX: HOST is blocking until ALL counts are downloaded..
-	// for( auto & d : device::devices() ) _cp[d]->synchronize();
-
-	// gather spikes
-	/*for( size_ delta = 1; delta < device::devices().size(); delta *= 2 )
-	{
-	    for( size_ i = 0; i < device::devices().size() - delta; i += 2 * delta )
-	    {
-	        bool const last_iter = ( 2 * delta >= device::devices().size() );
-
-	        if( _spikes.counts[i] == ~0 ) _cp[i]->synchronize();
-	        if( _spikes.counts[i + delta] == ~0 ) _cp[i + delta]->synchronize();
-
-	        _cp[i]->wait( *_updt[i + delta] );
-	        copy(
-	            spikes[i] + _spikes.counts[i],
-	            spikes[i + delta],
-	            _spikes.counts[i + delta],
-	            *_cp[i] );
-
-	        if( last_iter )
-	        {
-	            _cp[i + delta]->wait( *_updt[i] );
-	            copy(
-	                spikes[i + delta] + _spikes.counts[i + delta],
-	                spikes[i],
-	                _spikes.counts[i],
-	                *_cp[i + delta] );
-	        }
-
-	        _updt[i]->record( *_cp[i] );
-	        if( last_iter ) _updt[i + delta]->record( *_cp[i + delta] );
-
-	        _spikes.counts[i] += _spikes.counts[i + delta];
-	        if( last_iter ) _spikes.counts[i + delta] += _spikes.counts[i];
-	    }
-
-	    // for( auto & d : device::devices() ) _cp[d]->synchronize();
-	}
-
-	// scatter spikes
-	for( size_ delta =
-	         narrow_cast<size_>( std::log2( std::max( 1_sz, device::devices().size() - 1 ) ) );
-	     delta >= 1;
-	     delta /= 2 )
-	{
-	    for( size_ i = 0; i < device::devices().size() - delta; i += 2 * delta )
-	    {
-	        _cp[i + delta]->wait( *_updt[i] );
-	        copy( spikes[i + delta], spikes[i], _spikes.counts[0], *_cp[i + delta] );
-	        _updt[i + delta]->record( *_cp[i + delta] );
-	    }
-
-	    // for( auto & d : device::devices() ) _cp[d]->synchronize();
-	}
-
-	// upload spike counts
-	for( auto & d : device::devices() ) copy( n_spikes[d], &_spikes.counts[0], 1, *_cp[d] );
-	for( auto & d : device::devices() ) _cp[d]->synchronize();*/
 }
 
 template <typename Model>
