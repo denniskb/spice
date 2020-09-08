@@ -103,18 +103,18 @@ TEST( Layout, Slice )
 		{
 			auto s = l.cut( 2, 0 );
 			ASSERT_EQ( s.first, 0 );
-			ASSERT_EQ( s.last, 15 );
+			ASSERT_EQ( s.last, 14 );
 			ASSERT_EQ( s.part.connections().size(), 2u );
-			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 10, 15, 0.25f ) );
-			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 10, 20, 10, 15, 0.75f ) );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 10, 14, 0.25f ) );
+			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 10, 20, 10, 14, 0.75f ) );
 		}
 		{
 			auto s = l.cut( 2, 1 );
-			ASSERT_EQ( s.first, 15 );
+			ASSERT_EQ( s.first, 14 );
 			ASSERT_EQ( s.last, 20 );
 			ASSERT_EQ( s.part.connections().size(), 2u );
-			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 15, 20, 0.25f ) );
-			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 10, 20, 15, 20, 0.75f ) );
+			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 14, 20, 0.25f ) );
+			ASSERT_EQ( s.part.connections()[1], std::make_tuple( 10, 20, 14, 20, 0.75f ) );
 		}
 	}
 
@@ -129,13 +129,13 @@ TEST( Layout, Slice )
 		{
 			auto s = l.cut( 2, 0 );
 			ASSERT_EQ( s.first, 0 );
-			ASSERT_EQ( s.last, 10 );
+			ASSERT_EQ( s.last, 15 );
 			ASSERT_EQ( s.part.connections().size(), 1u );
 			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 0, 10, 0, 10, 0.5f ) );
 		}
 		{
 			auto s = l.cut( 2, 1 );
-			ASSERT_EQ( s.first, 10 );
+			ASSERT_EQ( s.first, 15 );
 			ASSERT_EQ( s.last, 30 );
 			ASSERT_EQ( s.part.connections().size(), 2u );
 			ASSERT_EQ( s.part.connections()[0], std::make_tuple( 10, 20, 20, 30, 0.25f ) );

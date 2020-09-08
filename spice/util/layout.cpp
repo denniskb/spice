@@ -130,21 +130,24 @@ layout::slice<> layout::cut( size_ n, size_ i )
 	std::vector<int> szs;
 	std::vector<size_> costs;
 	{
-		std::map<int, std::pair<int, double>> pop2sizedeg;
+		std::map<int, std::pair<int, double>> pop2size_cost;
 		for( auto const & c : connections() )
 		{
-			pop2sizedeg[std::get<0>( c )].first = std::get<1>( c ) - std::get<0>( c );
+			size_ const src_size = std::get<1>( c ) - std::get<0>( c );
+			size_ const dst_size = std::get<3>( c ) - std::get<2>( c );
 
-			auto x = pop2sizedeg[std::get<2>( c )];
-			x.first = std::get<3>( c ) - std::get<2>( c );
-			x.second += ( std::get<1>( c ) - std::get<0>( c ) ) * std::get<4>( c );
-			pop2sizedeg[std::get<2>( c )] = x;
+			pop2size_cost[std::get<0>( c )].first = src_size;
+
+			auto x = pop2size_cost[std::get<2>( c )];
+			x.first = dst_size;
+			x.second += src_size * dst_size * static_cast<double>( std::get<4>( c ) );
+			pop2size_cost[std::get<2>( c )] = x;
 		}
 
-		for( auto const & [k, v] : pop2sizedeg )
+		for( auto const & [k, v] : pop2size_cost )
 		{
 			szs.push_back( v.first );
-			costs.push_back( static_cast<size_>( std::round( v.first * v.second ) ) );
+			costs.push_back( v.first + static_cast<size_>( std::round( v.second ) ) );
 		}
 	}
 	std::inclusive_scan( szs.begin(), szs.end(), szs.begin() );
