@@ -7,7 +7,10 @@
 #include <spice/snn.h>
 #include <spice/util/span.hpp>
 
-#include <vector>
+#include <array>
+#include <atomic>
+#include <thread>
+
 
 namespace spice::cuda
 {
@@ -17,6 +20,7 @@ class multi_snn : public ::spice::snn<Model>
 public:
 	multi_snn( spice::util::layout desc, float dt, int_ delay = 1 );
 	multi_snn( spice::snn<Model> const & net );
+	~multi_snn();
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
 	void sync();
@@ -34,10 +38,18 @@ private:
 	{
 		std::unique_ptr<uint_, cudaError_t ( * )( void * )> counts_data;
 		nonstd::span<uint_> counts;
+
+		std::array<int_ *, util::device::max_devices> ddata;
+		std::array<uint_ *, util::device::max_devices> dcounts;
 	} _spikes;
 
 	std::array<std::optional<util::stream>, util::device::max_devices> _cp;
 	std::array<std::optional<util::sync_event>, util::device::max_devices> _updt;
+
+	std::array<std::thread, util::device::max_devices> _workers;
+	std::atomic_bool _running{ true };
+	std::atomic_int32_t _iter{ 0 };
+	std::atomic_int32_t _work{ 0 };
 
 	multi_snn( float dt, int_ delay );
 };

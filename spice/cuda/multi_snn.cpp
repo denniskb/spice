@@ -9,6 +9,8 @@
 
 #include <cuda_runtime.h>
 
+#include <immintrin.h>
+
 
 using namespace spice::util;
 using namespace spice::cuda::util;
@@ -45,6 +47,37 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 	}
 	// Absorb potential errors from blindly enabling peer access
 	cudaGetLastError();
+
+	for( auto & d : device::devices() )
+		_workers[d] = std::thread(
+		    [&]( int_ const ID ) {
+			    device::devices()[ID].set();
+
+			    int iter = 0;
+			    while( _running )
+			    {
+				    if( iter < _iter )
+				    {
+					    // TODO: out_spikes
+					    _nets[ID]->step( *_updt[ID], &_spikes.ddata[ID], &_spikes.dcounts[ID] );
+					    _cp[ID]->wait( *_updt[ID] );
+					    copy( &_spikes.counts[ID], _spikes.dcounts[ID], 1, *_cp[ID] );
+
+					    _work--;
+					    iter++;
+				    }
+				    else
+					    _mm_pause();
+			    }
+		    },
+		    static_cast<int_>( d ) );
+}
+
+template <typename Model>
+multi_snn<Model>::~multi_snn()
+{
+	_running = false;
+	for( auto & d : device::devices() ) _workers[d].join();
 }
 
 template <typename Model>
@@ -109,44 +142,47 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 template <typename Model>
 void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
-	int_ * spikes[device::max_devices];
-	uint_ * n_spikes[device::max_devices];
-
-	// advance sims
+#if 0
 	{
-		std::vector<int> tmp;
-		if( out_spikes ) out_spikes->clear();
+	    std::vector<int> tmp;
+	    if( out_spikes ) out_spikes->clear();
 
-		for( auto & d : device::devices() )
-		{
-			d.set();
-			_nets[d]->step( *_updt[d], &spikes[d], &n_spikes[d], out_spikes ? &tmp : nullptr );
-			if( out_spikes ) out_spikes->insert( out_spikes->end(), tmp.begin(), tmp.end() );
-		}
+	    for( auto & d : device::devices() )
+	    {
+	        d.set();
+	        _nets[d]->step(
+	            *_updt[d], &_spikes.ddata[d], &_spikes.dcounts[d], out_spikes ? &tmp : nullptr );
+	        if( out_spikes ) out_spikes->insert( out_spikes->end(), tmp.begin(), tmp.end() );
+	    }
 	}
-
-	if( device::devices().size() == 1 ) return;
 
 	for( auto & d : device::devices() )
 	{
-		_cp[d]->wait( *_updt[d] );
-		copy( &_spikes.counts[d], n_spikes[d], 1, *_cp[d] );
+	    _cp[d]->wait( *_updt[d] );
+	    copy( &_spikes.counts[d], _spikes.dcounts[d], 1, *_cp[d] );
 	}
+#else
+	_work += device::devices().size();
+	_iter++;
+	while( _work ) _mm_pause();
+#endif
+
+	if( device::devices().size() == 1 ) return;
 
 	if( device::devices().size() == 2 )
 	{
 		_cp[0]->synchronize();
 		_cp[1]->synchronize();
 
-		copy( spikes[0] + _spikes.counts[0], spikes[1], _spikes.counts[1], *_cp[0] );
-		copy( spikes[1] + _spikes.counts[1], spikes[0], _spikes.counts[0], *_cp[1] );
+		copy( _spikes.ddata[0] + _spikes.counts[0], _spikes.ddata[1], _spikes.counts[1], *_cp[0] );
+		copy( _spikes.ddata[1] + _spikes.counts[1], _spikes.ddata[0], _spikes.counts[0], *_cp[1] );
 
 		uint_ a = _spikes.counts[0];
 		uint_ b = _spikes.counts[1];
 		_spikes.counts[0] += _spikes.counts[1];
 
-		if( b ) copy( n_spikes[0], &_spikes.counts[0], 1, *_cp[0] );
-		if( a ) copy( n_spikes[1], &_spikes.counts[0], 1, *_cp[1] );
+		if( b ) copy( _spikes.dcounts[0], &_spikes.counts[0], 1, *_cp[0] );
+		if( a ) copy( _spikes.dcounts[1], &_spikes.counts[0], 1, *_cp[1] );
 
 		if( b ) _cp[0]->synchronize();
 		if( a ) _cp[1]->synchronize();
@@ -157,16 +193,21 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 		for( size_ i = 1; i < device::devices().size(); i++ )
 		{
 			_cp[i]->synchronize();
-			copy( spikes[0] + _spikes.counts[0], spikes[i], _spikes.counts[i], *_cp[0] );
+			copy(
+			    _spikes.ddata[0] + _spikes.counts[0],
+			    _spikes.ddata[i],
+			    _spikes.counts[i],
+			    *_cp[0] );
 			_spikes.counts[0] += _spikes.counts[i];
 		}
 
 		for( size_ i = 1; i < device::devices().size(); i++ )
-			copy( spikes[i], spikes[0], _spikes.counts[0], *_cp[0] );
+			copy( _spikes.ddata[i], _spikes.ddata[0], _spikes.counts[0], *_cp[0] );
 
 		if( _spikes.counts[0] )
 		{
-			for( auto & d : device::devices() ) copy( n_spikes[d], &_spikes.counts[0], 1, *_cp[d] );
+			for( auto & d : device::devices() )
+				copy( _spikes.dcounts[d], &_spikes.counts[0], 1, *_cp[d] );
 			for( auto & d : device::devices() ) _cp[d]->synchronize();
 		}
 	}
