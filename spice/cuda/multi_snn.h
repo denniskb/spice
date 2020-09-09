@@ -61,6 +61,6 @@ private:
 
 	multi_snn( float dt, int_ delay );
 
-	void work( int_ const ID, int_ const iter, std::vector<int_> & tmp );
+	void work( int_ const ID, std::vector<int_> & tmp );
 };
 } // namespace spice::cuda

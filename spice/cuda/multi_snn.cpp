@@ -32,6 +32,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 	void * ptr;
 	success_or_throw( cudaHostAlloc(
 	    &ptr, device::devices().size() * delay * sizeof( uint_ ), cudaHostAllocPortable ) );
+	success_or_throw( cudaMemset( ptr, 0, device::devices().size() * delay * sizeof( uint_ ) ) );
 
 	_spikes.counts_data.reset( static_cast<uint_ *>( ptr ) );
 	_spikes.counts = { _spikes.counts_data.get(), delay };
@@ -39,7 +40,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 	_spikes.ddata_data.resize( device::devices().size() * delay );
 	_spikes.ddata = { _spikes.ddata_data.data(), delay };
 
-	_spikes.dcounts_data.resize( device::devices().size() * delay );
+	_spikes.dcounts_data.resize( device::devices().size() * delay, nullptr );
 	_spikes.dcounts = { _spikes.dcounts_data.data(), delay };
 
 	for( auto & d : device::devices() )
@@ -63,7 +64,11 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 			    std::vector<int_> tmp;
 			    while( _running )
 			    {
-				    for( ; iter < _iter; iter++ ) work( ID, iter, tmp );
+				    if( iter < _iter )
+				    {
+					    work( ID, tmp );
+					    iter += this->delay();
+				    }
 				    std::this_thread::yield();
 			    }
 		    },
@@ -71,21 +76,32 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 }
 
 template <typename Model>
-void multi_snn<Model>::work( int_ const ID, int_ const iter, std::vector<int_> & tmp )
+void multi_snn<Model>::work( int_ const ID, std::vector<int_> & tmp )
 {
-	_nets[ID]->step(
-	    *_updt[ID],
-	    &_spikes.ddata( ID, iter % this->delay() ),
-	    &_spikes.dcounts( ID, iter % this->delay() ),
-	    _out_spikes ? &tmp : nullptr );
+	// TODO: Moving upload work into worker sporadically fails MultiSnn.Step(d=1) test
+	// copy( *_spikes.dcounts.row( ID ), _spikes.counts.row( 0 ), this->delay(), *_cp[ID] );
+	//_cp[ID]->synchronize();
 
-	if( _out_spikes )
+	for( int_ iter = 0; iter < this->delay(); iter++ )
 	{
-		std::lock_guard _( _out_spikes_lock );
-		_out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
+		_nets[ID]->step(
+		    *_updt[ID],
+		    &_spikes.ddata( ID, iter % this->delay() ),
+		    &_spikes.dcounts( ID, iter % this->delay() ),
+		    _out_spikes ? &tmp : nullptr );
+
+		if( _out_spikes )
+		{
+			std::lock_guard _( _out_spikes_lock );
+			_out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
+		}
 	}
-	_work--;
-}
+	_cp[ID]->wait( *_updt[ID] );
+	copy( _spikes.counts.row( ID ), *_spikes.dcounts.row( ID ), this->delay(), *_cp[ID] );
+	_cp[ID]->synchronize();
+
+	_work -= this->delay();
+} // namespace spice::cuda
 
 template <typename Model>
 multi_snn<Model>::~multi_snn()
@@ -167,18 +183,11 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	_work += device::devices().size() * this->delay(); // * delta;
 	_iter += this->delay();                            // += delta;
 
-	for( int_ step = 0; step < this->delay(); step++ ) work( 0, step, _tmp );
+	work( 0, _tmp );
 
 	while( _work ) _mm_pause();
 
 	if( device::devices().size() == 1 ) return;
-
-	for( auto & d : device::devices() )
-	{
-		_cp[d]->wait( *_updt[d] );
-		copy( _spikes.counts.row( d ), *_spikes.dcounts.row( d ), this->delay(), *_cp[d] );
-	}
-	for( auto & d : device::devices() ) _cp[d]->synchronize();
 
 	switch( device::devices().size() )
 	{

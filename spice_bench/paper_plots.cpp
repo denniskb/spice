@@ -122,7 +122,7 @@ static void plot2_RunTime( benchmark::State & state )
 
 	float const P = 0.02f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
-	size_ const ITER = 100;
+	size_ const ITER = 800;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
