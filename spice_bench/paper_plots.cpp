@@ -117,7 +117,7 @@ static void plot2_RunTime( benchmark::State & state )
 #else
 	using net_t = cuda::multi_snn<Model>;
 	NSYN *= 2;
-	n *= 2;
+	n *= device::devices().size();
 #endif
 
 	float const P = 0.02f;
