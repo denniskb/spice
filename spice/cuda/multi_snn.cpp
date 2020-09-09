@@ -238,7 +238,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 			    *_cp[3] );
 
 			_spikes.counts( 3, step ) += _spikes.counts( 1, step );
-			_spikes.counts( 1, step ) += _spikes.counts( 3, step );
+			_spikes.counts( 1, step ) = _spikes.counts( 3, step );
 		}
 
 		_cp[1]->synchronize();
