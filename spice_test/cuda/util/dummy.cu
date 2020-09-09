@@ -14,7 +14,7 @@ start:
 
 		if( e < s ) goto start;
 
-		if( e - s > 250'000 ) return;
+		if( e - s > 5'000'000 ) return;
 	}
 }
 

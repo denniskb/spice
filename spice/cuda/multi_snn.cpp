@@ -54,7 +54,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 	// Absorb potential errors from blindly enabling peer access
 	cudaGetLastError();
 
-	for( auto & d : device::devices() )
+	for( size_ d = 1; d < device::devices().size(); d++ )
 		_workers[d] = std::thread(
 		    [&]( int_ const ID ) {
 			    device::devices()[ID].set();
@@ -63,24 +63,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 			    std::vector<int_> tmp;
 			    while( _running )
 			    {
-				    // TODO: Experiment with while
-				    while( iter < _iter )
-				    {
-					    _nets[ID]->step(
-					        *_updt[ID],
-					        &_spikes.ddata( ID, iter % this->delay() ),
-					        &_spikes.dcounts( ID, iter % this->delay() ),
-					        _out_spikes ? &tmp : nullptr );
-
-					    if( _out_spikes )
-					    {
-						    std::lock_guard _( _out_spikes_lock );
-						    _out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
-					    }
-
-					    _work--;
-					    iter++;
-				    }
+				    for( ; iter < _iter; iter++ ) work( ID, iter, tmp );
 				    std::this_thread::yield();
 			    }
 		    },
@@ -88,10 +71,27 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 }
 
 template <typename Model>
+void multi_snn<Model>::work( int_ const ID, int_ const iter, std::vector<int_> & tmp )
+{
+	_nets[ID]->step(
+	    *_updt[ID],
+	    &_spikes.ddata( ID, iter % this->delay() ),
+	    &_spikes.dcounts( ID, iter % this->delay() ),
+	    _out_spikes ? &tmp : nullptr );
+
+	if( _out_spikes )
+	{
+		std::lock_guard _( _out_spikes_lock );
+		_out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
+	}
+	_work--;
+}
+
+template <typename Model>
 multi_snn<Model>::~multi_snn()
 {
 	_running = false;
-	for( auto & d : device::devices() ) _workers[d].join();
+	for( size_ d = 1; d < device::devices().size(); d++ ) _workers[d].join();
 }
 
 template <typename Model>
@@ -105,6 +105,7 @@ multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* =
 		auto slice = desc.cut( device::devices().size(), d );
 		_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
 	}
+	device::devices( 0 ).set();
 }
 
 template <typename Model>
@@ -150,6 +151,7 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 		_nets[d].emplace(
 		    slice, deg, net.dt(), net.delay(), narrow<int>( first ), narrow<int>( last ) );
 	}
+	device::devices( 0 ).set();
 }
 
 
@@ -164,6 +166,9 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	// int_ const last = first + delta;
 	_work += device::devices().size() * this->delay(); // * delta;
 	_iter += this->delay();                            // += delta;
+
+	for( int_ step = 0; step < this->delay(); step++ ) work( 0, step, _tmp );
+
 	while( _work ) _mm_pause();
 
 	if( device::devices().size() == 1 ) return;

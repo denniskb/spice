@@ -15,18 +15,28 @@ using namespace spice::cuda::util;
 
 // Non-zero cost work on specified stream
 void dummy_kernel( cudaStream_t s );
-void dummy_copy( cudaStream_t s )
+
+class Stream : public ::testing::Test
 {
-	int_ const N = 3'000'000;
-	static std::unique_ptr<int, cudaError_t ( * )( void * )> host(
-	    static_cast<int_ *>( cuda_malloc_host( N * 4 ) ), cudaFree );
-	static std::unique_ptr<int, cudaError_t ( * )( void * )> device(
-	    static_cast<int_ *>( cuda_malloc( N * 4 ) ), cudaFree );
+private:
+	int_ const N = 10'000'000;
+	std::unique_ptr<int, cudaError_t ( * )( void * )> host{ nullptr, cudaFreeHost };
+	std::unique_ptr<int, cudaError_t ( * )( void * )> device{ nullptr, cudaFree };
 
-	cudaMemcpyAsync( device.get(), host.get(), N * 4, cudaMemcpyDefault, s ); // ~1ms
-}
+protected:
+	void SetUp() override
+	{
+		host.reset( static_cast<int_ *>( cuda_malloc_host( N ) ) );
+		device.reset( static_cast<int_ *>( cuda_malloc( N ) ) );
+	}
 
-TEST( Stream, Ctor )
+	void dummy_copy( cudaStream_t s )
+	{
+		cudaMemcpyAsync( device.get(), host.get(), N, cudaMemcpyDefault, s );
+	}
+};
+
+TEST_F( Stream, Ctor )
 {
 	stream s1, s2;
 	time_event s1start, s1stop, s2start, s2stop;
@@ -46,11 +56,11 @@ TEST( Stream, Ctor )
 	ASSERT_TRUE( s2stop.elapsed_time( s2start ) > 0.0 );
 }
 
-TEST( Stream, Query )
+TEST_F( Stream, Query )
 {
 	stream s;
 
-	for( size_ i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 10; i++ )
 	{
 		dummy_kernel( s );
 		EXPECT_EQ( s.query(), cudaErrorNotReady );
@@ -60,12 +70,12 @@ TEST( Stream, Query )
 	}
 }
 
-TEST( Stream, Wait )
+TEST_F( Stream, Wait )
 {
 	stream s1, s2;
 	time_event s1start, s1stop, s2start, s2stop;
 
-	for( size_ i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 10; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );
@@ -86,7 +96,7 @@ TEST( Stream, Wait )
 		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0 );
 	}
 
-	for( size_ i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 10; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );
@@ -107,12 +117,12 @@ TEST( Stream, Wait )
 	}
 }
 
-TEST( Stream, Synchronize )
+TEST_F( Stream, Synchronize )
 {
 	stream s1, s2;
 	time_event s1start, s1stop, s2start, s2stop;
 
-	for( size_ i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 10; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );
@@ -131,7 +141,7 @@ TEST( Stream, Synchronize )
 		ASSERT_GE( s2start.elapsed_time( s1stop ), 0.0 );
 	}
 
-	for( size_ i = 0; i < 100; i++ )
+	for( size_ i = 0; i < 10; i++ )
 	{
 		s1start.record( s1 );
 		dummy_kernel( s1 );
@@ -149,7 +159,7 @@ TEST( Stream, Synchronize )
 	}
 }
 
-TEST( Stream, Default )
+TEST_F( Stream, Default )
 {
 	ASSERT_EQ( static_cast<cudaStream_t>( stream::default_stream() ), nullptr );
 }

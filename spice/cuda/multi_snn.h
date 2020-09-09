@@ -57,6 +57,10 @@ private:
 	std::vector<int_> * _out_spikes = nullptr;
 	std::mutex _out_spikes_lock;
 
+	std::vector<int_> _tmp;
+
 	multi_snn( float dt, int_ delay );
+
+	void work( int_ const ID, int_ const iter, std::vector<int_> & tmp );
 };
 } // namespace spice::cuda
