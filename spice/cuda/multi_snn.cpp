@@ -189,6 +189,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 			    _spikes.ddata( 1, step ),
 			    _spikes.counts( 1, step ),
 			    *_cp[0] );
+
 			copy(
 			    _spikes.ddata( 1, step ) + _spikes.counts( 1, step ),
 			    _spikes.ddata( 0, step ),

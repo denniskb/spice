@@ -117,12 +117,12 @@ static void plot2_RunTime( benchmark::State & state )
 #else
 	using net_t = cuda::multi_snn<Model>;
 	NSYN *= 2;
-	n *= 2;
+	n *= device::devices().size();
 #endif
 
 	float const P = 0.02f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
-	size_ const ITER = 1000;
+	size_ const ITER = 100;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -134,7 +134,11 @@ static void plot2_RunTime( benchmark::State & state )
 		for( auto _ : state )
 		{
 			timer t;
-			for( size_ i = 0; i < ITER / net.delay(); i++ ) net.step();
+			for( size_ i = 0;
+			     i <
+			     ITER / ( std::is_same<net_t, cuda::multi_snn<Model>>::value ? net.delay() : 1 );
+			     i++ )
+				net.step();
 
 			if constexpr( std::is_same<net_t, cuda::multi_snn<Model>>::value )
 				net.sync();
