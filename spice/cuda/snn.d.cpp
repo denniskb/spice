@@ -153,7 +153,6 @@ void snn<Model>::step(
 {
 	this->_step( [&]( int_ const i, float const dt ) {
 		if( i >= this->delay() )
-		{
 			receive<Model>(
 			    _sim,
 
@@ -169,7 +168,6 @@ void snn<Model>::step(
 			    i,
 			    this->delay(),
 			    dt );
-		}
 
 		zero_async( _spikes.counts.data() + circidx( i, this->delay() ), _sim );
 		if constexpr( Model::synapse::size > 0 ) _spikes.num_updates.zero_async( _sim );
