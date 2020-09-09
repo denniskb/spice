@@ -30,11 +30,17 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
     , _spikes{ { nullptr, cudaFreeHost } }
 {
 	void * ptr;
-	success_or_throw(
-	    cudaHostAlloc( &ptr, device::devices().size() * sizeof( uint_ ), cudaHostAllocPortable ) );
+	success_or_throw( cudaHostAlloc(
+	    &ptr, device::devices().size() * delay * sizeof( uint_ ), cudaHostAllocPortable ) );
 
 	_spikes.counts_data.reset( static_cast<uint_ *>( ptr ) );
-	_spikes.counts = { _spikes.counts_data.get(), device::devices().size() };
+	_spikes.counts = { _spikes.counts_data.get(), delay };
+
+	_spikes.ddata_data.resize( device::devices().size() * delay );
+	_spikes.ddata = { _spikes.ddata_data.data(), delay };
+
+	_spikes.dcounts_data.resize( device::devices().size() * delay );
+	_spikes.dcounts = { _spikes.dcounts_data.data(), delay };
 
 	for( auto & d : device::devices() )
 	{
@@ -57,28 +63,25 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 			    std::vector<int_> tmp;
 			    while( _running )
 			    {
-				    if( iter < _iter )
+				    // TODO: Experiment with while
+				    while( iter < _iter )
 				    {
 					    _nets[ID]->step(
 					        *_updt[ID],
-					        &_spikes.ddata[ID],
-					        &_spikes.dcounts[ID],
+					        &_spikes.ddata( ID, iter % this->delay() ),
+					        &_spikes.dcounts( ID, iter % this->delay() ),
 					        _out_spikes ? &tmp : nullptr );
-					    _cp[ID]->wait( *_updt[ID] );
-					    copy( &_spikes.counts[ID], _spikes.dcounts[ID], 1, *_cp[ID] );
 
 					    if( _out_spikes )
 					    {
 						    std::lock_guard _( _out_spikes_lock );
 						    _out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
-						    tmp.clear();
 					    }
 
 					    _work--;
 					    iter++;
 				    }
-				    else
-					    std::this_thread::yield();
+				    std::this_thread::yield();
 			    }
 		    },
 		    static_cast<int_>( d ) );
@@ -156,55 +159,67 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	_out_spikes = out_spikes;
 	if( out_spikes ) out_spikes->clear();
 
-	_work += device::devices().size();
-	_iter++;
+	// int_ const delta = ( this->delay() + static_cast<bool>( _iter % this->delay() ) ) / 2;
+	// int_ const first = _iter % this->delay();
+	// int_ const last = first + delta;
+	_work += device::devices().size() * this->delay(); // * delta;
+	_iter += this->delay();                            // += delta;
 	while( _work ) _mm_pause();
 
 	if( device::devices().size() == 1 ) return;
 
+	for( auto & d : device::devices() )
+	{
+		_cp[d]->wait( *_updt[d] );
+		copy( _spikes.counts.row( d ), *_spikes.dcounts.row( d ), this->delay(), *_cp[d] );
+	}
+	for( auto & d : device::devices() ) _cp[d]->synchronize();
+
 	if( device::devices().size() == 2 )
 	{
-		_cp[0]->synchronize();
-		_cp[1]->synchronize();
+		for( int_ step = 0; step < this->delay(); step++ )
+		{
+			copy(
+			    _spikes.ddata( 0, step ) + _spikes.counts( 0, step ),
+			    _spikes.ddata( 1, step ),
+			    _spikes.counts( 1, step ),
+			    *_cp[0] );
+			copy(
+			    _spikes.ddata( 1, step ) + _spikes.counts( 1, step ),
+			    _spikes.ddata( 0, step ),
+			    _spikes.counts( 0, step ),
+			    *_cp[1] );
 
-		copy( _spikes.ddata[0] + _spikes.counts[0], _spikes.ddata[1], _spikes.counts[1], *_cp[0] );
-		copy( _spikes.ddata[1] + _spikes.counts[1], _spikes.ddata[0], _spikes.counts[0], *_cp[1] );
-
-		uint_ a = _spikes.counts[0];
-		uint_ b = _spikes.counts[1];
-		_spikes.counts[0] += _spikes.counts[1];
-
-		if( b ) copy( _spikes.dcounts[0], &_spikes.counts[0], 1, *_cp[0] );
-		if( a ) copy( _spikes.dcounts[1], &_spikes.counts[0], 1, *_cp[1] );
-
-		if( b ) _cp[0]->synchronize();
-		if( a ) _cp[1]->synchronize();
+			_spikes.counts( 0, step ) += _spikes.counts( 1, step );
+		}
 	}
 	else
 	{
-		_cp[0]->synchronize();
-		for( size_ i = 1; i < device::devices().size(); i++ )
+		for( int_ step = 0; step < this->delay(); step++ )
 		{
-			_cp[i]->synchronize();
-			copy(
-			    _spikes.ddata[0] + _spikes.counts[0],
-			    _spikes.ddata[i],
-			    _spikes.counts[i],
-			    *_cp[0] );
-			_spikes.counts[0] += _spikes.counts[i];
-		}
+			for( size_ i = 1; i < device::devices().size(); i++ )
+			{
+				copy(
+				    _spikes.ddata( 0, step ) + _spikes.counts( 0, step ),
+				    _spikes.ddata( i, step ),
+				    _spikes.counts( i, step ),
+				    *_cp[0] );
+				_spikes.counts( 0, step ) += _spikes.counts( i, step );
+			}
 
-		for( size_ i = 1; i < device::devices().size(); i++ )
-			copy( _spikes.ddata[i], _spikes.ddata[0], _spikes.counts[0], *_cp[0] );
-
-		if( _spikes.counts[0] )
-		{
-			for( auto & d : device::devices() )
-				copy( _spikes.dcounts[d], &_spikes.counts[0], 1, *_cp[d] );
-			for( auto & d : device::devices() ) _cp[d]->synchronize();
+			for( size_ i = 1; i < device::devices().size(); i++ )
+				copy(
+				    _spikes.ddata( i, step ),
+				    _spikes.ddata( 0, step ),
+				    _spikes.counts( 0, step ),
+				    *_cp[0] );
 		}
 	}
-}
+
+	for( auto & d : device::devices() )
+		copy( *_spikes.dcounts.row( d ), _spikes.counts.row( 0 ), this->delay(), *_cp[d] );
+	for( auto & d : device::devices() ) _cp[d]->synchronize();
+} // namespace spice::cuda
 
 template <typename Model>
 void multi_snn<Model>::sync()

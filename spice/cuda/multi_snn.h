@@ -5,7 +5,7 @@
 #include <spice/cuda/util/event.h>
 #include <spice/cuda/util/stream.h>
 #include <spice/snn.h>
-#include <spice/util/span.hpp>
+#include <spice/util/span2d.h>
 
 #include <array>
 #include <atomic>
@@ -38,10 +38,13 @@ private:
 	struct
 	{
 		std::unique_ptr<uint_, cudaError_t ( * )( void * )> counts_data;
-		nonstd::span<uint_> counts;
+		spice::util::span2d<uint_> counts; // gpu x iter
 
-		std::array<int_ *, util::device::max_devices> ddata;
-		std::array<uint_ *, util::device::max_devices> dcounts;
+		std::vector<int_ *> ddata_data;
+		spice::util::span2d<int_ *> ddata;
+
+		std::vector<uint_ *> dcounts_data;
+		spice::util::span2d<uint_ *> dcounts;
 	} _spikes;
 
 	std::array<std::optional<util::stream>, util::device::max_devices> _cp;

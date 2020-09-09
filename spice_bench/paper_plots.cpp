@@ -134,7 +134,7 @@ static void plot2_RunTime( benchmark::State & state )
 		for( auto _ : state )
 		{
 			timer t;
-			for( size_ i = 0; i < ITER; i++ ) net.step();
+			for( size_ i = 0; i < ITER / net.delay(); i++ ) net.step();
 
 			if constexpr( std::is_same<net_t, cuda::multi_snn<Model>>::value )
 				net.sync();

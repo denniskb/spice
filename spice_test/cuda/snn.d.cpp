@@ -184,15 +184,22 @@ TEST( MultiSNN, StepWithDelay )
 	cuda::multi_snn d( h );
 	ASSERT_EQ( d.num_neurons(), 4000u );
 	ASSERT_EQ( d.dt(), 0.0001f );
-	ASSERT_EQ( d.delay(), 8 );
+	ASSERT_EQ( d.delay(), h.delay() );
 	ASSERT_TRUE( close( h, d, 0.0 ) );
 
-	std::vector<int> h_spikes, d_spikes;
+	std::vector<int> h_spikes, d_spikes, tmp;
 
-	for( int_ i = 0; i < 1000; i++ )
+	for( int_ i = 0; i < 125; i++ )
 	{
-		h.step( &h_spikes );
+		h_spikes.clear();
+		for( int_ j = 0; j < h.delay(); j++ )
+		{
+			h.step( &tmp );
+			h_spikes.insert( h_spikes.end(), tmp.begin(), tmp.end() );
+		}
+
 		d.step( &d_spikes );
+
 		ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << i;
 	}
 
