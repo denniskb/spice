@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 
 #include <immintrin.h>
+#include <numeric>
 
 
 using namespace spice::util;
@@ -188,6 +189,12 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	while( _work ) _mm_pause();
 
 	if( device::devices().size() == 1 ) return;
+
+	if( std::accumulate(
+	        _spikes.counts.row( 0 ),
+	        _spikes.counts.row( 0 ) + device::devices().size() * this->delay(),
+	        0 ) == 0 )
+		return;
 
 	switch( device::devices().size() )
 	{
