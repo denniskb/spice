@@ -42,6 +42,7 @@ void snn<Model>::reserve( size_ const num_neurons, size_ const num_synapses, int
 	_spikes.ids_data.resize( delay * num_neurons );
 	_spikes.ids = { _spikes.ids_data.data(), narrow<int>( num_neurons ) };
 	_spikes.counts.resize( delay );
+	_spikes.counts.zero_async( _sim );
 
 	if constexpr( Model::neuron::size > 0 ) _neurons.resize( num_neurons );
 
@@ -55,8 +56,8 @@ void snn<Model>::reserve( size_ const num_neurons, size_ const num_synapses, int
 
 		_graph.ages.resize( num_neurons );
 
-		_spikes.history_data.zero_async();
-		_graph.ages.zero_async();
+		_spikes.history_data.zero_async( _sim );
+		_graph.ages.zero_async( _sim );
 	}
 }
 #pragma warning( pop )

@@ -14,6 +14,7 @@
 #include <spice/util/type_traits.h>
 
 #include <chrono>
+#include <optional>
 
 using namespace spice;
 using namespace spice::cuda;
@@ -106,42 +107,42 @@ BENCHMARK( plot0_AdjGen )
 
 
 // Absolute runtime per iteration as a function of synapse count
-template <typename Model>
+template <template <typename> typename net_t, typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
 	size_ NSYN = state.range( 0 );
 
-	uint_ n = 1000;
-#if 0
-	using net_t = cuda::snn<Model>;
-#else
-	using net_t = cuda::multi_snn<Model>;
-	NSYN *= 2;
-	n *= device::devices().size();
-#endif
+	if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
+		NSYN *= device::devices().size();
 
-	float const P = 0.02f;
+	float const P = std::is_same<Model, vogels_abbott>::value ? 0.02f : 0.05f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
-	size_ const ITER = 800;
+	size_ const ITER = 1000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
 
 	try
 	{
-		net_t net( { n, 0.0f }, 0.0001f, 8 );
+		std::optional<net_t<Model>> net;
+		if constexpr( std::is_same<Model, vogels_abbott>::value )
+			net.emplace( layout{ N, 0.02f }, 0.0001f, 8 );
+		else
+			net.emplace(
+			    layout{ { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 15 );
 
 		for( auto _ : state )
 		{
 			timer t;
 			for( size_ i = 0;
-			     i <
-			     ITER / ( std::is_same<net_t, cuda::multi_snn<Model>>::value ? net.delay() : 1 );
+			     i < ITER / ( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value ?
+			                      net->delay() :
+			                      1 );
 			     i++ )
-				net.step();
+				net->step();
 
-			if constexpr( std::is_same<net_t, cuda::multi_snn<Model>>::value )
-				net.sync();
+			if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
+				net->sync();
 			else
 				cudaDeviceSynchronize();
 
@@ -154,15 +155,28 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-BENCHMARK_TEMPLATE( plot2_RunTime, synth )
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 768'000'000, 768'000'000 );
-/*BENCHMARK_TEMPLATE( plot2_RunTime, synth )
+    ->ExpRange( 512'000'000, 2048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, brunel )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 512'000'000, 512'000'000 );*/
-/*BENCHMARK_TEMPLATE( plot2_RunTime, brunel_with_plasticity )
-        ->UseManualTime()
-        ->Unit( benchmark::kMicrosecond )
-        ->ExpRange( 1'000'000, 16'000'000 );*/
+    ->ExpRange( 512'000'000, 2048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, brunel_with_plasticity )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 128'000'000, 512'000'000 );
+
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, vogels_abbott )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 512'000'000, 2048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, brunel )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 512'000'000, 2048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, brunel_with_plasticity )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 128'000'000, 512'000'000 );

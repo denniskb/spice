@@ -180,21 +180,21 @@ TEST( MultiSNN, Step )
 
 TEST( MultiSNN, StepWithDelay )
 {
-	for( int delay = 8; delay <= 9; delay++ )
+	for( int delay = 2; delay <= 5; delay++ )
 	{
 		cpu::snn<vogels_abbott> h( { 4000, 0.02f }, 0.0001f, delay );
 		cuda::multi_snn d( h );
 		ASSERT_EQ( d.num_neurons(), 4000u );
 		ASSERT_EQ( d.dt(), 0.0001f );
-		ASSERT_EQ( d.delay(), h.delay() );
+		ASSERT_EQ( d.delay(), delay );
 		ASSERT_TRUE( close( h, d, 0.0 ) );
 
 		std::vector<int> h_spikes, d_spikes, tmp;
 
-		for( int_ i = 0; i < 125; i++ )
+		for( int_ i = 0; i < 1000 / delay; i++ )
 		{
 			h_spikes.clear();
-			for( int_ j = 0; j < h.delay(); j++ )
+			for( int_ j = 0; j < delay; j++ )
 			{
 				h.step( &tmp );
 				h_spikes.insert( h_spikes.end(), tmp.begin(), tmp.end() );

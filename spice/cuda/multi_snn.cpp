@@ -22,6 +22,15 @@ static void copy( void * dst, void * src, size_ n, cudaStream_t s )
 	success_or_throw( cudaMemcpyAsync( dst, src, n * 4, cudaMemcpyDefault, s ) );
 };
 
+static std::pair<int_, int_> batch( int_ const iter, int_ const delay )
+{
+	int_ const delta = std::max( 1, ( delay + static_cast<bool>( iter % delay ) ) / 2 );
+	int_ const first = iter % delay;
+	int_ const last = first + delta;
+
+	return { first, last };
+}
+
 
 namespace spice::cuda
 {
@@ -67,11 +76,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 			    {
 				    if( iter < _iter )
 				    {
-					    int_ const delta = std::max(
-					        1, ( this->delay() + static_cast<bool>( iter % this->delay() ) ) / 2 );
-					    int_ const first = iter % this->delay();
-					    int_ const last = first + delta;
-
+					    auto [first, last] = batch( iter, this->delay() );
 					    work( ID, first, last, tmp );
 
 					    iter += last - first;
@@ -86,9 +91,17 @@ template <typename Model>
 void multi_snn<Model>::work(
     int_ const ID, int_ const first, int_ const last, std::vector<int_> & tmp )
 {
-	// TODO: Moving upload work into worker sporadically fails MultiSnn.Step(d=1) test
-	// copy( *_spikes.dcounts.row( ID ), _spikes.counts.row( 0 ), this->delay(), *_cp[ID] );
-	//_cp[ID]->synchronize();
+	auto const download_spikes = [&] {
+		auto [prev_first, prev_last] = batch( last, this->delay() );
+		_cp[ID]->wait( *_updt[ID] );
+		copy(
+		    _spikes.counts.row( ID ) + prev_first,
+		    *_spikes.dcounts.row( ID ) + prev_first,
+		    prev_last - prev_first,
+		    *_cp[ID] );
+	};
+
+	if( this->delay() > 1 && _spikes.dcounts( ID, last % this->delay() ) ) download_spikes();
 
 	for( int_ iter = first; iter < last; iter++ )
 	{
@@ -104,12 +117,9 @@ void multi_snn<Model>::work(
 			_out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
 		}
 	}
-	_cp[ID]->wait( *_updt[ID] );
-	copy(
-	    _spikes.counts.row( ID ) + first,
-	    *_spikes.dcounts.row( ID ) + first,
-	    last - first,
-	    *_cp[ID] );
+
+	if( this->delay() == 1 ) download_spikes();
+
 	_cp[ID]->synchronize();
 
 	_work -= last - first;
@@ -186,30 +196,28 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 template <typename Model>
 void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 {
-	int_ const delta =
-	    std::max( 1, ( this->delay() + static_cast<bool>( _iter % this->delay() ) ) / 2 );
-	int_ const first = _iter % this->delay();
-	int_ const last = first + delta;
+	auto [first, last] = batch( _iter, this->delay() );
+	bool const repeat = last < this->delay();
 
 	_out_spikes = out_spikes;
-	if( out_spikes && ( delta == this->delay() || last < this->delay() ) ) out_spikes->clear();
+	if( out_spikes && ( this->delay() == 1 || repeat ) ) out_spikes->clear();
 
-	_work += device::devices().size() * delta;
-	_iter += delta;
+	_work += device::devices().size() * ( last - first );
+	_iter += last - first;
 	work( 0, first, last, _tmp );
 	while( _work ) _mm_pause();
 
 	if( device::devices().size() == 1 ) return;
 
-	size_ const total = [&] {
-		size_ result = 0;
-		for( auto & d : device::devices() )
-			result += std::accumulate(
-			    _spikes.counts.row( d ) + first, _spikes.counts.row( d ) + last, 0 );
-		return result;
-	}();
+	std::tie( first, last ) = batch( last, this->delay() );
 
-	if( total )
+	if( [&] {
+		    size_ total = 0;
+		    for( auto & d : device::devices() )
+			    total += std::accumulate(
+			        _spikes.counts.row( d ) + first, _spikes.counts.row( d ) + last, 0 );
+		    return total;
+	    }() )
 	{
 		switch( device::devices().size() )
 		{
@@ -320,12 +328,12 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 			copy(
 			    *_spikes.dcounts.row( d ) + first,
 			    _spikes.counts.row( 0 ) + first,
-			    delta,
+			    last - first,
 			    *_cp[d] );
 		for( auto & d : device::devices() ) _cp[d]->synchronize();
 	}
 
-	if( last < this->delay() ) step( out_spikes );
+	if( repeat ) step( out_spikes );
 } // namespace spice::cuda
 
 template <typename Model>
