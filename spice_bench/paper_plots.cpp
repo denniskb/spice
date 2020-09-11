@@ -110,7 +110,7 @@ BENCHMARK( plot0_AdjGen )
 template <template <typename> typename net_t, typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	size_ NSYN = state.range( 0 );
+	size_ NSYN = state.range( 0 ) / 4;
 
 	if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
 		NSYN *= device::devices().size();
@@ -180,3 +180,52 @@ BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, brunel_with_plasticity )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 128'000'000, 512'000'000 );
+
+
+static void gpu_throttle( benchmark::State & state )
+{
+	size_ const NSYN = state.range( 0 ) / 4;
+	float const P = 0.05f;
+	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
+	size_ const ITER = 1000;
+
+	state.counters["num_neurons"] = narrow_cast<double>( N );
+	state.counters["num_syn"] = narrow_cast<double>( NSYN );
+	state.counters["#gpus"] = device::devices().size();
+
+	std::optional<cuda::snn<brunel>> nets[4];
+
+	try
+	{
+		for( auto & d : device::devices() )
+		{
+			d.set();
+			nets[d].emplace(
+			    layout{ { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 15 );
+		}
+
+		for( auto _ : state )
+		{
+			timer t;
+			for( size_ i = 0; i < ITER; i++ )
+				for( auto & d : device::devices() )
+				{
+					d.set();
+					nets[d]->step();
+				}
+
+			for( auto & d : device::devices() ) d.synchronize();
+
+			state.SetIterationTime( t.time() / ITER );
+		}
+	}
+	catch( std::exception & e )
+	{
+		std::printf( "%s\n", e.what() );
+		return;
+	}
+}
+BENCHMARK( gpu_throttle )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 512'000'000, 2048'000'000 );
