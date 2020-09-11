@@ -1,6 +1,7 @@
 #include "algorithm.h"
 
 #include <spice/cuda/backend.cuh>
+#include <spice/cuda/util/device.h>
 #include <spice/cuda/util/error.h>
 #include <spice/cuda/util/utility.cuh>
 #include <spice/cuda/util/warp.cuh>
@@ -564,7 +565,7 @@ void receive(
     int_ const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	if( info.num_neurons < 400'000 || Model::synapse::size > 0 )
+	if( info.num_neurons < 400'000 * device::devices().size() || Model::synapse::size > 0 )
 		call( [&] {
 			_process_spikes<Model, HNDL_SPKS>
 			    <<<( Model::synapse::size > 0 ? 256 : 128 ),
