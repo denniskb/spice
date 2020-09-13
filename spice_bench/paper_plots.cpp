@@ -110,12 +110,18 @@ BENCHMARK( plot0_AdjGen )
 template <template <typename> typename net_t, typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	size_ NSYN = state.range( 0 ) / 4;
+	size_ NSYN = state.range( 0 );
 
 	if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
 		NSYN *= device::devices().size();
 
-	float const P = std::is_same<Model, vogels_abbott>::value ? 0.02f : 0.05f;
+	float P;
+	if constexpr( std::is_same<Model, vogels_abbott>::value )
+		P = 0.02f;
+	else if constexpr( std::is_same<Model, synth>::value )
+		P = 0.035f;
+	else
+		P = 0.05f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
 	size_ const ITER = 1000;
 
@@ -126,7 +132,9 @@ static void plot2_RunTime( benchmark::State & state )
 	{
 		std::optional<net_t<Model>> net;
 		if constexpr( std::is_same<Model, vogels_abbott>::value )
-			net.emplace( layout{ N, 0.02f }, 0.0001f, 8 );
+			net.emplace( layout{ N, P }, 0.0001f, 8 );
+		else if constexpr( std::is_same<Model, synth>::value )
+			net.emplace( layout{ N, P }, 0.0001f, 8 );
 		else
 			net.emplace(
 			    layout{ { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 15 );
@@ -155,6 +163,10 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, synth )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 512'000'000, 2048'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
@@ -168,7 +180,7 @@ BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, brunel_with_plasticity )
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 128'000'000, 512'000'000 );
 
-BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, vogels_abbott )
+/*BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 512'000'000, 2048'000'000 );
@@ -179,7 +191,7 @@ BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, brunel )
 BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, brunel_with_plasticity )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 128'000'000, 512'000'000 );
+    ->ExpRange( 128'000'000, 512'000'000 );*/
 
 
 static void gpu_throttle( benchmark::State & state )

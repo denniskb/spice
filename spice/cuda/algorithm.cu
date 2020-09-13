@@ -442,7 +442,7 @@ void update(
     span2d<int_ const> adj /* = {} */ )
 {
 	call( [&] {
-		_process_neurons<Model, false><<<nblocks( last - first, 128, 256 ), 256, 0, s>>>(
+		_process_neurons<Model, false><<<128, 128, 0, s>>>(
 		    first,
 		    last,
 		    info,
@@ -565,37 +565,33 @@ void receive(
     int_ const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	if( info.num_neurons < 400'000 * device::devices().size() || Model::synapse::size > 0 )
-		call( [&] {
-			_process_spikes<Model, HNDL_SPKS>
-			    <<<( Model::synapse::size > 0 ? 256 : 128 ),
-			       ( (float)info.num_neurons / adj.width() > 40 ? 128 : 256 ),
-			       0,
-			       s>>>(
-			        info,
-			        seed(),
-			        adj,
+	// if( info.num_neurons < 400'000 * device::devices().size() || Model::synapse::size > 0 )
+	call( [&] {
+		_process_spikes<Model, HNDL_SPKS><<<256, 256, 0, s>>>(
+		    info,
+		    seed(),
+		    adj,
 
-			        spikes,
-			        num_spikes,
+		    spikes,
+		    num_spikes,
 
-			        ages,
-			        history,
-			        max_history,
-			        iter,
-			        delay,
-			        dt );
-		} );
-	else
-		call( [&] {
-			_process_spikes_cache_aware<Model><<<512, WARP_SZ, 0, s>>>(
-			    info,
-			    seed(),
-			    adj,
+		    ages,
+		    history,
+		    max_history,
+		    iter,
+		    delay,
+		    dt );
+	} );
+	/*else
+	    call( [&] {
+	        _process_spikes_cache_aware<Model><<<512, WARP_SZ, 0, s>>>(
+	            info,
+	            seed(),
+	            adj,
 
-			    spikes,
-			    num_spikes );
-		} );
+	            spikes,
+	            num_spikes );
+	    } );*/
 }
 template void receive<::spice::vogels_abbott>(
     cudaStream_t,
