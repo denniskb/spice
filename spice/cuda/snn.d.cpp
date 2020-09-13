@@ -157,6 +157,8 @@ void snn<Model>::step(
 			receive<Model>(
 			    _sim,
 
+			    _first,
+			    _last,
 			    this->info(),
 			    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
 

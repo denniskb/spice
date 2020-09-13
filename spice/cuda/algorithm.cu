@@ -36,11 +36,6 @@ static ulong_ seed()
 	return hash( x++ );
 }
 
-static int_ nblocks( int_ desired, int_ max, int_ block_size )
-{
-	return std::min( max, ( desired + block_size - 1 ) / block_size );
-}
-
 class iter_base
 {
 public:
@@ -274,10 +269,9 @@ static __global__ void _process_spikes(
 			}
 		}
 
-		if( MODE != INIT_SYNS && Model::synapse::size > 0 )
+		if constexpr( MODE != INIT_SYNS && Model::synapse::size > 0 )
 		{
 			__syncthreads();
-
 			if( threadIdx.x == 0 ) ages[src] = iter + 1;
 		}
 	}
@@ -298,11 +292,11 @@ static __global__ void _process_spikes_cache_aware(
 
 	for( int_ i = blockIdx.x; i < S * ( adj.width() / WARP_SZ ); i += gridDim.x )
 	{
-		int_ s = i % S;
-		int_ o = i / S;
+		int_ const s = i % S;
+		int_ const o = i / S;
 
-		int_ src = spikes[s];
-		int_ dst = adj( src, WARP_SZ * o + threadIdx.x );
+		int_ const src = spikes[s];
+		int_ const dst = adj( src, WARP_SZ * o + threadIdx.x );
 
 		if( dst >= 0 )
 			Model::neuron::template receive(
@@ -407,13 +401,10 @@ template void upload_meta<::spice::synth>(
 template <typename Model>
 void init( int_ first, int_ last, snn_info const info, span2d<int_ const> adj /* = {} */ )
 {
-	call( [&] {
-		_process_neurons<Model, true>
-		    <<<nblocks( last - first, 128, 256 ), 256>>>( first, last, info, seed() );
-	} );
+	call( [&] { _process_neurons<Model, true><<<256, 256>>>( first, last, info, seed() ); } );
 
 	if constexpr( Model::synapse::size > 0 )
-		call( [&] { _process_spikes<Model, INIT_SYNS><<<128, 256>>>( info, seed(), adj ); } );
+		call( [&] { _process_spikes<Model, INIT_SYNS><<<256, 256>>>( info, seed(), adj ); } );
 }
 template void init<::spice::vogels_abbott>( int_, int_, snn_info, span2d<int_ const> );
 template void init<::spice::brunel>( int_, int_, snn_info, span2d<int_ const> );
@@ -552,6 +543,8 @@ template <typename Model>
 void receive(
     cudaStream_t s,
 
+    int_ const first,
+    int_ const last,
     snn_info const info,
     span2d<int_ const> adj,
 
@@ -565,10 +558,10 @@ void receive(
     int_ const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	if constexpr( Model::synapse::size > 0 )
+	if( last - first <= 3'200'000 / Model::neuron::size_in_bytes || Model::synapse::size > 0 )
 		call( [&] {
-			// 256, 256 for plast., 512, 128 else
-			_process_spikes<Model, HNDL_SPKS><<<512, 128, 0, s>>>(
+			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
+			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
 			    info,
 			    seed(),
 			    adj,
@@ -585,8 +578,6 @@ void receive(
 		} );
 	else
 		call( [&] {
-			// > 800k neurons uniformly written to!!!
-			// so good, might become only kernel => implement plast. inside here!
 			_process_spikes_cache_aware<Model><<<2048, WARP_SZ, 0, s>>>(
 			    info,
 			    seed(),
@@ -598,6 +589,8 @@ void receive(
 }
 template void receive<::spice::vogels_abbott>(
     cudaStream_t,
+    int_ const,
+    int_ const,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
@@ -610,6 +603,8 @@ template void receive<::spice::vogels_abbott>(
     float const dt );
 template void receive<::spice::brunel>(
     cudaStream_t,
+    int_ const,
+    int_ const,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
@@ -622,6 +617,8 @@ template void receive<::spice::brunel>(
     float const dt );
 template void receive<::spice::brunel_with_plasticity>(
     cudaStream_t,
+    int_ const,
+    int_ const,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
@@ -634,6 +631,8 @@ template void receive<::spice::brunel_with_plasticity>(
     float const dt );
 template void receive<::spice::synth>(
     cudaStream_t,
+    int_ const,
+    int_ const,
     snn_info const,
     span2d<int_ const>,
     int_ const *,

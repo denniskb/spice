@@ -118,6 +118,7 @@ struct type_list
 	using ptuple_t = std::tuple<T *...>;
 	using cptuple_t = std::tuple<const T *...>;
 	static constexpr size_ size = sizeof...( T );
+	static constexpr size_ size_in_bytes = (sizeof( T ) + ... + 0);
 
 	template <template <typename> typename Cont>
 	using soa_t = std::tuple<Cont<T>...>;

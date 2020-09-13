@@ -47,6 +47,8 @@ template <typename Model>
 void receive(
     cudaStream_t s,
 
+    int_ const first,
+    int_ const last,
     snn_info info,
     spice::util::span2d<int_ const> adj,
 
