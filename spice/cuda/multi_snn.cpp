@@ -207,11 +207,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	work( 0, first, last, _tmp );
 	while( _work ) _mm_pause();
 
-	if( device::devices().size() == 1 ) return;
-
-	std::tie( first, last ) = batch( last, this->delay() );
-
-	if( [&] {
+	if( device::devices().size() > 1 && [&] {
 		    size_ total = 0;
 		    for( auto & d : device::devices() )
 			    total += std::accumulate(
@@ -219,6 +215,8 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 		    return total;
 	    }() )
 	{
+		std::tie( first, last ) = batch( last, this->delay() );
+
 		switch( device::devices().size() )
 		{
 		case 2:

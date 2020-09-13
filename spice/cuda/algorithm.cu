@@ -442,7 +442,7 @@ void update(
     span2d<int_ const> adj /* = {} */ )
 {
 	call( [&] {
-		_process_neurons<Model, false><<<128, 128, 0, s>>>(
+		_process_neurons<Model, false><<<256, 256, 0, s>>>(
 		    first,
 		    last,
 		    info,
@@ -565,33 +565,36 @@ void receive(
     int_ const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	// if( info.num_neurons < 400'000 * device::devices().size() || Model::synapse::size > 0 )
-	call( [&] {
-		_process_spikes<Model, HNDL_SPKS><<<256, 256, 0, s>>>(
-		    info,
-		    seed(),
-		    adj,
+	if constexpr( Model::synapse::size > 0 )
+		call( [&] {
+			// 256, 256 for plast., 512, 128 else
+			_process_spikes<Model, HNDL_SPKS><<<512, 128, 0, s>>>(
+			    info,
+			    seed(),
+			    adj,
 
-		    spikes,
-		    num_spikes,
+			    spikes,
+			    num_spikes,
 
-		    ages,
-		    history,
-		    max_history,
-		    iter,
-		    delay,
-		    dt );
-	} );
-	/*else
-	    call( [&] {
-	        _process_spikes_cache_aware<Model><<<512, WARP_SZ, 0, s>>>(
-	            info,
-	            seed(),
-	            adj,
+			    ages,
+			    history,
+			    max_history,
+			    iter,
+			    delay,
+			    dt );
+		} );
+	else
+		call( [&] {
+			// > 800k neurons uniformly written to!!!
+			// so good, might become only kernel => implement plast. inside here!
+			_process_spikes_cache_aware<Model><<<2048, WARP_SZ, 0, s>>>(
+			    info,
+			    seed(),
+			    adj,
 
-	            spikes,
-	            num_spikes );
-	    } );*/
+			    spikes,
+			    num_spikes );
+		} );
 }
 template void receive<::spice::vogels_abbott>(
     cudaStream_t,

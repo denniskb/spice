@@ -202,7 +202,7 @@ TEST( MultiSNN, StepWithDelay )
 
 			d.step( &d_spikes );
 
-			ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << i;
+			ASSERT_TRUE( set_equal( h_spikes, d_spikes ) ) << "delay: " << delay << "iter: " << i;
 		}
 
 		ASSERT_TRUE( close( h, d, 1e-5 ) );
