@@ -65,7 +65,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 	// Absorb potential errors from blindly enabling peer access
 	cudaGetLastError();
 
-	for( size_ d = 1; d < device::devices().size(); d++ )
+	for( auto & d : device::devices() )
 		_workers[d] = std::thread(
 		    [&]( int_ const ID ) {
 			    device::devices()[ID].set();
@@ -78,7 +78,6 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 				    {
 					    auto [first, last] = batch( iter, this->delay() );
 					    work( ID, first, last, tmp );
-
 					    iter += last - first;
 				    }
 				    std::this_thread::yield();
@@ -122,14 +121,14 @@ void multi_snn<Model>::work(
 
 	_cp[ID]->synchronize();
 
-	_work -= last - first;
+	_work--;
 } // namespace spice::cuda
 
 template <typename Model>
 multi_snn<Model>::~multi_snn()
 {
 	_running = false;
-	for( size_ d = 1; d < device::devices().size(); d++ ) _workers[d].join();
+	for( auto & d : device::devices() ) _workers[d].join();
 }
 
 template <typename Model>
@@ -143,7 +142,6 @@ multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* =
 		auto slice = desc.cut( device::devices().size(), d );
 		_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
 	}
-	device::devices( 0 ).set();
 }
 
 template <typename Model>
@@ -189,7 +187,6 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 		_nets[d].emplace(
 		    slice, deg, net.dt(), net.delay(), narrow<int>( first ), narrow<int>( last ) );
 	}
-	device::devices( 0 ).set();
 }
 
 
@@ -202,10 +199,9 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	_out_spikes = out_spikes;
 	if( out_spikes && ( this->delay() == 1 || repeat ) ) out_spikes->clear();
 
-	_work += device::devices().size() * ( last - first );
+	_work += device::devices().size();
 	_iter += last - first;
-	work( 0, first, last, _tmp );
-	while( _work ) _mm_pause();
+	while( _work ) std::this_thread::yield(); // _mm_pause();
 
 	std::tie( first, last ) = batch( last, this->delay() );
 
