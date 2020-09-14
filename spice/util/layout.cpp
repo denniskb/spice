@@ -114,7 +114,7 @@ size_ layout::size() const { return _n; }
 std::vector<layout::edge> const & layout::connections() const { return _connections; }
 size_ layout::max_degree() const { return _max_degree; }
 
-layout::slice<> layout::cut( size_ n, size_ i )
+layout::slice<> layout::cut( size_ n, size_ i ) const
 {
 	spice_assert( n > 0 );
 	spice_assert( i < n );

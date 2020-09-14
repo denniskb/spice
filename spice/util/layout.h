@@ -43,7 +43,7 @@ public:
 		int_ first;
 		int_ last;
 	};
-	slice<> cut( size_ n, size_ i );
+	slice<> cut( size_ n, size_ i ) const;
 
 private:
 	size_ _n;

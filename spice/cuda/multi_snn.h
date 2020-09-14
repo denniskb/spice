@@ -59,7 +59,7 @@ private:
 
 	std::vector<int_> _tmp;
 
-	multi_snn( float dt, int_ delay );
+	multi_snn( float dt, int_ delay, spice::util::layout const * desc = nullptr );
 
 	void work( int_ const ID, int_ const first, int_ const last, std::vector<int_> & tmp );
 };
