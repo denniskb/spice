@@ -70,8 +70,8 @@ multi_snn<Model>::multi_snn(
 
 	for( auto & d : device::devices() )
 		_workers[d] = std::thread(
-		    [&]( int_ const ID ) {
-			    device::devices()[ID].set();
+		    [=]( int_ const ID ) {
+			    device::devices( ID ).set();
 
 			    if( desc )
 			    {
