@@ -142,15 +142,12 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 	int_ * spikes;
 	uint_ * num_spikes;
 
-	step( nullptr, &spikes, &num_spikes, out_spikes );
+	step( &spikes, &num_spikes, out_spikes );
 }
 
 template <typename Model>
 void snn<Model>::step(
-    cudaEvent_t updt,
-    int_ ** out_dspikes,
-    uint_ ** out_dnum_spikes,
-    std::vector<int> * out_spikes /* = nullptr */ )
+    int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes /* = nullptr */ )
 {
 	this->_step( [&]( int_ const i, float const dt ) {
 		if( i >= this->delay() )
@@ -164,6 +161,8 @@ void snn<Model>::step(
 
 			    _spikes.ids.row( circidx( i, this->delay() ) ),
 			    _spikes.counts.data() + circidx( i, this->delay() ),
+			    _spikes.updates.data(),
+			    _spikes.num_updates.data(),
 
 			    _graph.ages.data(),
 			    _spikes.history,
@@ -177,7 +176,6 @@ void snn<Model>::step(
 
 		update<Model>(
 		    _sim,
-		    updt,
 
 		    _first,
 		    _last,
@@ -192,8 +190,7 @@ void snn<Model>::step(
 		    _spikes.num_updates.data(),
 		    i,
 		    this->delay(),
-		    MAX_HISTORY(),
-		    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
+		    MAX_HISTORY() );
 
 		*out_dspikes = _spikes.ids.row( circidx( i, this->delay() ) );
 		*out_dnum_spikes = _spikes.counts.data() + circidx( i, this->delay() );
@@ -208,6 +205,12 @@ void snn<Model>::step(
 		}
 	} );
 } // namespace spice::cuda
+
+template <typename Model>
+stream & snn<Model>::sim_stream()
+{
+	return _sim;
+}
 
 
 template <typename Model>

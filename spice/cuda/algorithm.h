@@ -25,7 +25,6 @@ void init( int_ first, int_ last, snn_info info, spice::util::span2d<int_ const>
 template <typename Model>
 void update(
     cudaStream_t s,
-    cudaEvent_t updt,
 
     int_ first,
     int_ last,
@@ -40,8 +39,7 @@ void update(
     uint_ * num_updates = nullptr,
     int_ const iter = 0,
     int_ const delay = 0,
-    int_ const max_history = 0,
-    spice::util::span2d<int_ const> adj = {} );
+    int_ const max_history = 0 );
 
 template <typename Model>
 void receive(
@@ -54,6 +52,8 @@ void receive(
 
     int_ const * spikes,
     uint_ const * num_spikes,
+    int_ const * updates,
+    uint_ const * num_updates,
 
     int_ * ages = nullptr,
     spice::util::span2d<uint_> history = {},

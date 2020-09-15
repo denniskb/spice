@@ -57,37 +57,68 @@ multi_snn<Model>::multi_snn(
 	for( auto & d : device::devices() )
 	{
 		d.set();
-		_cp[d].emplace();
-		_updt[d].emplace();
-
 		for( auto & d2 : device::devices() )
 			if( d != d2 ) cudaDeviceEnablePeerAccess( d2, 0 );
 	}
 	// Absorb potential errors from blindly enabling peer access
 	cudaGetLastError();
 
-	if( desc ) _work += device::devices().size();
+	_work += device::devices().size();
 
 	for( auto & d : device::devices() )
 		_workers[d] = std::thread(
 		    [=]( int_ const ID ) {
 			    device::devices( ID ).set();
+			    _cp[ID].emplace();
 
 			    if( desc )
 			    {
 				    auto slice = desc->cut( device::devices().size(), ID );
 				    _nets[ID].emplace( slice.part, dt, delay, slice.first, slice.last );
-				    _work--;
 			    }
+
+			    sync_event updt;
+			    auto const download_spikes = [&]( int_ const last ) {
+				    auto [prev_first, prev_last] = batch( last, this->delay() );
+				    _cp[ID]->wait( updt );
+				    copy(
+				        _spikes.counts.row( ID ) + prev_first,
+				        *_spikes.dcounts.row( ID ) + prev_first,
+				        prev_last - prev_first,
+				        *_cp[ID] );
+			    };
 
 			    int iter = 0;
 			    std::vector<int_> tmp;
+			    _work--;
 			    while( _running )
 			    {
 				    if( iter < _iter )
 				    {
-					    auto [first, last] = batch( iter, this->delay() );
-					    work( ID, first, last, tmp );
+					    auto const [first, last] = batch( iter, this->delay() );
+
+					    if( this->delay() > 1 && _spikes.dcounts( ID, last % this->delay() ) )
+						    download_spikes( last );
+
+					    for( int_ iter = first; iter < last; iter++ )
+					    {
+						    _nets[ID]->step(
+						        &_spikes.ddata( ID, iter ),
+						        &_spikes.dcounts( ID, iter ),
+						        _out_spikes ? &tmp : nullptr );
+
+						    if( _out_spikes )
+						    {
+							    std::lock_guard _( _out_spikes_lock );
+							    _out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
+						    }
+					    }
+					    updt.record( _nets[ID]->sim_stream() );
+
+					    if( this->delay() == 1 ) download_spikes( last );
+					    _cp[ID]->synchronize();
+					    _work--;
+
 					    iter += last - first;
 				    }
 				    std::this_thread::yield();
@@ -97,44 +128,6 @@ multi_snn<Model>::multi_snn(
 
 	while( _work ) std::this_thread::yield();
 }
-
-template <typename Model>
-void multi_snn<Model>::work(
-    int_ const ID, int_ const first, int_ const last, std::vector<int_> & tmp )
-{
-	auto const download_spikes = [&] {
-		auto [prev_first, prev_last] = batch( last, this->delay() );
-		_cp[ID]->wait( *_updt[ID] );
-		copy(
-		    _spikes.counts.row( ID ) + prev_first,
-		    *_spikes.dcounts.row( ID ) + prev_first,
-		    prev_last - prev_first,
-		    *_cp[ID] );
-	};
-
-	if( this->delay() > 1 && _spikes.dcounts( ID, last % this->delay() ) ) download_spikes();
-
-	for( int_ iter = first; iter < last; iter++ )
-	{
-		_nets[ID]->step(
-		    *_updt[ID],
-		    &_spikes.ddata( ID, iter ),
-		    &_spikes.dcounts( ID, iter ),
-		    _out_spikes ? &tmp : nullptr );
-
-		if( _out_spikes )
-		{
-			std::lock_guard _( _out_spikes_lock );
-			_out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
-		}
-	}
-
-	if( this->delay() == 1 ) download_spikes();
-
-	_cp[ID]->synchronize();
-
-	_work--;
-} // namespace spice::cuda
 
 template <typename Model>
 multi_snn<Model>::~multi_snn()

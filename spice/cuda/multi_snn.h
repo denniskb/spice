@@ -48,7 +48,6 @@ private:
 	} _spikes;
 
 	std::array<std::optional<util::stream>, util::device::max_devices> _cp;
-	std::array<std::optional<util::sync_event>, util::device::max_devices> _updt;
 
 	std::array<std::thread, util::device::max_devices> _workers;
 	std::atomic_bool _running{ true };
@@ -60,7 +59,5 @@ private:
 	std::vector<int_> _tmp;
 
 	multi_snn( float dt, int_ delay, spice::util::layout const * desc = nullptr );
-
-	void work( int_ const ID, int_ const first, int_ const last, std::vector<int_> & tmp );
 };
 } // namespace spice::cuda

@@ -31,11 +31,9 @@ public:
 	snn( spice::snn<Model> const & net );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
-	void step(
-	    cudaEvent_t updt,
-	    int_ ** out_dspikes,
-	    uint_ ** out_dnum_spikes,
-	    std::vector<int> * out_spikes = nullptr );
+	void
+	step( int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes = nullptr );
+	util::stream & sim_stream();
 
 	size_ num_neurons() const override;
 	size_ num_synapses() const override;
