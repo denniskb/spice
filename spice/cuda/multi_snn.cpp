@@ -35,8 +35,7 @@ static std::pair<int_, int_> batch( int_ const iter, int_ const delay )
 namespace spice::cuda
 {
 template <typename Model>
-multi_snn<Model>::multi_snn(
-    float dt, int_ delay, spice::util::layout const * desc /* = nullptr */ )
+multi_snn<Model>::multi_snn( float dt, int_ delay )
     : ::spice::snn<Model>( dt, delay )
     , _spikes{ { nullptr, cudaFreeHost } }
 {
@@ -63,19 +62,11 @@ multi_snn<Model>::multi_snn(
 	// Absorb potential errors from blindly enabling peer access
 	cudaGetLastError();
 
-	_work += device::devices().size();
-
 	for( auto & d : device::devices() )
 		_workers[d] = std::thread(
 		    [=]( int_ const ID ) {
 			    device::devices( ID ).set();
 			    _cp[ID].emplace();
-
-			    if( desc )
-			    {
-				    auto slice = desc->cut( device::devices().size(), ID );
-				    _nets[ID].emplace( slice.part, dt, delay, slice.first, slice.last );
-			    }
 
 			    sync_event updt;
 			    auto const download_spikes = [&]( int_ const last ) {
@@ -87,10 +78,11 @@ multi_snn<Model>::multi_snn(
 				        prev_last - prev_first,
 				        *_cp[ID] );
 			    };
+			    time_event start;
+			    time_event stop;
 
 			    int iter = 0;
 			    std::vector<int_> tmp;
-			    _work--;
 			    while( _running )
 			    {
 				    if( iter < _iter )
@@ -100,6 +92,7 @@ multi_snn<Model>::multi_snn(
 					    if( this->delay() > 1 && _spikes.dcounts( ID, last % this->delay() ) )
 						    download_spikes( last );
 
+					    if( _bench ) start.record( _nets[ID]->sim_stream() );
 					    for( int_ iter = first; iter < last; iter++ )
 					    {
 						    _nets[ID]->step(
@@ -113,6 +106,12 @@ multi_snn<Model>::multi_snn(
 							    _out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
 						    }
 					    }
+					    if( _bench )
+					    {
+						    stop.record( _nets[ID]->sim_stream() );
+						    stop.synchronize();
+						    _timings[ID] += stop.elapsed_time( start );
+					    }
 					    updt.record( _nets[ID]->sim_stream() );
 
 					    if( this->delay() == 1 ) download_spikes( last );
@@ -125,8 +124,6 @@ multi_snn<Model>::multi_snn(
 			    }
 		    },
 		    static_cast<int_>( d ) );
-
-	while( _work ) std::this_thread::yield();
 }
 
 template <typename Model>
@@ -138,8 +135,14 @@ multi_snn<Model>::~multi_snn()
 
 template <typename Model>
 multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* = 1 */ )
-    : multi_snn<Model>( dt, delay, &desc )
+    : multi_snn<Model>( dt, delay )
 {
+	for( auto & d : device::devices() )
+	{
+		d.set();
+		auto slice = desc.cut( device::devices().size(), d );
+		_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
+	}
 }
 
 template <typename Model>

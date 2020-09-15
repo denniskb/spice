@@ -320,7 +320,7 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges )
+void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, int_ * edges )
 {
 	spice_assert(
 	    desc.connections().size() <= 20,
@@ -340,15 +340,25 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges )
 	}
 
 	success_or_throw( cudaMemcpyToSymbolAsync(
-	    _desc_range, tmp_range.data(), sizeof( int4 ) * desc.connections().size() ) );
+	    _desc_range,
+	    tmp_range.data(),
+	    sizeof( int4 ) * desc.connections().size(),
+	    0,
+	    cudaMemcpyDefault,
+	    s ) );
 	success_or_throw( cudaMemcpyToSymbolAsync(
-	    _desc_p, tmp_p.data(), sizeof( float ) * desc.connections().size() ) );
+	    _desc_p,
+	    tmp_p.data(),
+	    sizeof( float ) * desc.connections().size(),
+	    0,
+	    cudaMemcpyDefault,
+	    s ) );
 
 	cudaFuncSetCacheConfig( _generate_adj_ids, cudaFuncCachePreferShared );
 
 	spice_assert( desc.size() <= ( 1u << 31 ) - 1 );
 	call( [&] {
-		_generate_adj_ids<<<narrow<int>( desc.size() ), WARP_SZ>>>(
+		_generate_adj_ids<<<narrow<int>( desc.size() ), WARP_SZ, 0, s>>>(
 		    seed(),
 		    narrow<int>( desc.connections().size() ),
 		    narrow<int>( desc.size() ),
@@ -359,6 +369,7 @@ void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges )
 
 template <typename Model>
 void upload_meta(
+    cudaStream_t s,
     typename Model::neuron::ptuple_t const & neuron,
     typename Model::synapse::ptuple_t const & synapse )
 {
@@ -374,8 +385,8 @@ void upload_meta(
 		std::array<void *, Model::neuron::size> tmp;
 		spice::util::for_each_i( neuron, [&]( auto p, auto i ) { tmp[i] = p; } );
 
-		success_or_throw(
-		    cudaMemcpyToSymbolAsync( _neuron_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
+		success_or_throw( cudaMemcpyToSymbolAsync(
+		    _neuron_storage, tmp.data(), sizeof( void * ) * tmp.size(), 0, cudaMemcpyDefault, s ) );
 	}
 
 	if constexpr( Model::synapse::size > 0 )
@@ -384,33 +395,47 @@ void upload_meta(
 		spice::util::for_each_i( synapse, [&]( auto p, auto i ) { tmp[i] = p; } );
 
 		success_or_throw( cudaMemcpyToSymbolAsync(
-		    _synapse_storage, tmp.data(), sizeof( void * ) * tmp.size() ) );
+		    _synapse_storage,
+		    tmp.data(),
+		    sizeof( void * ) * tmp.size(),
+		    0,
+		    cudaMemcpyDefault,
+		    s ) );
 	}
 }
 template void upload_meta<::spice::vogels_abbott>(
+    cudaStream_t,
     ::spice::vogels_abbott::neuron::ptuple_t const &,
     ::spice::vogels_abbott::synapse::ptuple_t const & );
 template void upload_meta<::spice::brunel>(
-    ::spice::brunel::neuron::ptuple_t const &, ::spice::brunel::synapse::ptuple_t const & );
+    cudaStream_t,
+    ::spice::brunel::neuron::ptuple_t const &,
+    ::spice::brunel::synapse::ptuple_t const & );
 template void upload_meta<::spice::brunel_with_plasticity>(
+    cudaStream_t,
     ::spice::brunel_with_plasticity::neuron::ptuple_t const &,
     ::spice::brunel_with_plasticity::synapse::ptuple_t const & );
 template void upload_meta<::spice::synth>(
-    ::spice::synth::neuron::ptuple_t const &, ::spice::synth::synapse::ptuple_t const & );
+    cudaStream_t,
+    ::spice::synth::neuron::ptuple_t const &,
+    ::spice::synth::synapse::ptuple_t const & );
 
 // TOOD: Fuse these two into one function using conditional compilation ('if constexpr')
 template <typename Model>
-void init( int_ first, int_ last, snn_info const info, span2d<int_ const> adj /* = {} */ )
+void init(
+    cudaStream_t s, int_ first, int_ last, snn_info const info, span2d<int_ const> adj /* = {} */ )
 {
-	call( [&] { _process_neurons<Model, true><<<256, 256>>>( first, last, info, seed() ); } );
+	call( [&] { _process_neurons<Model, true><<<256, 256, 0, s>>>( first, last, info, seed() ); } );
 
 	if constexpr( Model::synapse::size > 0 )
-		call( [&] { _process_spikes<Model, INIT_SYNS><<<256, 256>>>( info, seed(), adj ); } );
+		call( [&] { _process_spikes<Model, INIT_SYNS><<<256, 256, 0, s>>>( info, seed(), adj ); } );
 }
-template void init<::spice::vogels_abbott>( int_, int_, snn_info, span2d<int_ const> );
-template void init<::spice::brunel>( int_, int_, snn_info, span2d<int_ const> );
-template void init<::spice::brunel_with_plasticity>( int_, int_, snn_info, span2d<int_ const> );
-template void init<::spice::synth>( int_, int_, snn_info, span2d<int_ const> );
+template void
+    init<::spice::vogels_abbott>( cudaStream_t, int_, int_, snn_info, span2d<int_ const> );
+template void init<::spice::brunel>( cudaStream_t, int_, int_, snn_info, span2d<int_ const> );
+template void
+    init<::spice::brunel_with_plasticity>( cudaStream_t, int_, int_, snn_info, span2d<int_ const> );
+template void init<::spice::synth>( cudaStream_t, int_, int_, snn_info, span2d<int_ const> );
 
 template <typename Model>
 void update(

@@ -14,7 +14,8 @@ public:
 	    std::is_arithmetic_v<T>,
 	    "dvar is only intended for individual primitive variables residing on the device" );
 
-	explicit dvar( T x = T( 0 ) ) { copy_from( x ); }
+	dvar() = default;
+	explicit dvar( T x ) { copy_from( x ); }
 
 	dvar & operator=( T x )
 	{

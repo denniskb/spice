@@ -78,15 +78,15 @@ snn<Model>::snn(
 	spice_assert( delay >= 1 );
 
 	reserve( desc.size(), desc.size() * desc.max_degree(), delay );
-	generate_rnd_adj_list( desc, _graph.edges.data() );
+	generate_rnd_adj_list( _sim, desc, _graph.edges.data() );
 
-	upload_meta<Model>( _neurons.data(), _synapses.data() );
+	upload_meta<Model>( _sim, _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
+	    _sim,
 	    _first,
 	    _last,
 	    this->info(),
 	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
-	cudaDeviceSynchronize();
 }
 
 template <typename Model>
@@ -110,13 +110,13 @@ snn<Model>::snn(
 	reserve( adj.size() / width, adj.size(), delay );
 	_graph.edges = adj;
 
-	upload_meta<Model>( _neurons.data(), _synapses.data() );
+	upload_meta<Model>( _sim, _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
+	    _sim,
 	    _first,
 	    _last,
 	    this->info(),
 	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
-	cudaDeviceSynchronize();
 }
 
 template <typename Model>
@@ -131,8 +131,7 @@ snn<Model>::snn( spice::snn<Model> const & net )
 	_neurons.from_aos( net.neurons() );
 	_synapses.from_aos( net.synapses() );
 
-	upload_meta<Model>( _neurons.data(), _synapses.data() );
-	cudaDeviceSynchronize();
+	upload_meta<Model>( _sim, _neurons.data(), _synapses.data() );
 }
 
 

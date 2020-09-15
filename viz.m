@@ -1,4 +1,4 @@
-f = fopen("D:/temp/bp.txt");
+f = fopen("~/brunel.txt");
 n = fgetl(f); n = str2num(n);
 
 width = ceil(sqrt(n));

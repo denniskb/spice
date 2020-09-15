@@ -55,9 +55,11 @@ private:
 	std::atomic_int32_t _work{ 0 };
 	std::vector<int_> * _out_spikes = nullptr;
 	std::mutex _out_spikes_lock;
+	std::atomic_bool _bench{ false };
+	std::array<double, util::device::max_devices> _timings;
 
 	std::vector<int_> _tmp;
 
-	multi_snn( float dt, int_ delay, spice::util::layout const * desc = nullptr );
+	multi_snn( float dt, int_ delay );
 };
 } // namespace spice::cuda

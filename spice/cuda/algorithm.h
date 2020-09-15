@@ -12,15 +12,21 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( spice::util::layout const & desc, int_ * edges );
+void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, int_ * edges );
 
 template <typename Model>
 void upload_meta(
+    cudaStream_t s,
     typename Model::neuron::ptuple_t const & neuron,
     typename Model::synapse::ptuple_t const & synapse );
 
 template <typename Model>
-void init( int_ first, int_ last, snn_info info, spice::util::span2d<int_ const> adj = {} );
+void init(
+    cudaStream_t s,
+    int_ first,
+    int_ last,
+    snn_info info,
+    spice::util::span2d<int_ const> adj = {} );
 
 template <typename Model>
 void update(

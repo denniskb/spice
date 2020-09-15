@@ -82,9 +82,9 @@ static void plot0_AdjGen( benchmark::State & state )
 		time_event start, stop;
 		for( auto _ : state )
 		{
-			generate_rnd_adj_list( desc, e.data() );
+			generate_rnd_adj_list( nullptr, desc, e.data() );
 			start.record();
-			for( int_ i = 0; i < 10; i++ ) generate_rnd_adj_list( desc, e.data() );
+			for( int_ i = 0; i < 10; i++ ) generate_rnd_adj_list( nullptr, desc, e.data() );
 			// cudaMemsetAsync( e.data(), 0, 4 * NSYN );
 			stop.record();
 			stop.synchronize();
@@ -110,7 +110,7 @@ BENCHMARK( plot0_AdjGen )
 template <template <typename> typename net_t, typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	size_ NSYN = state.range( 0 );
+	size_ NSYN = state.range( 0 ) / 4;
 
 	if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
 		NSYN *= device::devices().size();
@@ -141,6 +141,10 @@ static void plot2_RunTime( benchmark::State & state )
 
 		for( auto _ : state )
 		{
+			if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
+				net->sync();
+			else
+				cudaDeviceSynchronize();
 			timer t;
 			for( size_ i = 0;
 			     i < ITER / ( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value ?
