@@ -36,14 +36,15 @@ public:
 	std::vector<edge> const & connections() const;
 	size_ max_degree() const;
 
+	std::pair<size_, size_> static_load_balance( size_ n, size_ i ) const;
 	template <typename T = layout>
 	struct slice
 	{
 		T part;
-		int_ first;
-		int_ last;
+		size_ first;
+		size_ last;
 	};
-	slice<> cut( size_ n, size_ i ) const;
+	slice<> cut( std::pair<size_, size_> range ) const;
 
 private:
 	size_ _n;

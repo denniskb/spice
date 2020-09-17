@@ -42,16 +42,20 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 	void * ptr;
 	success_or_throw( cudaHostAlloc(
 	    &ptr, device::devices().size() * delay * sizeof( uint_ ), cudaHostAllocPortable ) );
-	success_or_throw( cudaMemset( ptr, 0, device::devices().size() * delay * sizeof( uint_ ) ) );
 
 	_spikes.counts_data.reset( static_cast<uint_ *>( ptr ) );
 	_spikes.counts = { _spikes.counts_data.get(), delay };
+	std::fill( _spikes.counts.data(), _spikes.counts.data() + device::devices().size() * delay, 0 );
 
 	_spikes.ddata_data.resize( device::devices().size() * delay );
 	_spikes.ddata = { _spikes.ddata_data.data(), delay };
 
-	_spikes.dcounts_data.resize( device::devices().size() * delay, nullptr );
+	_spikes.dcounts_data.resize( device::devices().size() * delay );
 	_spikes.dcounts = { _spikes.dcounts_data.data(), delay };
+	std::fill(
+	    _spikes.dcounts.data(),
+	    _spikes.dcounts.data() + device::devices().size() * delay,
+	    nullptr );
 
 	for( auto & d : device::devices() )
 	{
@@ -134,14 +138,51 @@ multi_snn<Model>::~multi_snn()
 }
 
 template <typename Model>
-multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* = 1 */ )
+multi_snn<Model>::multi_snn(
+    spice::util::layout desc, float dt, int_ delay /* = 1 */, bool const bench /* = false */ )
     : multi_snn<Model>( dt, delay )
 {
 	for( auto & d : device::devices() )
 	{
 		d.set();
-		auto slice = desc.cut( device::devices().size(), d );
+		auto slice = desc.cut( desc.static_load_balance( device::devices().size(), d ) );
 		_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
+		_slices[d] = slice.last - slice.first;
+	}
+
+	if( bench )
+	{
+		_bench = true;
+		for( int_ i = 0; i < 1000 / this->delay(); i++ ) step();
+		_bench = false;
+
+		for( auto & d : device::devices() ) _timings[d] = _slices[d] / _timings[d];
+
+		auto total = std::accumulate( _timings.begin(), _timings.end(), 0.0 );
+
+		size_ first = 0;
+		size_ last = 0;
+		for( auto & d : device::devices() )
+		{
+			d.set();
+
+			if( static_cast<int_>( d ) == device::devices().size() - 1 )
+				last = this->num_neurons();
+			else
+				last = first + narrow_cast<size_>( this->num_neurons() / total * _timings[d] );
+
+			auto slice = desc.cut( { first, last } );
+			_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
+			first = last;
+		}
+
+		// TODO: Duplicated code
+		std::fill(
+		    _spikes.counts.data(), _spikes.counts.data() + device::devices().size() * delay, 0 );
+		std::fill(
+		    _spikes.dcounts.data(),
+		    _spikes.dcounts.data() + device::devices().size() * delay,
+		    nullptr );
 	}
 }
 
@@ -202,7 +243,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 
 	_work += device::devices().size();
 	_iter += last - first;
-	while( _work ) std::this_thread::yield(); // _mm_pause();
+	while( _work ) std::this_thread::yield();
 
 	std::tie( first, last ) = batch( last, this->delay() );
 

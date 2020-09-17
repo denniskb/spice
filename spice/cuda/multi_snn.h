@@ -19,7 +19,7 @@ template <typename Model>
 class multi_snn : public ::spice::snn<Model>
 {
 public:
-	multi_snn( spice::util::layout desc, float dt, int_ delay = 1 );
+	multi_snn( spice::util::layout desc, float dt, int_ delay = 1, bool bench = false );
 	multi_snn( spice::snn<Model> const & net );
 	~multi_snn();
 
@@ -56,6 +56,7 @@ private:
 	std::vector<int_> * _out_spikes = nullptr;
 	std::mutex _out_spikes_lock;
 	std::atomic_bool _bench{ false };
+	std::array<size_, util::device::max_devices> _slices;
 	std::array<double, util::device::max_devices> _timings;
 
 	std::vector<int_> _tmp;

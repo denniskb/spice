@@ -110,7 +110,8 @@ BENCHMARK( plot0_AdjGen )
 template <template <typename> typename net_t, typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	size_ NSYN = state.range( 0 ) / 4;
+	bool const bench = false;
+	size_ NSYN = state.range( 0 );
 
 	if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
 		NSYN *= device::devices().size();
@@ -123,7 +124,7 @@ static void plot2_RunTime( benchmark::State & state )
 	else
 		P = 0.05f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
-	size_ const ITER = 1000;
+	size_ const ITER = Model::synapse::size > 0 ? 100 : 1000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -132,12 +133,15 @@ static void plot2_RunTime( benchmark::State & state )
 	{
 		std::optional<net_t<Model>> net;
 		if constexpr( std::is_same<Model, vogels_abbott>::value )
-			net.emplace( layout{ N, P }, 0.0001f, 8 );
+			net.emplace( layout{ N, P }, 0.0001f, 8, bench );
 		else if constexpr( std::is_same<Model, synth>::value )
-			net.emplace( layout{ N, P }, 0.0001f, 8 );
+			net.emplace( layout{ N, P }, 0.0001f, 8, bench );
 		else
 			net.emplace(
-			    layout{ { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 15 );
+			    layout{ { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } },
+			    0.0001f,
+			    15,
+			    bench );
 
 		for( auto _ : state )
 		{
@@ -145,6 +149,7 @@ static void plot2_RunTime( benchmark::State & state )
 				net->sync();
 			else
 				cudaDeviceSynchronize();
+
 			timer t;
 			for( size_ i = 0;
 			     i < ITER / ( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value ?
