@@ -556,7 +556,7 @@ void receive(
     int_ const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	if( last - first <= 3'200'000 / Model::neuron::size_in_bytes || Model::synapse::size > 0 )
+	if constexpr( Model::synapse::size > 0 )
 		call( [&] {
 			_process_spikes<Model, UPDT_SYNS><<<256, 256, 0, s>>>(
 			    info,
@@ -572,7 +572,10 @@ void receive(
 			    iter,
 			    delay,
 			    dt );
+		} );
 
+	if( last - first <= 3'200'000 / Model::neuron::size_in_bytes || Model::synapse::size > 0 )
+		call( [&] {
 			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
 			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
 			    info,
