@@ -68,11 +68,13 @@ snn<Model>::snn(
     spice::util::layout const & desc,
     float const dt,
     int_ const delay /* = 1 */,
-    int_ first /* = 0 */,
-    int_ last /* = -1 */ )
+    int_ slice_width /* = -1 */,
+    int_ n /* = 1 */,
+    int_ i /* = 0 */ )
     : ::spice::snn<Model>( dt, delay )
-    , _first( first )
-    , _last( last == -1 ? narrow<int>( desc.size() ) : last )
+    , _slice_width( slice_width == -1 ? narrow<int>( desc.size() ) : slice_width )
+    , _n( n )
+    , _i( i )
 {
 	spice_assert( dt > 0.0f );
 	spice_assert( delay >= 1 );
@@ -83,8 +85,9 @@ snn<Model>::snn(
 	upload_meta<Model>( _sim, _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
 	    _sim,
-	    _first,
-	    _last,
+	    _slice_width,
+	    _n,
+	    _i,
 	    this->info(),
 	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
 }
@@ -95,11 +98,13 @@ snn<Model>::snn(
     size_ width,
     float const dt,
     int_ const delay /* = 1 */,
-    int_ first /* = 0 */,
-    int_ last /* = -1 */ )
+    int_ slice_width /* = -1 */,
+    int_ n /* = 1 */,
+    int_ i /* = 0 */ )
     : ::spice::snn<Model>( dt, delay )
-    , _first( first )
-    , _last( last == -1 ? narrow<int>( adj.size() / width ) : last )
+    , _slice_width( slice_width == -1 ? narrow<int>( adj.size() / width ) : slice_width )
+    , _n( n )
+    , _i( i )
 {
 	spice_assert( width > 0 );
 	spice_assert( adj.size() % width == 0 );
@@ -113,8 +118,9 @@ snn<Model>::snn(
 	upload_meta<Model>( _sim, _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
 	    _sim,
-	    _first,
-	    _last,
+	    _slice_width,
+	    _n,
+	    _i,
 	    this->info(),
 	    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) } );
 }
@@ -122,8 +128,9 @@ snn<Model>::snn(
 template <typename Model>
 snn<Model>::snn( spice::snn<Model> const & net )
     : ::spice::snn<Model>( net )
-    , _first( 0 )
-    , _last( narrow<int>( net.num_neurons() ) )
+    , _slice_width( narrow<int>( net.num_neurons() ) )
+    , _n( 1 )
+    , _i( 0 )
 {
 	reserve( net.num_neurons(), net.num_synapses(), net.delay() );
 
@@ -153,8 +160,6 @@ void snn<Model>::step(
 			receive<Model>(
 			    _sim,
 
-			    _first,
-			    _last,
 			    this->info(),
 			    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
 
@@ -176,8 +181,9 @@ void snn<Model>::step(
 		update<Model>(
 		    _sim,
 
-		    _first,
-		    _last,
+		    _slice_width,
+		    _n,
+		    _i,
 		    this->info(),
 		    dt,
 		    _spikes.ids.row( circidx( i, this->delay() ) ),

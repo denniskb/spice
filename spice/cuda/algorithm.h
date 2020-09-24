@@ -23,8 +23,9 @@ void upload_meta(
 template <typename Model>
 void init(
     cudaStream_t s,
-    int_ first,
-    int_ last,
+    int_ slice_width,
+    int_ n,
+    int_ i,
     snn_info info,
     spice::util::span2d<int_ const> adj = {} );
 
@@ -32,8 +33,9 @@ template <typename Model>
 void update(
     cudaStream_t s,
 
-    int_ first,
-    int_ last,
+    int_ slice_width,
+    int_ n,
+    int_ i,
     snn_info info,
     float dt,
     int_ * spikes,
@@ -51,8 +53,6 @@ template <typename Model>
 void receive(
     cudaStream_t s,
 
-    int_ const first,
-    int_ const last,
     snn_info info,
     spice::util::span2d<int_ const> adj,
 

@@ -177,6 +177,27 @@ layout::slice<> layout::cut( std::pair<size_, size_> range ) const
 	return { layout( size(), part ), range.first, range.second };
 }
 
+layout layout::cut( size_ slice_width, size_ n_gpus, size_ i_gpu ) const
+{
+	spice_assert( slice_width > 0 );
+	spice_assert( i_gpu < n_gpus );
+
+	std::vector<layout::edge> part;
+	for( auto c : connections() )
+	{
+		for( size_ first = i_gpu * slice_width; first < size(); first += n_gpus * slice_width )
+		{
+			size_ last = first + slice_width;
+			auto const a = std::max( narrow<int_>( first ), std::get<2>( c ) );
+			auto const b = std::min( narrow<int_>( last ), std::get<3>( c ) );
+			if( a < b )
+				part.push_back( { std::get<0>( c ), std::get<1>( c ), a, b, std::get<4>( c ) } );
+		}
+	}
+
+	return { size(), part };
+}
+
 layout::layout( size_ n, std::vector<edge> flat )
     : _n( n )
     , _connections( flat )

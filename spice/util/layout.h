@@ -46,6 +46,8 @@ public:
 	};
 	slice<> cut( std::pair<size_, size_> range ) const;
 
+	layout cut( size_ slice_width, size_ n_gpus, size_ i_gpu ) const;
+
 private:
 	size_ _n;
 	std::vector<edge> _connections;

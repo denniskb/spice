@@ -82,8 +82,6 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 				        prev_last - prev_first,
 				        *_cp[ID] );
 			    };
-			    time_event start;
-			    time_event stop;
 
 			    int iter = 0;
 			    std::vector<int_> tmp;
@@ -96,7 +94,6 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 					    if( this->delay() > 1 && _spikes.dcounts( ID, last % this->delay() ) )
 						    download_spikes( last );
 
-					    if( _bench ) start.record( _nets[ID]->sim_stream() );
 					    for( int_ iter = first; iter < last; iter++ )
 					    {
 						    _nets[ID]->step(
@@ -109,12 +106,6 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 							    std::lock_guard _( _out_spikes_lock );
 							    _out_spikes->insert( _out_spikes->end(), tmp.begin(), tmp.end() );
 						    }
-					    }
-					    if( _bench )
-					    {
-						    stop.record( _nets[ID]->sim_stream() );
-						    stop.synchronize();
-						    _timings[ID] += stop.elapsed_time( start );
 					    }
 					    updt.record( _nets[ID]->sim_stream() );
 
@@ -142,47 +133,22 @@ multi_snn<Model>::multi_snn(
     spice::util::layout desc, float dt, int_ delay /* = 1 */, bool const bench /* = false */ )
     : multi_snn<Model>( dt, delay )
 {
+	size_ const slice_width = [&] {
+		size_ const n_slices = device::devices().size() * 2;
+
+		return ( ( desc.size() + n_slices - 1 ) / n_slices + WARP_SZ - 1 ) / WARP_SZ * WARP_SZ;
+	}();
+
 	for( auto & d : device::devices() )
 	{
 		d.set();
-		auto slice = desc.cut( desc.static_load_balance( device::devices().size(), d ) );
-		_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
-		_slices[d] = slice.last - slice.first;
-	}
-
-	if( bench )
-	{
-		_bench = true;
-		for( int_ i = 0; i < 1000 / this->delay(); i++ ) step();
-		_bench = false;
-
-		for( auto & d : device::devices() ) _timings[d] = _slices[d] / _timings[d];
-
-		auto total = std::accumulate( _timings.begin(), _timings.end(), 0.0 );
-
-		size_ first = 0;
-		size_ last = 0;
-		for( auto & d : device::devices() )
-		{
-			d.set();
-
-			if( static_cast<int_>( d ) == device::devices().size() - 1 )
-				last = this->num_neurons();
-			else
-				last = first + narrow_cast<size_>( this->num_neurons() / total * _timings[d] );
-
-			auto slice = desc.cut( { first, last } );
-			_nets[d].emplace( slice.part, dt, delay, slice.first, slice.last );
-			first = last;
-		}
-
-		// TODO: Duplicated code
-		std::fill(
-		    _spikes.counts.data(), _spikes.counts.data() + device::devices().size() * delay, 0 );
-		std::fill(
-		    _spikes.dcounts.data(),
-		    _spikes.dcounts.data() + device::devices().size() * delay,
-		    nullptr );
+		_nets[d].emplace(
+		    desc.cut( slice_width, device::devices().size(), d ),
+		    dt,
+		    delay,
+		    slice_width,
+		    device::devices().size(),
+		    d );
 	}
 }
 
@@ -194,11 +160,16 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 	adj_list adj( adj_data.first.size() / adj_data.second, adj_data.second, adj_data.first.data() );
 
 	std::vector<int> slice;
+	size_ const slice_width =
+	    ( ( net.num_neurons() + device::devices().size() - 1 ) / device::devices().size() +
+	      WARP_SZ - 1 ) /
+	    WARP_SZ * WARP_SZ;
+
 	for( auto & d : device::devices() )
 	{
 		// TODO: Load-balanced split
-		size_ const first = d * net.num_neurons() / device::devices().size();
-		size_ const last = ( d + 1 ) * net.num_neurons() / device::devices().size();
+		size_ const first = d * slice_width;
+		size_ const last = std::min( net.num_neurons(), first + slice_width );
 
 		size_ deg = 0;
 		for( size_ i = 0; i < adj.num_nodes(); i++ )
@@ -227,7 +198,7 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 
 		d.set();
 		_nets[d].emplace(
-		    slice, deg, net.dt(), net.delay(), narrow<int>( first ), narrow<int>( last ) );
+		    slice, deg, net.dt(), net.delay(), slice_width, device::devices().size(), d );
 	}
 }
 

@@ -20,14 +20,16 @@ public:
 	snn( spice::util::layout const & desc,
 	     float dt,
 	     int_ delay = 1,
-	     int_ first = 0,
-	     int_ last = -1 );
+	     int_ slice_width = -1,
+	     int_ n = 1,
+	     int_ i = 0 );
 	snn( std::vector<int> const & adj,
 	     size_ width,
 	     float dt,
 	     int_ delay = 1,
-	     int_ first = 0,
-	     int_ last = -1 );
+	     int_ slice_width = -1,
+	     int_ n = 1,
+	     int_ i = 0 );
 	snn( spice::snn<Model> const & net );
 
 	void step( std::vector<int> * out_spikes = nullptr ) override;
@@ -66,8 +68,9 @@ private:
 		util::dvar<uint_> num_updates;
 	} _spikes;
 
-	int_ const _first;
-	int_ const _last;
+	int_ const _slice_width;
+	int_ const _n;
+	int_ const _i;
 
 	util::stream _sim;
 

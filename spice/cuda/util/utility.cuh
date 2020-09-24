@@ -22,7 +22,10 @@ __device__ __forceinline__ int_ num_warps() { return ( num_threads() + WARP_SZ -
 
 inline __device__ uint_ active_mask( int_ i, int_ n )
 {
-	return MASK_ALL >> max( 0, ( i & 0xFFFFFFE0 ) + WARP_SZ - n );
+	static_assert( 32 == WARP_SZ, "TODO: Fix active_mask() logic (utility.cuh)" );
+	spice_assert( ( ( i - laneid() ) & 0x1f ) == 0 );
+
+	return MASK_ALL >> max( 0, ( i & 0xffffffe0 ) + WARP_SZ - n );
 }
 } // namespace util
 } // namespace cuda

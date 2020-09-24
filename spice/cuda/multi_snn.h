@@ -55,9 +55,6 @@ private:
 	std::atomic_int32_t _work{ 0 };
 	std::vector<int_> * _out_spikes = nullptr;
 	std::mutex _out_spikes_lock;
-	std::atomic_bool _bench{ false };
-	std::array<size_, util::device::max_devices> _slices;
-	std::array<double, util::device::max_devices> _timings;
 
 	std::vector<int_> _tmp;
 

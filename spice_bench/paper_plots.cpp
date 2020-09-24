@@ -82,7 +82,7 @@ static void plot0_AdjGen( benchmark::State & state )
 		time_event start, stop;
 		for( auto _ : state )
 		{
-			generate_rnd_adj_list( nullptr, desc, e.data() );
+			generate_rnd_adj_list( nullptr, desc.cut( N / 19, 1, 0 ), e.data() );
 			start.record();
 			for( int_ i = 0; i < 10; i++ ) generate_rnd_adj_list( nullptr, desc, e.data() );
 			// cudaMemsetAsync( e.data(), 0, 4 * NSYN );
@@ -103,14 +103,13 @@ static void plot0_AdjGen( benchmark::State & state )
 BENCHMARK( plot0_AdjGen )
     ->UseManualTime()
     ->Unit( benchmark::kMillisecond )
-    ->ExpRange( 1'000'000, 2048'000'000 );
+    ->ExpRange( 512'000'000, 2048'000'000 );
 
 
 // Absolute runtime per iteration as a function of synapse count
 template <template <typename> typename net_t, typename Model>
 static void plot2_RunTime( benchmark::State & state )
 {
-	bool const bench = false;
 	size_ NSYN = state.range( 0 );
 
 	if constexpr( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value )
@@ -123,8 +122,8 @@ static void plot2_RunTime( benchmark::State & state )
 		P = 0.035f;
 	else
 		P = 0.05f;
-	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) );
-	size_ const ITER = Model::synapse::size > 0 ? 100 : 1000;
+	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) ) / 32 * 32;
+	size_ const ITER = Model::synapse::size > 0 ? 1000 : 10000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -133,15 +132,12 @@ static void plot2_RunTime( benchmark::State & state )
 	{
 		std::optional<net_t<Model>> net;
 		if constexpr( std::is_same<Model, vogels_abbott>::value )
-			net.emplace( layout{ N, P }, 0.0001f, 8, bench );
+			net.emplace( layout{ N, P }, 0.0001f, 8 );
 		else if constexpr( std::is_same<Model, synth>::value )
-			net.emplace( layout{ N, P }, 0.0001f, 8, bench );
+			net.emplace( layout{ N, P }, 0.0001f, 8 );
 		else
 			net.emplace(
-			    layout{ { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } },
-			    0.0001f,
-			    15,
-			    bench );
+			    layout{ { N / 2, N / 2 }, { { 0, 1, 0.1f }, { 1, 1, 0.1f } } }, 0.0001f, 15 );
 
 		for( auto _ : state )
 		{
