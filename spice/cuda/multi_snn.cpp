@@ -241,12 +241,11 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 					    *_cp[src] );
 
 					if( 2 * delta >= device::devices().size() )
-						for( size_ step = first; step < last; step++ )
-							copy(
-							    _spikes.ddata( src, step ) + _spikes.counts( src, step ),
-							    _spikes.ddata( dst, step ),
-							    _spikes.counts( dst, step ),
-							    *_cp[dst] );
+						copy(
+						    _spikes.ddata( src, step ) + _spikes.counts( src, step ),
+						    _spikes.ddata( dst, step ),
+						    _spikes.counts( dst, step ),
+						    *_cp[dst] );
 
 					_spikes.counts( dst, step ) += _spikes.counts( src, step );
 					if( 2 * delta >= device::devices().size() )
@@ -269,7 +268,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 					size_ const dst = src + delta;
 
 					copy(
-					    _spikes.ddata( dst, step ) + _spikes.counts( dst, step ),
+					    _spikes.ddata( dst, step ),
 					    _spikes.ddata( src, step ),
 					    _spikes.counts( src, step ),
 					    *_cp[src] );
