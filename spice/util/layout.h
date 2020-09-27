@@ -25,7 +25,7 @@ class layout
 {
 public:
 	// ([first1, last2), [first2, last2), p)
-	using edge = std::tuple<int, int_, int_, int_, float>;
+	using edge = std::tuple<int_, int_, int_, int_, float>;
 
 	layout( size_ num_neurons, float connections );
 	layout(
