@@ -129,8 +129,7 @@ multi_snn<Model>::~multi_snn()
 }
 
 template <typename Model>
-multi_snn<Model>::multi_snn(
-    spice::util::layout desc, float dt, int_ delay /* = 1 */, bool const bench /* = false */ )
+multi_snn<Model>::multi_snn( spice::util::layout desc, float dt, int_ delay /* = 1 */ )
     : multi_snn<Model>( dt, delay )
 {
 	size_ const slice_width = [&] {

@@ -19,7 +19,7 @@ template <typename Model>
 class multi_snn : public ::spice::snn<Model>
 {
 public:
-	multi_snn( spice::util::layout desc, float dt, int_ delay = 1, bool bench = false );
+	multi_snn( spice::util::layout desc, float dt, int_ delay = 1 );
 	multi_snn( spice::snn<Model> const & net );
 	~multi_snn();
 
