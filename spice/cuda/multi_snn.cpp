@@ -209,7 +209,7 @@ void multi_snn<Model>::step( std::vector<int> * out_spikes /* = nullptr */ )
 	bool const repeat = last < this->delay();
 
 	_out_spikes = out_spikes;
-	if( out_spikes && ( this->delay() == 1 || repeat ) ) out_spikes->clear();
+	if( out_spikes && first == 0 ) out_spikes->clear();
 
 	_work += device::devices().size();
 	_iter += last - first;
