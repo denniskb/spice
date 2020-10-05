@@ -86,8 +86,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 			    {
 				    if( iter < _iter )
 				    {
-					    if( this->delay() > 1 && _iter >= this->delay() )
-						    download_spikes( _iter % this->delay() );
+					    if( this->delay() > 1 && _iter >= this->delay() ) download_spikes( _iter );
 
 					    for( ; iter < _iter; iter++ )
 					    {
@@ -104,7 +103,7 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 					    }
 					    updt.record( _nets[ID]->sim_stream() );
 
-					    if( this->delay() == 1 ) download_spikes( _iter % this->delay() );
+					    if( this->delay() == 1 ) download_spikes( _iter );
 					    _cp[ID]->synchronize();
 					    _work--;
 				    }
