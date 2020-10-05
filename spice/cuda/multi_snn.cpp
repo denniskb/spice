@@ -24,11 +24,8 @@ static void copy( void * dst, void * src, size_ n, cudaStream_t s )
 
 static std::pair<int_, int_> batch( int_ const iter, int_ const delay )
 {
-	int_ const delta = std::max( 1, ( delay + static_cast<bool>( iter % delay ) ) / 2 );
 	int_ const first = iter % delay;
-	int_ const last = first + delta;
-
-	return { first, last };
+	return { first, first ? delay : std::max( 1, delay / 2 ) };
 }
 
 
