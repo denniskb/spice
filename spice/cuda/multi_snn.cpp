@@ -86,16 +86,14 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 			    {
 				    if( iter < _iter )
 				    {
-					    auto const [first, last] = batch( iter, this->delay() );
+					    if( this->delay() > 1 && _iter >= this->delay() )
+						    download_spikes( _iter % this->delay() );
 
-					    if( this->delay() > 1 && _spikes.dcounts( ID, last % this->delay() ) )
-						    download_spikes( last );
-
-					    for( int_ iter = first; iter < last; iter++ )
+					    for( ; iter < _iter; iter++ )
 					    {
 						    _nets[ID]->step(
-						        &_spikes.ddata( ID, iter ),
-						        &_spikes.dcounts( ID, iter ),
+						        &_spikes.ddata( ID, iter % this->delay() ),
+						        &_spikes.dcounts( ID, iter % this->delay() ),
 						        _out_spikes ? &tmp : nullptr );
 
 						    if( _out_spikes )
@@ -106,11 +104,9 @@ multi_snn<Model>::multi_snn( float dt, int_ delay )
 					    }
 					    updt.record( _nets[ID]->sim_stream() );
 
-					    if( this->delay() == 1 ) download_spikes( last );
+					    if( this->delay() == 1 ) download_spikes( _iter % this->delay() );
 					    _cp[ID]->synchronize();
 					    _work--;
-
-					    iter += last - first;
 				    }
 				    std::this_thread::yield();
 			    }
