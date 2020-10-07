@@ -62,7 +62,7 @@
         {
             "label": "Build Release",
             "type": "shell",
-            "command": "cd build/release && cmake . && make",
+            "command": "cd build/release && cmake . && make -j 6",
             "group": "build",
             "problemMatcher": "[]",
             "presentation": {
@@ -73,7 +73,7 @@
         {
             "label": "Build Debug",
             "type": "shell",
-            "command": "cd build/debug && cmake . && make",
+            "command": "cd build/debug && cmake . && make -j 6",
             "group": "build",
             "problemMatcher": "[]",
             "presentation": {
