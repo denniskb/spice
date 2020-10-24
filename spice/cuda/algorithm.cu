@@ -603,33 +603,34 @@ void receive(
 		} );
 
 	// TODO
-	// if( last - first <= 3'200'000 / Model::neuron::size_in_bytes || Model::synapse::size > 0 )
-	call( [&] {
-		int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
-		_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
-		    info,
-		    seed(),
-		    adj,
+	if( info.num_neurons <= 3'200'000 / Model::neuron::size_in_bytes || Model::synapse::size > 0 )
+		call( [&] {
+			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
+			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
+			    info,
+			    seed(),
+			    adj,
 
-		    spikes,
-		    num_spikes,
+			    spikes,
+			    num_spikes,
 
-		    ages,
-		    history,
-		    max_history,
-		    iter,
-		    delay,
-		    dt );
-	} );
-	/*else call( [&] {
-	    _process_spikes_cache_aware<Model><<<2048, WARP_SZ, 0, s>>>(
-	        info,
-	        seed(),
-	        adj,
+			    ages,
+			    history,
+			    max_history,
+			    iter,
+			    delay,
+			    dt );
+		} );
+	else
+		call( [&] {
+			_process_spikes_cache_aware<Model><<<2048, WARP_SZ, 0, s>>>(
+			    info,
+			    seed(),
+			    adj,
 
-	        spikes,
-	        num_spikes );
-	} );*/
+			    spikes,
+			    num_spikes );
+		} );
 }
 template void receive<::spice::vogels_abbott>(
     cudaStream_t,
