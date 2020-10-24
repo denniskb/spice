@@ -9,7 +9,7 @@ else()
 endif()
 
 set(CPP_STD 17)
-set(CUDA_ARCH 52)
+set(CUDA_ARCH 61)
 
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_${CUDA_ARCH} --use_fast_math -std=c++${CPP_STD}")
 if(CMAKE_BUILD_TYPE MATCHES Release)
