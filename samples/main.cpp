@@ -1318,15 +1318,90 @@ int _main(
 
 FIRE( _main )
 
+// TODO: Implement
 
-double bench_setup( model m, gpu g, int nneuron, double pconnect, int delay, double pfire )
+#include <spice/cuda/multi_snn.h>
+#include <spice/cuda/snn.h>
+#include <spice/models/brunel.h>
+#include <spice/models/brunel_with_plasticity.h>
+#include <spice/models/synth.h>
+#include <spice/models/vogels_abbott.h>
+
+
+using namespace spice;
+using namespace spice::cuda;
+using namespace spice::util;
+
+#pragma GCC diagnostic ignored "-Wnarrowing"
+
+template <typename SNN>
+std::pair<double, double> _bench( bench b, layout l, int delay )
 {
-	// TODO: Implement
-	return -1;
+	int const ITER = 1000;
+	double tsetup = -1, tsim = -1;
+
+	timer t;
+
+	SNN net( l, 0.0001f, delay );
+
+	for( auto & d : device::devices() ) d.synchronize();
+	tsetup = t.stop();
+
+	if( b == ::bench::sim )
+	{
+		t = timer();
+
+		for( int i = 0; i < ITER; i++ ) net.step();
+
+		for( auto & d : device::devices() ) d.synchronize();
+		tsim = t.stop() / ITER;
+	}
+
+	return { tsetup, tsim };
 }
 
-double bench_sim( model m, gpu g, int nneuron, double pconnect, int delay, double pfire )
+template <typename Model>
+std::pair<double, double> _bench( bench b, gpu g, layout l, int delay )
+{
+	switch( g )
+	{
+	case gpu::single: return _bench<cuda::snn<Model>>( b, l, delay );
+	case gpu::multi: return _bench<cuda::multi_snn<Model>>( b, l, delay );
+	default: throw std::logic_error( "invalid gpu" );
+	}
+}
+
+std::pair<double, double>
+_bench( bench b, ::model m, gpu g, int nneuron, double pconnect, int delay, double pfire )
+{
+	switch( m )
+	{
+	case ::model::vogels: return _bench<vogels_abbott>( b, g, { nneuron, pconnect }, delay );
+	case ::model::synth: return _bench<synth>( b, g, { nneuron, pconnect }, delay );
+	case ::model::brunel:
+		return _bench<brunel>(
+		    b,
+		    g,
+		    { { nneuron / 2, nneuron / 2 }, { { 0, 1, pconnect }, { 1, 1, pconnect } } },
+		    delay );
+	case ::model::brunel_plus:
+		return _bench<brunel_with_plasticity>(
+		    b,
+		    g,
+		    { { nneuron / 2, nneuron / 2 }, { { 0, 1, pconnect }, { 1, 1, pconnect } } },
+		    delay );
+	default: throw std::logic_error( "invalid model" );
+	}
+}
+
+double bench_setup( ::model m, gpu g, int nneuron, double pconnect, int delay, double pfire )
 {
 	// TODO: Implement
-	return -1;
+	return _bench( bench::setup, m, g, nneuron, pconnect, delay, pfire ).first;
+}
+
+double bench_sim( ::model m, gpu g, int nneuron, double pconnect, int delay, double pfire )
+{
+	// TODO: Implement
+	return _bench( bench::sim, m, g, nneuron, pconnect, delay, pfire ).second;
 }
