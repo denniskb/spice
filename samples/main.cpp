@@ -1189,7 +1189,7 @@ public:
 	timer() { s = high_resolution_clock::now(); }
 	double stop()
 	{
-		return duration_cast<microseconds>( high_resolution_clock::now() - s ).count() * 1e-6;
+		return duration_cast<milliseconds>( high_resolution_clock::now() - s ).count() * 1e-3;
 	}
 };
 
@@ -1335,29 +1335,37 @@ using namespace spice::util;
 #pragma GCC diagnostic ignored "-Wnarrowing"
 
 template <typename SNN>
-std::pair<double, double> _bench( bench b, layout l, int delay )
+std::pair<double, double> _bench( std::tuple<bench, gpu> info, layout l, int delay )
 {
-	int const ITER = 1000;
-	double tsetup = -1, tsim = -1;
-
-	timer t;
-
-	SNN net( l, 0.0001f, delay );
-
-	for( auto & d : device::devices() ) d.synchronize();
-	tsetup = t.stop();
-
-	if( b == ::bench::sim )
+	try
 	{
-		t = timer();
+		int const ITER = 10000;
+		double tsetup = -1, tsim = -1;
 
-		for( int i = 0; i < ITER; i++ ) net.step();
+		timer t;
+
+		SNN net( l, 0.0001f, delay );
 
 		for( auto & d : device::devices() ) d.synchronize();
-		tsim = t.stop() / ITER;
-	}
+		tsetup = t.stop();
 
-	return { tsetup, tsim };
+		if( std::get<bench>( info ) == bench::sim )
+		{
+			t = timer();
+
+			for( int i = 0; i < ITER / ( std::get<gpu>( info ) == gpu::multi ? delay : 1 ); i++ )
+				net.step();
+
+			for( auto & d : device::devices() ) d.synchronize();
+			tsim = t.stop();
+		}
+
+		return { tsetup, tsim };
+	}
+	catch( ... )
+	{
+		return { -1, -1 };
+	}
 }
 
 template <typename Model>
@@ -1365,8 +1373,8 @@ std::pair<double, double> _bench( bench b, gpu g, layout l, int delay )
 {
 	switch( g )
 	{
-	case gpu::single: return _bench<cuda::snn<Model>>( b, l, delay );
-	case gpu::multi: return _bench<cuda::multi_snn<Model>>( b, l, delay );
+	case gpu::single: return _bench<cuda::snn<Model>>( { b, g }, l, delay );
+	case gpu::multi: return _bench<cuda::multi_snn<Model>>( { b, g }, l, delay );
 	default: throw std::logic_error( "invalid gpu" );
 	}
 }
@@ -1374,23 +1382,31 @@ std::pair<double, double> _bench( bench b, gpu g, layout l, int delay )
 std::pair<double, double>
 _bench( bench b, ::model m, gpu g, int nneuron, double pconnect, int delay, double pfire )
 {
-	switch( m )
+	try
 	{
-	case ::model::vogels: return _bench<vogels_abbott>( b, g, { nneuron, pconnect }, delay );
-	case ::model::synth: return _bench<synth>( b, g, { nneuron, pconnect }, delay );
-	case ::model::brunel:
-		return _bench<brunel>(
-		    b,
-		    g,
-		    { { nneuron / 2, nneuron / 2 }, { { 0, 1, pconnect }, { 1, 1, pconnect } } },
-		    delay );
-	case ::model::brunel_plus:
-		return _bench<brunel_with_plasticity>(
-		    b,
-		    g,
-		    { { nneuron / 2, nneuron / 2 }, { { 0, 1, pconnect }, { 1, 1, pconnect } } },
-		    delay );
-	default: throw std::logic_error( "invalid model" );
+		switch( m )
+		{
+		case ::model::vogels: return _bench<vogels_abbott>( b, g, { nneuron, pconnect }, delay );
+		case ::model::synth: return _bench<synth>( b, g, { nneuron, pconnect }, delay );
+		case ::model::brunel:
+			return _bench<brunel>(
+			    b,
+			    g,
+			    { { nneuron / 2, nneuron / 2 }, { { 0, 1, pconnect }, { 1, 1, pconnect } } },
+			    delay );
+		case ::model::brunel_plus:
+			return _bench<brunel_with_plasticity>(
+			    b,
+			    g,
+			    { { nneuron / 2, nneuron / 2 }, { { 0, 1, pconnect }, { 1, 1, pconnect } } },
+			    delay );
+		default: throw std::logic_error( "invalid model" );
+		}
+	}
+	catch( std::exception & e )
+	{
+		std::cerr << e.what() << std::endl;
+		std::terminate();
 	}
 }
 
