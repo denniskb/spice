@@ -60,8 +60,10 @@ cudaDeviceProp device::props() const
 void device::set() { success_or_throw( cudaSetDevice( _id ) ); }
 void device::synchronize()
 {
+	auto & x = active();
 	set();
 	success_or_throw( cudaDeviceSynchronize() );
+	x.set();
 }
 
 
