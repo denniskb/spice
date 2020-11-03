@@ -6,9 +6,9 @@ sizes_multi=({500000000..24000000000..500000000})
 echo "benchmarks = [" > results.txt
 
 run() {
+	echo $1
 	eval "$1 >> results.txt"
 	echo -n "," >> results.txt
-	echo $1
 }
 
 for sim in ${sims[@]}
