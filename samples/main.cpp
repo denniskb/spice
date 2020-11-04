@@ -1297,10 +1297,10 @@ int _main(
 	sim = sim.substr( sim.find_last_of( "/" ) + 1, sim.length() - sim.find_last_of( "/" ) - 1 );
 
 	std::cout << "{" << std::endl
-	          << "\t\"sim\": \"" << sim << "\"" << std::endl
-	          << "\t\"model\": \"" << m << "\"" << std::endl
-	          << "\t\"#syn\": " << nsyn << std::endl
-	          << "\t\"#gpus\": " << device::devices().size() << std::endl;
+	          << "\t\"sim\": \"" << sim << "\"," << std::endl
+	          << "\t\"model\": \"" << m << "\"," << std::endl
+	          << "\t\"#syn\": " << nsyn << "," << std::endl
+	          << "\t\"#gpus\": " << device::devices().size() << "," << std::endl;
 
 	if( str2bench( bench ) == bench::setup )
 		std::cout << "\t\"setuptime\": "
