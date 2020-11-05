@@ -3,7 +3,7 @@ models=(vogels brunel)
 sizes_single=({200000000..3000000000..200000000})
 sizes_multi=({500000000..24000000000..500000000})
 
-echo "[" > results.txt
+echo "[" > results.json
 
 run() {
 	echo $1
