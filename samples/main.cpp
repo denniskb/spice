@@ -1339,7 +1339,10 @@ std::pair<double, double> _bench( std::tuple<bench, gpu> info, layout l, int del
 {
 	try
 	{
-		int const ITER = 10000;
+		int const ITER = std::is_same_v<SNN, cuda::snn<brunel_with_plasticity>> ||
+		                         std::is_same_v<SNN, cuda::multi_snn<brunel_with_plasticity>> ?
+		                     1000 :
+		                     10000;
 		double tsetup = -1, tsim = -1;
 
 		timer t;
@@ -1360,7 +1363,7 @@ std::pair<double, double> _bench( std::tuple<bench, gpu> info, layout l, int del
 			tsim = t.stop();
 		}
 
-		return { tsetup, tsim };
+		return { tsetup, tsim * (10000 / ITER) };
 	}
 	catch( ... )
 	{
