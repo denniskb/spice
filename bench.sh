@@ -28,7 +28,7 @@ do
 	# simtime sparse
 	for size in {250000000..3000000000..250000000}
 	do
-		run ".$sim --bench sim --gpu single --model synth --pconnect 0.0016 --pfire 0.001 --delay 1 --nsyn $size"
+		run ".$sim --bench sim --gpu single --model synth --pconnect 0.00156 --pfire 0.001 --delay 1 --nsyn $size"
 	done
 
 	for igpu in {0..3}
