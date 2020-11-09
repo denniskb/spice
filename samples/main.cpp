@@ -1189,7 +1189,7 @@ public:
 	timer() { s = high_resolution_clock::now(); }
 	double stop()
 	{
-		return duration_cast<milliseconds>( high_resolution_clock::now() - s ).count() * 1e-3;
+		return duration_cast<microseconds>( high_resolution_clock::now() - s ).count() * 1e-6;
 	}
 };
 
@@ -1339,10 +1339,7 @@ std::pair<double, double> _bench( std::tuple<bench, gpu> info, layout l, int del
 {
 	try
 	{
-		int const ITER = std::is_same_v<SNN, cuda::snn<brunel_with_plasticity>> ||
-		                         std::is_same_v<SNN, cuda::multi_snn<brunel_with_plasticity>> ?
-		                     1000 :
-		                     10000;
+		int const ITER = 1000;
 		double tsetup = -1, tsim = -1;
 
 		timer t;
