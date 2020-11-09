@@ -1,7 +1,4 @@
 sims=(/build/release/samples) # bsim ngpu (all sims)
-models=(vogels brunel)
-sizes_single=({250000000..3000000000..250000000})
-sizes_multi=({500000000..24000000000..500000000})
 gpus=("0" "0,1" "0,1,2,3" "0,1,2,3,4,5,6,7")
 gpu=("single" "multi" "multi" "multi")
 sizes=({250000000..3000000000..250000000}
