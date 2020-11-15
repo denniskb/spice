@@ -1,5 +1,6 @@
+clear all;
 close all;
-results = jsondecode(fileread("results.json"));
+results = jsondecode(fileread("gold.json"));
 
 % Sim. time as function of network size (single GPU)
 [x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "vogels"});
@@ -31,6 +32,8 @@ plot_simtime("Setup Time", x, y);
 plot_simtime("Setup Time", x, y);
 [x, y] = filter(results, "setuptime", {"sim" "samples" "x_gpus" 4 "model" "synth_0.05_0.001_1"});
 plot_simtime("Setup Time", x, y);
+[x, y] = filter(results, "setuptime", {"sim" "samples" "x_gpus" 8 "model" "synth_0.05_0.001_1"});
+plot_simtime("Setup Time", x, y);
 ylabel("Setup Time (s)");
 legend("Ours (1 GPU)", "Ours (2 GPUs)", "Ours (4 GPUs)");
 
@@ -43,7 +46,9 @@ plot_simtime("Vogels", x, y);
 plot_simtime("Vogels", x, y);
 [x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 4 "model" "vogels"});
 plot_simtime("Vogels", x, y);
-legend("1 GPU", "2 GPUs", "4 GPUs");
+[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 8 "model" "vogels"});
+plot_simtime("Vogels", x, y);
+legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
 
 figure;
 hold on;
@@ -53,7 +58,9 @@ plot_simtime("Brunel", x, y);
 plot_simtime("Brunel", x, y);
 [x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 4 "model" "brunel"});
 plot_simtime("Brunel", x, y);
-legend("1 GPU", "2 GPUs", "4 GPUs");
+[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 8 "model" "brunel"});
+plot_simtime("Brunel", x, y);
+legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
 
 figure;
 hold on;
@@ -63,56 +70,67 @@ plot_simtime("Brunel+", x, y);
 plot_simtime("Brunel+", x, y);
 [x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 4 "model" "brunel+"});
 plot_simtime("Brunel+", x, y);
-legend("1 GPU", "2 GPUs", "4 GPUs");
+[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 8 "model" "brunel+"});
+plot_simtime("Brunel+", x, y);
+legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
 xlabel("#Synapses (M)");
 
 % Speedup
-speed = [1 1 1];
-size = [1 1 1];
-i = [6 5 5];
-ii = [8 5 5];
-for igpu = 1:2
-    s = [];
-    ss = [];
+speedup = [1 1 1];
+scaleup = [1 1 1];
+i = [8 6 5.5];
+ii = [9 6 5.5];
+for igpu = 1:3
+    s1 = [];
+    s2 = [];
     
-    [~, x] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "vogels"});
-    [~, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2^igpu "model" "vogels"});
-    s = [s x(8)/y(i(igpu))];
-    ss = [ss x(12)/y(12)];
+    for model = {"vogels", "brunel", "brunel+"}
+        [a, x] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" model{1}});
+        [b, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2^igpu "model" model{1}});
+        s1 = [s1 x(12) / binsearch(y, b, a(12))];
+        s2 = [s2 binsearch(b, y, x(12)) / a(12)];
+    end
     
-    [~, x] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "brunel"});
-    [~, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2^igpu "model" "brunel"});
-    s = [s x(8)/y(i(igpu))];
-    ss = [ss x(12)/y(12)];
-    
-    [a, x] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "brunel+"});
-    [b, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2^igpu "model" "brunel+"});
-    s = [s x(8)/y(ii(igpu))];
-    ss = [ss x(12)/y(12)];
-    
-    speed= [speed; s];
-    size = [size ; 2^igpu*ss];
+    speedup = [speedup; s1];
+    scaleup = [scaleup; s2];
 end
 figure;
-bar(speed);
+bar(speedup);
 title("Speedup");
 xlabel("#GPUs");
-xticklabels({"1", "2", "4"});
+xticklabels({"1", "2", "4", "8"});
 ylabel("Speedup");
 legend("Vogels", "Brunel", "Brunel+", "Location", "Northwest");
 set(gca, "YGrid", "on");
 
 % Sizeup
 figure;
-bar(size);
-title("Sizeup");
+bar(scaleup);
+title("Scaleup");
 xlabel("#GPUs");
-xticklabels({"1", "2", "4"});
-ylabel("Speedup");
+xticklabels({"1", "2", "4", "8"});
+ylabel("Scaleup");
 legend("Vogels", "Brunel", "Brunel+", "Location", "Northwest");
 set(gca, "YGrid", "on");
 
 
+
+function xx = binsearch(x, y, t)
+    j = length(y)/2;
+    for i = 2:10
+        if lerp(y, j) < t
+            j = j + length(y)/(2^i);
+        else
+            j = j - length(y)/(2^i);
+        end
+    end
+    xx = lerp(x, j) * (t / lerp(y, j));
+end
+
+function y = lerp(x, i)
+    w = i - floor(i);
+    y = w * x(ceil(i)) + (1-w) * x(floor(i));
+end
 
 function plot_simtime(name, x, y)
     plot(x, y, "LineWidth", 2);
