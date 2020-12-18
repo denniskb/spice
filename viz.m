@@ -1,5 +1,8 @@
+clc;
+close all;
+
 %f = fopen("~/brunel.txt");
-f = fopen("/media/dkb/data/google_drive/projects/BSim/release/bin/GSim.log");
+f = fopen("/media/dkb/data/google_drive/projects/BSim/release/GSim.log");
 n = fgetl(f); n = str2num(n);
 
 width = ceil(sqrt(n));
@@ -11,7 +14,7 @@ while ischar(l)
     
     if length(l) > 0
         spikes = split(l, ',');
-        spikes = uint32(arrayfun(@(x) str2num(x{1}), spikes)) + 1;
+        spikes = uint32(str2double(spikes)) + 1;
         i(spikes) = 1;
     end
     
