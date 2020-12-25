@@ -9,6 +9,7 @@ width = ceil(sqrt(n));
 i = zeros(width * width, 1);
 
 l = fgetl(f);
+avg = [];
 while ischar(l)
     i(:) = 0;
     
@@ -16,9 +17,12 @@ while ischar(l)
         spikes = split(l, ',');
         spikes = uint32(str2double(spikes)) + 1;
         i(spikes) = 1;
+        avg = [avg; length(spikes)];
     end
     
     imshow(reshape(i, width, width)', 'InitialMagnification', 400);
     
     l = fgetl(f);
 end
+
+sum(avg)/n/1000

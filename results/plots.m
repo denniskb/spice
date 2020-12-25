@@ -1,94 +1,96 @@
 clear all;
 close all;
-results = jsondecode(fileread("gold.json"));
+results = jsondecode(fileread("spice.json"));
+
+gsim = "Spice";%lif_unit_test";
 
 % Sim. time as function of network size (single GPU)
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "vogels"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "vogels"});
 figure;
 plot_simtime("Vogels", x, y);
 
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "brunel"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel"});
 figure;
 plot_simtime("Brunel", x, y);
 
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "brunel+"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel+"});
 figure;
 plot_simtime("Brunel+", x, y);
 xlabel("#Synapses (M)");
 
 % Sim. time as a function of network size (single GPU, sparse)
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "synth_0.00156_0.001_1"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "synth_0.00156_0.005_1"});
 figure;
 plot_simtime("Synth", x, y);
-xlabel("#Synapses (B) (#Neurons (M))");
-xticklabels({"0 (0)", "0.5 (0.57)", "1 (0.8)", "1.5 (0.98)", "2 (1.13)", "2.5 (1.27)", "3 (1.4)"});
+%xlabel("#Synapses (B) (#Neurons (M))");
+%xticklabels({"0 (0)", "0.5 (0.57)", "1 (0.8)", "1.5 (0.98)", "2 (1.13)", "2.5 (1.27)", "3 (1.4)"});
 
 % Constr. time as a function of network size
 figure;
 hold on;
-[x, y] = filter(results, "setuptime", {"sim" "samples" "x_gpus" 1 "model" "synth_0.05_0.001_1"});
+[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 1 "model" "synth_0.05_0.001_1"});
 plot_simtime("Setup Time", x, y);
-[x, y] = filter(results, "setuptime", {"sim" "samples" "x_gpus" 2 "model" "synth_0.05_0.001_1"});
+[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 2 "model" "synth_0.05_0.001_1"});
 plot_simtime("Setup Time", x, y);
-[x, y] = filter(results, "setuptime", {"sim" "samples" "x_gpus" 4 "model" "synth_0.05_0.001_1"});
+[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 4 "model" "synth_0.05_0.001_1"});
 plot_simtime("Setup Time", x, y);
-[x, y] = filter(results, "setuptime", {"sim" "samples" "x_gpus" 8 "model" "synth_0.05_0.001_1"});
+[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 8 "model" "synth_0.05_0.001_1"});
 plot_simtime("Setup Time", x, y);
 ylabel("Setup Time (s)");
-legend("Ours (1 GPU)", "Ours (2 GPUs)", "Ours (4 GPUs)");
+legend("Ours (1 GPU)", "Ours (2 GPUs)", "Ours (4 GPUs)", "Ours (8 GPUs)");
 
 % Sim. time as a function of network size (multi-GPU)
 figure;
 hold on;
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "vogels"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "vogels"});
 plot_simtime("Vogels", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2 "model" "vogels"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2 "model" "vogels"});
 plot_simtime("Vogels", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 4 "model" "vogels"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 4 "model" "vogels"});
 plot_simtime("Vogels", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 8 "model" "vogels"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 8 "model" "vogels"});
 plot_simtime("Vogels", x, y);
 legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
 
 figure;
 hold on;
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "brunel"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel"});
 plot_simtime("Brunel", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2 "model" "brunel"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2 "model" "brunel"});
 plot_simtime("Brunel", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 4 "model" "brunel"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 4 "model" "brunel"});
 plot_simtime("Brunel", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 8 "model" "brunel"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 8 "model" "brunel"});
 plot_simtime("Brunel", x, y);
 legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
 
 figure;
 hold on;
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" "brunel+"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel+"});
 plot_simtime("Brunel+", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2 "model" "brunel+"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2 "model" "brunel+"});
 plot_simtime("Brunel+", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 4 "model" "brunel+"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 4 "model" "brunel+"});
 plot_simtime("Brunel+", x, y);
-[x, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 8 "model" "brunel+"});
+[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 8 "model" "brunel+"});
 plot_simtime("Brunel+", x, y);
 legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
 xlabel("#Synapses (M)");
 
 % Speedup
-speedup = [1 1 1];
-scaleup = [1 1 1];
+speedup = [1 1];
+scaleup = [1 1];
 i = [8 6 5.5];
 ii = [9 6 5.5];
 for igpu = 1:3
     s1 = [];
     s2 = [];
     
-    for model = {"vogels", "brunel", "brunel+"}
-        [a, x] = filter(results, "simtime", {"sim" "samples" "x_gpus" 1 "model" model{1}});
-        [b, y] = filter(results, "simtime", {"sim" "samples" "x_gpus" 2^igpu "model" model{1}});
-        s1 = [s1 x(12) / binsearch(y, b, a(12))];
-        s2 = [s2 binsearch(b, y, x(12)) / a(12)];
+    for model = {"vogels", "brunel"}%, "brunel+"}
+        [a, x] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" model{1}});
+        [b, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2^igpu "model" model{1}});
+        s1 = [s1 x(end) / lerp(y, indexof(a(end), b))];
+        s2 = [s2 x(end) / lerp(y, indexof(x(end), y)) * lerp(b, indexof(x(end), y)) / a(end)];
     end
     
     speedup = [speedup; s1];
@@ -114,17 +116,15 @@ legend("Vogels", "Brunel", "Brunel+", "Location", "Northwest");
 set(gca, "YGrid", "on");
 
 
-
-function xx = binsearch(x, y, t)
-    j = length(y)/2;
-    for i = 2:10
-        if lerp(y, j) < t
-            j = j + length(y)/(2^i);
+function i = indexof(x, v)
+    i = length(v)/2 + 0.5;
+    for j = 2:10
+        if lerp(v, i) < x
+            i = i + (length(v)-1)/(2^j);
         else
-            j = j - length(y)/(2^i);
+            i = i - (length(v)-1)/(2^j);
         end
     end
-    xx = lerp(x, j) * (t / lerp(y, j));
 end
 
 function y = lerp(x, i)
@@ -145,7 +145,7 @@ function [nsyn, t] = filter(json, select, where)
     t = [];
     
     for j = 1:length(json)
-        o = json{j};
+        o = json(j);
         
         if ~isfield(o, select) | o.(select) == -1
             continue;
