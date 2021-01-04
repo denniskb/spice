@@ -1,0 +1,258 @@
+[
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 4.910248,
+		"setuptime": 64.693481
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 7.782603,
+		"setuptime": 149.452431
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 11.185618,
+		"setuptime": 233.492034
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 15.156147,
+		"setuptime": 344.796738
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 19.109728,
+		"setuptime": 484.626437
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 24.108372,
+		"setuptime": 565.479919
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 30.121160,
+		"setuptime": 670.837243
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 32.633037,
+		"setuptime": 775.974455
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 1.768418,
+		"setuptime": 32.393005
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 2.387257,
+		"setuptime": 84.273889
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 3.194061,
+		"setuptime": 143.381680
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 3.947071,
+		"setuptime": 212.553914
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 4.746119,
+		"setuptime": 269.811618
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 5.847901,
+		"setuptime": 325.141882
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 6.841765,
+		"setuptime": 365.895430
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "vogels",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 7.660852,
+		"setuptime": 421.234520
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 1.834349,
+		"setuptime": 21.925589
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 2.477962,
+		"setuptime": 49.141668
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 3.030083,
+		"setuptime": 75.566625
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 3.517628,
+		"setuptime": 105.886988
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 4.034611,
+		"setuptime": 137.514704
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 4.556153,
+		"setuptime": 171.301409
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 5.185921,
+		"setuptime": 220.781544
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "brunel",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 5.635977,
+		"setuptime": 255.570591
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 2.277978,
+		"setuptime": 26.882706
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 3.435840,
+		"setuptime": 65.577799
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 4.476143,
+		"setuptime": 109.842929
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 5.458592,
+		"setuptime": 157.624662
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 6.508131,
+		"setuptime": 210.056170
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 7.589545,
+		"setuptime": 275.953663
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 8.713577,
+		"setuptime": 346.581044
+	},
+	{
+		"sim": "NeuronGPU",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 9.770313,
+		"setuptime": 414.631988
+	}
+]
