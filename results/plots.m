@@ -1,94 +1,95 @@
-clear all;
+%%
 close all;
-results = jsondecode(fileread("spice.json"));
+clear all;
+clc;
 
-gsim = "Spice";%lif_unit_test";
+results = [
+    jsondecode(fileread('spice.json'));
+    jsondecode(fileread('bsim.json'));
+    jsondecode(fileread('neurongpu.json'))
+];
 
-% Sim. time as function of network size (single GPU)
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "vogels"});
-figure;
-plot_simtime("Vogels", x, y);
+C = distinct_colors(10, 'w');
+global CM;
+CM = containers.Map;
+CM('Spice') = C(5,:);
+CM('BSim') = C(8,:);
+CM('NeuronGPU') = C(6,:);
 
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel"});
-figure;
-plot_simtime("Brunel", x, y);
+%% Sim. time as function of network size (single GPU)
+models = {'vogels' 'brunel' 'brunel+' 'synth_0.00156_0.005_1'};
+titles = {'Vogels' 'Brunel' 'Brunel+' 'Synthetic'};
+for i = 1:4
+    plot_group(filter(results, 'simtime', {'x_gpus' 1 'model' models{i}}, 'sim'));
+    title(titles{i});
+    xlabel('#Synapses');
+    ylabel('Simulation Time (s)');
+    if strcmp(models{i}, 'brunel+')
+        xlim([0 1e9]);
+        xticks([0:0.25:1] * 1e9);
+        xticklabels({'0' '0.25B' '0.5B' '0.75B' '1B'});
+    else
+        xticks([0:0.5:3] .* 1e9);
+        xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
+    end
+	plot([0 3] .* 1e9, [10 10], 'Color', 'r', 'LineStyle', '--', 'HandleVisibility', 'off');
+end
 
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel+"});
-figure;
-plot_simtime("Brunel+", x, y);
-xlabel("#Synapses (M)");
-
-% Sim. time as a function of network size (single GPU, sparse)
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "synth_0.00156_0.005_1"});
-figure;
-plot_simtime("Synth", x, y);
-%xlabel("#Synapses (B) (#Neurons (M))");
-%xticklabels({"0 (0)", "0.5 (0.57)", "1 (0.8)", "1.5 (0.98)", "2 (1.13)", "2.5 (1.27)", "3 (1.4)"});
-
-% Constr. time as a function of network size
-figure;
-hold on;
-[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 1 "model" "synth_0.05_0.001_1"});
-plot_simtime("Setup Time", x, y);
-[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 2 "model" "synth_0.05_0.001_1"});
-plot_simtime("Setup Time", x, y);
-[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 4 "model" "synth_0.05_0.001_1"});
-plot_simtime("Setup Time", x, y);
-[x, y] = filter(results, "setuptime", {"sim" gsim "x_gpus" 8 "model" "synth_0.05_0.001_1"});
-plot_simtime("Setup Time", x, y);
-ylabel("Setup Time (s)");
-legend("Ours (1 GPU)", "Ours (2 GPUs)", "Ours (4 GPUs)", "Ours (8 GPUs)");
-
-% Sim. time as a function of network size (multi-GPU)
+%% Setup time as a function of network size
 figure;
 hold on;
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "vogels"});
-plot_simtime("Vogels", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2 "model" "vogels"});
-plot_simtime("Vogels", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 4 "model" "vogels"});
-plot_simtime("Vogels", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 8 "model" "vogels"});
-plot_simtime("Vogels", x, y);
-legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
+markers = {'None' '*' 'd' 's'};
+legends = {};
+for sim = {'BSim' 'NeuronGPU' 'Spice'}
+	i = 1;
+    for n = [1 2 4 8]
+        xy = filter_unique(results, 'setuptime', {'sim' sim{1} 'x_gpus' n 'model' 'synth_0.05_0.005_1'});
+        if length(xy) == 0
+            continue;
+        end
+        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', CM(sim{1}), 'Marker', markers{i}, 'MarkerSize', 8);
+        legends{end+1} = strcat(sim{1}, ' (', num2str(n), ' GPUs)');
+		i = i + 1;
+    end
+end
+title('Setup');
+xlabel('#Synapses');
+xlim([2e8 2.4e10]);
+xticks([2e8 1e9 1e10 2.4e10]);
+xticklabels({'0.2B' '1B' '10B' '24B'});
 
-figure;
-hold on;
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel"});
-plot_simtime("Brunel", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2 "model" "brunel"});
-plot_simtime("Brunel", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 4 "model" "brunel"});
-plot_simtime("Brunel", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 8 "model" "brunel"});
-plot_simtime("Brunel", x, y);
-legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
+ylabel('Setup Time (s)');
+ylim([0 1e3]);
+yticks([1 10 100 1e3]);
+yticklabels({'1' '10' '100' '1000'});
 
-figure;
-hold on;
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" "brunel+"});
-plot_simtime("Brunel+", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2 "model" "brunel+"});
-plot_simtime("Brunel+", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 4 "model" "brunel+"});
-plot_simtime("Brunel+", x, y);
-[x, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 8 "model" "brunel+"});
-plot_simtime("Brunel+", x, y);
-legend("1 GPU", "2 GPUs", "4 GPUs", "8 GPUs", "Location", "East");
-xlabel("#Synapses (M)");
+legend(legends);
+grid on;
+set(gca, 'YScale', 'log');
+%set(gca, 'XScale', 'log');
 
-% Speedup
-speedup = [1 1];
-scaleup = [1 1];
-i = [8 6 5.5];
-ii = [9 6 5.5];
+%% Sim. time as a function of network size (multi-GPU)
+% plot_group(filter(results, 'simtime', {'sim' 'Spice' 'model' 'vogels'}, 'x_gpus'));
+% plot_group(filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel'}, 'x_gpus'));
+% plot_group(filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel+'}, 'x_gpus'));
+% 
+% plot_group(filter(results, 'simtime', {'sim' 'BSim' 'model' 'vogels'}, 'x_gpus'));
+% plot_group(filter(results, 'simtime', {'sim' 'BSim' 'model' 'brunel'}, 'x_gpus'));
+
+%% Speedup & Scaleup
+speedup = [1 1 1];
+scaleup = [1 1 1];
 for igpu = 1:3
     s1 = [];
     s2 = [];
     
-    for model = {"vogels", "brunel"}%, "brunel+"}
-        [a, x] = filter(results, "simtime", {"sim" gsim "x_gpus" 1 "model" model{1}});
-        [b, y] = filter(results, "simtime", {"sim" gsim "x_gpus" 2^igpu "model" model{1}});
+    for model = {'vogels', 'brunel', 'brunel+'}
+        xy = filter_unique(results, 'simtime', {'sim' 'Spice' 'x_gpus' 1 'model' model{1}});
+        a = xy(1,:);
+        x = xy(2,:);
+        xy = filter_unique(results, 'simtime', {'sim' 'Spice' 'x_gpus' 2^igpu 'model' model{1}});
+        b = xy(1,:);
+        y = xy(2,:);
         s1 = [s1 x(end) / lerp(y, indexof(a(end), b))];
         s2 = [s2 x(end) / lerp(y, indexof(x(end), y)) * lerp(b, indexof(x(end), y)) / a(end)];
     end
@@ -98,22 +99,21 @@ for igpu = 1:3
 end
 figure;
 bar(speedup);
-title("Speedup");
-xlabel("#GPUs");
-xticklabels({"1", "2", "4", "8"});
-ylabel("Speedup");
-legend("Vogels", "Brunel", "Brunel+", "Location", "Northwest");
-set(gca, "YGrid", "on");
+title('Speedup');
+xlabel('#GPUs');
+xticklabels({'1', '2', '4', '8'});
+ylabel('Speedup');
+legend('Vogels', 'Brunel', 'Brunel+', 'Location', 'Northwest');
+set(gca, 'YGrid', 'on');
 
-% Sizeup
 figure;
 bar(scaleup);
-title("Scaleup");
-xlabel("#GPUs");
-xticklabels({"1", "2", "4", "8"});
-ylabel("Scaleup");
-legend("Vogels", "Brunel", "Brunel+", "Location", "Northwest");
-set(gca, "YGrid", "on");
+title('Scaleup');
+xlabel('#GPUs');
+xticklabels({'1', '2', '4', '8'});
+ylabel('Scaleup');
+legend('Vogels', 'Brunel', 'Brunel+', 'Location', 'Northwest');
+set(gca, 'YGrid', 'on');
 
 
 function i = indexof(x, v)
@@ -132,36 +132,233 @@ function y = lerp(x, i)
     y = w * x(ceil(i)) + (1-w) * x(floor(i));
 end
 
-function plot_simtime(name, x, y)
-    plot(x, y, "LineWidth", 2);
-    title(name);
-    xlabel("#Synapses (B)");
-    ylabel("Simulation Time (s)");
+function plot_group(data)
+    global CM;
+    
+    figure;
+    hold on;
+    for k = data.keys
+        xy = data(k{1});
+        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', CM(k{1}));
+    end
     grid on;
+    legend(data.keys);
 end
 
-function [nsyn, t] = filter(json, select, where)
-    nsyn = [];
-    t = [];
+function xy = filter(json, select, where, group_by)
+    xy = containers.Map;
     
-    for j = 1:length(json)
-        o = json(j);
+    for i = 1:length(json)
+        o = json(i);
+        xy(num2str(o.(group_by))) = [];
+    end
+    
+    for k = xy.keys
+        where2 = where;
+        where2{end+1} = group_by;
+        where2{end+1} = k{1};
+        
+        xy(k{1}) = filter_unique(json, select, where2);
+        
+        if length(xy(k{1})) == 0
+            remove(xy, k{1});
+        end
+    end
+end
+
+function xy = filter_unique(json, select, where)
+    x = [];
+    y = [];
+    
+    for i = 1:length(json)
+        o = json(i);
         
         if ~isfield(o, select) | o.(select) == -1
             continue;
         end
             
         match = 1;
-        for i = 1:2:length(where)
-            if o.(where{i}) ~= where{i+1}
+        for j = 1:2:length(where)
+            if ~compare(o.(where{j}), where{j+1})
                 match = 0;
                 break;
             end
         end
         
         if match
-            nsyn = [nsyn; o.x_syn];
-            t = [t; o.(select)];
+            x = [x o.x_syn];
+            y = [y o.(select)];
         end
     end
+    
+    if strcmp(select, 'simtime')
+        y = y * 10;
+    end
+    xy = [x; y];
+end
+
+function eq = compare(a, b)
+    if ischar(a) | ischar(b)
+        eq = strcmp(num2str(a), num2str(b));
+    else
+        eq = a == b;
+    end
+end
+
+function res = value_or(map, key, or)
+    if ~isKey(map, key)
+        map(key) = or;
+    end
+    
+    res = map(key);
+end
+
+
+
+function colors = distinct_colors(n_colors,bg,func)
+% DISTINGUISHABLE_COLORS: pick colors that are maximally perceptually distinct
+%
+% When plotting a set of lines, you may want to distinguish them by color.
+% By default, Matlab chooses a small set of colors and cycles among them,
+% and so if you have more than a few lines there will be confusion about
+% which line is which. To fix this problem, one would want to be able to
+% pick a much larger set of distinct colors, where the number of colors
+% equals or exceeds the number of lines you want to plot. Because our
+% ability to distinguish among colors has limits, one should choose these
+% colors to be 'maximally perceptually distinguishable.'
+%
+% This function generates a set of colors which are distinguishable
+% by reference to the 'Lab' color space, which more closely matches
+% human color perception than RGB. Given an initial large list of possible
+% colors, it iteratively chooses the entry in the list that is farthest (in
+% Lab space) from all previously-chosen entries. While this 'greedy'
+% algorithm does not yield a global maximum, it is simple and efficient.
+% Moreover, the sequence of colors is consistent no matter how many you
+% request, which facilitates the users' ability to learn the color order
+% and avoids major changes in the appearance of plots when adding or
+% removing lines.
+%
+% Syntax:
+%   colors = distinguishable_colors(n_colors)
+% Specify the number of colors you want as a scalar, n_colors. This will
+% generate an n_colors-by-3 matrix, each row representing an RGB
+% color triple. If you don't precisely know how many you will need in
+% advance, there is no harm (other than execution time) in specifying
+% slightly more than you think you will need.
+%
+%   colors = distinguishable_colors(n_colors,bg)
+% This syntax allows you to specify the background color, to make sure that
+% your colors are also distinguishable from the background. Default value
+% is white. bg may be specified as an RGB triple or as one of the standard
+% 'ColorSpec' strings. You can even specify multiple colors:
+%     bg = {'w','k'}
+% or
+%     bg = [1 1 1; 0 0 0]
+% will only produce colors that are distinguishable from both white and
+% black.
+%
+%   colors = distinguishable_colors(n_colors,bg,rgb2labfunc)
+% By default, distinguishable_colors uses the image processing toolbox's
+% color conversion functions makecform and applycform. Alternatively, you
+% can supply your own color conversion function.
+%
+% Example:
+%   c = distinguishable_colors(25);
+%   figure
+%   image(reshape(c,[1 size(c)]))
+%
+% Example using the file exchange's 'colorspace':
+%   func = @(x) colorspace('RGB->Lab',x);
+%   c = distinguishable_colors(25,'w',func);
+% Copyright 2010-2011 by Timothy E. Holy
+  % Parse the inputs
+  if (nargin < 2)
+    bg = [1 1 1];  % default white background
+  else
+    if iscell(bg)
+      % User specified a list of colors as a cell aray
+      bgc = bg;
+      for i = 1:length(bgc)
+	bgc{i} = parsecolor(bgc{i});
+      end
+      bg = cat(1,bgc{:});
+    else
+      % User specified a numeric array of colors (n-by-3)
+      bg = parsecolor(bg);
+    end
+  end
+  
+  % Generate a sizable number of RGB triples. This represents our space of
+  % possible choices. By starting in RGB space, we ensure that all of the
+  % colors can be generated by the monitor.
+  n_grid = 30;  % number of grid divisions along each axis in RGB space
+  x = linspace(0,1,n_grid);
+  [R,G,B] = ndgrid(x,x,x);
+  rgb = [R(:) G(:) B(:)];
+  if (n_colors > size(rgb,1)/3)
+    error('You can''t readily distinguish that many colors');
+  end
+  
+  % Convert to Lab color space, which more closely represents human
+  % perception
+  if (nargin > 2)
+    lab = func(rgb);
+    bglab = func(bg);
+  else
+    C = makecform('srgb2lab');
+    lab = applycform(rgb,C);
+    bglab = applycform(bg,C);
+  end
+  % If the user specified multiple background colors, compute distances
+  % from the candidate colors to the background colors
+  mindist2 = inf(size(rgb,1),1);
+  for i = 1:size(bglab,1)-1
+    dX = bsxfun(@minus,lab,bglab(i,:)); % displacement all colors from bg
+    dist2 = sum(dX.^2,2);  % square distance
+    mindist2 = min(dist2,mindist2);  % dist2 to closest previously-chosen color
+  end
+  
+  % Iteratively pick the color that maximizes the distance to the nearest
+  % already-picked color
+  colors = zeros(n_colors,3);
+  lastlab = bglab(end,:);   % initialize by making the 'previous' color equal to background
+  for i = 1:n_colors
+    dX = bsxfun(@minus,lab,lastlab); % displacement of last from all colors on list
+    dist2 = sum(dX.^2,2);  % square distance
+    mindist2 = min(dist2,mindist2);  % dist2 to closest previously-chosen color
+    [~,index] = max(mindist2);  % find the entry farthest from all previously-chosen colors
+    colors(i,:) = rgb(index,:);  % save for output
+    lastlab = lab(index,:);  % prepare for next iteration
+  end
+end
+function c = parsecolor(s)
+  if ischar(s)
+    c = colorstr2rgb(s);
+  elseif isnumeric(s) && size(s,2) == 3
+    c = s;
+  else
+    error('MATLAB:InvalidColorSpec','Color specification cannot be parsed.');
+  end
+end
+function c = colorstr2rgb(c)
+  % Convert a color string to an RGB value.
+  % This is cribbed from Matlab's whitebg function.
+  % Why don't they make this a stand-alone function?
+  rgbspec = [1 0 0;0 1 0;0 0 1;1 1 1;0 1 1;1 0 1;1 1 0;0 0 0];
+  cspec = 'rgbwcmyk';
+  k = find(cspec==c(1));
+  if isempty(k)
+    error('MATLAB:InvalidColorString','Unknown color string.');
+  end
+  if k~=3 || length(c)==1,
+    c = rgbspec(k,:);
+  elseif length(c)>2,
+    if strcmpi(c(1:3),'bla')
+      c = [0 0 0];
+    elseif strcmpi(c(1:3),'blu')
+      c = [0 0 1];
+    else
+      error('MATLAB:UnknownColorString', 'Unknown color string.');
+    end
+  end
 end
