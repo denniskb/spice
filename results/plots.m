@@ -9,12 +9,9 @@ results = [
     jsondecode(fileread('neurongpu.json'))
 ];
 
-C = distinct_colors(10, 'w');
+C = distinct_colors(20, 'w');
 global CM;
-CM = containers.Map;
-CM('Spice') = C(5,:);
-CM('BSim') = C(8,:);
-CM('NeuronGPU') = C(6,:);
+CM = [C(5,:); C(8,:); C(6,:)];
 
 %% Sim. time as function of network size (single GPU)
 models = {'vogels' 'brunel' 'brunel+' 'synth_0.00156_0.005_1'};
@@ -25,9 +22,9 @@ for i = 1:4
     xlabel('#Synapses');
     ylabel('Simulation Time (s)');
     if strcmp(models{i}, 'brunel+')
-        xlim([0 1e9]);
-        xticks([0:0.25:1] * 1e9);
-        xticklabels({'0' '0.25B' '0.5B' '0.75B' '1B'});
+        xlim([0 7.5e8]);
+        xticks([0:0.25:0.75] * 1e9);
+        xticklabels({'0' '0.25B' '0.5B' '0.75B'});
     else
         xticks([0:0.5:3] .* 1e9);
         xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
@@ -38,18 +35,19 @@ end
 %% Setup time as a function of network size
 figure;
 hold on;
+sims = {'BSim' 'NeuronGPU' 'Spice'};
+ngpus = [1 2 4 8];
 markers = {'None' '*' 'd' 's'};
 legends = {};
-for sim = {'BSim' 'NeuronGPU' 'Spice'}
-	i = 1;
-    for n = [1 2 4 8]
-        xy = filter_unique(results, 'setuptime', {'sim' sim{1} 'x_gpus' n 'model' 'synth_0.05_0.005_1'});
+
+for i = 1:length(sims)
+    for j = 1:length(ngpus)
+        xy = filter_unique(results, 'setuptime', {'sim' sims{i} 'x_gpus' ngpus(j) 'model' 'synth_0.05_0.005_1'});
         if length(xy) == 0
             continue;
         end
-        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', CM(sim{1}), 'Marker', markers{i}, 'MarkerSize', 8);
-        legends{end+1} = strcat(sim{1}, ' (', num2str(n), ' GPUs)');
-		i = i + 1;
+        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', CM(i,:), 'Marker', markers{j}, 'MarkerSize', 8);
+        legends{end+1} = strcat(sims{i}, ' (', num2str(ngpus(j)), ' GPUs)');
     end
 end
 title('Setup');
@@ -66,54 +64,60 @@ yticklabels({'1' '10' '100' '1000'});
 legend(legends);
 grid on;
 set(gca, 'YScale', 'log');
-%set(gca, 'XScale', 'log');
+set(gca, 'XScale', 'log');
 
 %% Sim. time as a function of network size (multi-GPU)
-% plot_group(filter(results, 'simtime', {'sim' 'Spice' 'model' 'vogels'}, 'x_gpus'));
-% plot_group(filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel'}, 'x_gpus'));
-% plot_group(filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel+'}, 'x_gpus'));
-% 
-% plot_group(filter(results, 'simtime', {'sim' 'BSim' 'model' 'vogels'}, 'x_gpus'));
-% plot_group(filter(results, 'simtime', {'sim' 'BSim' 'model' 'brunel'}, 'x_gpus'));
+old = CM;
+CM = [C(11,:); C(9,:); C(13,:); C(18,:)];
+for model = {'Vogels' 'Brunel' 'Brunel+'}
+    plot_group(filter(results, 'simtime', {'sim' 'Spice' 'model' model{1}}, 'x_gpus'));
+    title(model);
+end
+
+for model = {'Vogels' 'Brunel'}
+    plot_group(filter(results, 'simtime', {'sim' 'BSim' 'model' model{1}}, 'x_gpus'));
+    title(model);
+end
+CM = old;
 
 %% Speedup & Scaleup
-speedup = [1 1 1];
-scaleup = [1 1 1];
-for igpu = 1:3
-    s1 = [];
-    s2 = [];
-    
-    for model = {'vogels', 'brunel', 'brunel+'}
-        xy = filter_unique(results, 'simtime', {'sim' 'Spice' 'x_gpus' 1 'model' model{1}});
-        a = xy(1,:);
-        x = xy(2,:);
-        xy = filter_unique(results, 'simtime', {'sim' 'Spice' 'x_gpus' 2^igpu 'model' model{1}});
-        b = xy(1,:);
-        y = xy(2,:);
-        s1 = [s1 x(end) / lerp(y, indexof(a(end), b))];
-        s2 = [s2 x(end) / lerp(y, indexof(x(end), y)) * lerp(b, indexof(x(end), y)) / a(end)];
+plot_scale(results, 'Spice', {'Vogels' 'Brunel' 'Brunel+'});
+plot_scale(results, 'BSim', {'Vogels' 'Brunel'});
+
+function plot_scale(results, sim, models)
+    speedup = ones(1, length(models));
+    scaleup = speedup;
+    for igpu = 1:3
+        s1 = [];
+        s2 = [];
+
+        for model = models
+            xy1 = filter_unique(results, 'simtime', {'sim' sim 'x_gpus' 1 'model' model{1}});
+            xy2 = filter_unique(results, 'simtime', {'sim' sim 'x_gpus' 2^igpu 'model' model{1}});
+
+            s1 = [s1 xy1(2,end) / lerp(xy2(2,:), indexof(xy1(1,end), xy2(1,:)))];
+
+            s2 = [s2 xy1(2,end) / lerp(xy2(2,:), indexof(xy1(2,end), xy2(2,:))) *...
+                lerp(xy2(1,:), indexof(xy1(2,end), xy2(2,:))) / xy1(1,end)];
+        end
+
+        speedup = [speedup; s1];
+        scaleup = [scaleup; s2];
     end
     
-    speedup = [speedup; s1];
-    scaleup = [scaleup; s2];
+    data = {speedup scaleup};
+    ylabels = {'Speedup' 'Scaleup'};
+    for i = 1:2
+        figure;
+        bar(data{i});
+        title(sim);
+        xlabel('#GPUs');
+        xticklabels({'1', '2', '4', '8'});
+        ylabel(ylabels{i});
+        legend(models, 'Location', 'Northwest');
+        set(gca, 'YGrid', 'on');
+    end
 end
-figure;
-bar(speedup);
-title('Speedup');
-xlabel('#GPUs');
-xticklabels({'1', '2', '4', '8'});
-ylabel('Speedup');
-legend('Vogels', 'Brunel', 'Brunel+', 'Location', 'Northwest');
-set(gca, 'YGrid', 'on');
-
-figure;
-bar(scaleup);
-title('Scaleup');
-xlabel('#GPUs');
-xticklabels({'1', '2', '4', '8'});
-ylabel('Scaleup');
-legend('Vogels', 'Brunel', 'Brunel+', 'Location', 'Northwest');
-set(gca, 'YGrid', 'on');
 
 
 function i = indexof(x, v)
@@ -137,9 +141,16 @@ function plot_group(data)
     
     figure;
     hold on;
+    i = 1;
     for k = data.keys
         xy = data(k{1});
-        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', CM(k{1}));
+        if strcmp(k{1}, 'Spice')
+            c = CM(3,:);
+        else
+            c = CM(i,:);
+        end
+        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', c);
+        i = i+1;
     end
     grid on;
     legend(data.keys);
@@ -199,7 +210,7 @@ end
 
 function eq = compare(a, b)
     if ischar(a) | ischar(b)
-        eq = strcmp(num2str(a), num2str(b));
+        eq = strcmp(lower(num2str(a)), lower(num2str(b)));
     else
         eq = a == b;
     end
