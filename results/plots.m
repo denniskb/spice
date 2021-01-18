@@ -33,14 +33,14 @@ for i = 1:4
     if strcmp(models{i}, 'brunel+')
         xlim([0 7.5e8]);
         xticks([0:0.25:0.75] * 1e9);
-        xticklabels({'0' '0.25B' '0.5B' '0.75B'});
+        xticklabels({'0' '0.25 B' '0.5 B' '0.75 B'});
     else
         if i == 4
             xticks([0:0.5:3] .* 1e9);
-            xticklabels({'0\newline0' '0.5B\newline0.6M' '  1B\newline0.8M' '1.5B\newline 1M' '  2B\newline1.1M' '2.5B\newline1.3M' '  3B\newline1.4M'});
+            xticklabels({'0\newline0' '0.5 B\newline0.6 M' '  1 B\newline0.8 M' '1.5 B\newline 1 M' '  2 B\newline1.1 M' '2.5 B\newline1.3 M' '  3 B\newline1.4 M'});
         else
             xticks([0:0.5:3] .* 1e9);
-            xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
+            xticklabels({'0' '0.5 B' '1 B' '1.5 B' '2 B' '2.5 B' '3 B'});
         end
     end
 	plot([0 3] .* 1e9, [10 10], 'Color', 'r', 'LineStyle', '--', 'HandleVisibility', 'off');
@@ -74,7 +74,7 @@ title('Setup', 'FontSize', TFS);
 xlabel('Synapse Count', 'FontSize', LFS);
 xlim([2e8 2.4e10]);
 xticks([2e8 1e9 1e10 2.4e10]);
-xticklabels({'0.2B' '1B' '10B' '24B'});
+xticklabels({'0.2 B' '1 B' '10 B' '24 B'});
 
 ylabel('Setup Time (s)', 'FontSize', LFS);
 ylim([0 1e3]);
@@ -136,7 +136,7 @@ function plot_scale(results, sim, models)
     end
     
     data = {speedup scaleup};
-    ylabels = {'Speedup' 'Scaleup'};
+    ylabels = {'Speedup (x)' 'Scaleup (x)'};
     ymax = {6, 9};
     for i = 1:2
         figure;
