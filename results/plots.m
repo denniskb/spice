@@ -11,25 +11,41 @@ results = [
 
 C = distinct_colors(20, 'w');
 global CM;
-CM = [C(5,:); C(8,:); C(6,:)];
+CM = [C(13,:); C(8,:); C(5,:)];
+
+global TFS; global LFS;
+TFS = 16;
+LFS = 14;
 
 %% Sim. time as function of network size (single GPU)
 models = {'vogels' 'brunel' 'brunel+' 'synth_0.00156_0.005_1'};
 titles = {'Vogels' 'Brunel' 'Brunel+' 'Synthetic'};
 for i = 1:4
     plot_group(filter(results, 'simtime', {'x_gpus' 1 'model' models{i}}, 'sim'));
-    title(titles{i});
-    xlabel('#Synapses');
-    ylabel('Simulation Time (s)');
+    title(titles{i}, "FontSize", TFS);
+    if i == 4
+        xlabel({'Synapse Count'; 'Neuron Count'}, 'FontSize', LFS);
+        %set(gca, 'YScale', 'log');
+    else
+        xlabel('Synapse Count', 'FontSize', LFS);
+    end
+    ylabel('Simulation Time (s)', 'FontSize', LFS);
     if strcmp(models{i}, 'brunel+')
         xlim([0 7.5e8]);
         xticks([0:0.25:0.75] * 1e9);
         xticklabels({'0' '0.25B' '0.5B' '0.75B'});
     else
-        xticks([0:0.5:3] .* 1e9);
-        xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
+        if i == 4
+            xticks([0:0.5:3] .* 1e9);
+            xticklabels({'0\newline0' '0.5B\newline0.6M' '  1B\newline0.8M' '1.5B\newline 1M' '  2B\newline1.1M' '2.5B\newline1.3M' '  3B\newline1.4M'});
+        else
+            xticks([0:0.5:3] .* 1e9);
+            xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
+        end
     end
 	plot([0 3] .* 1e9, [10 10], 'Color', 'r', 'LineStyle', '--', 'HandleVisibility', 'off');
+    
+    saveas(gcf, strcat('simtime_', models{i}, '.eps'), 'epsc');
 end
 
 %% Setup time as a function of network size
@@ -37,7 +53,7 @@ figure;
 hold on;
 sims = {'BSim' 'NeuronGPU' 'Spice'};
 ngpus = [1 2 4 8];
-markers = {'None' '*' 'd' 's'};
+markers = {'-' '--' '-.' ':'};
 legends = {};
 
 for i = 1:length(sims)
@@ -46,25 +62,33 @@ for i = 1:length(sims)
         if length(xy) == 0
             continue;
         end
-        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', CM(i,:), 'Marker', markers{j}, 'MarkerSize', 8);
-        legends{end+1} = strcat(sims{i}, ' (', num2str(ngpus(j)), ' GPUs)');
+        plot(xy(1,:), xy(2,:), 'LineWidth', 2, 'Color', CM(i,:), 'LineStyle', markers{j}, 'MarkerSize', 8);
+        if compare('NeuronGPU', sims{i})
+            legends{end+1} = sims{i};
+        else
+            legends{end+1} = strcat(sims{i}, ' (', num2str(ngpus(j)), ' GPUs)');
+        end
     end
 end
-title('Setup');
-xlabel('#Synapses');
+title('Setup', 'FontSize', TFS);
+xlabel('Synapse Count', 'FontSize', LFS);
 xlim([2e8 2.4e10]);
 xticks([2e8 1e9 1e10 2.4e10]);
 xticklabels({'0.2B' '1B' '10B' '24B'});
 
-ylabel('Setup Time (s)');
+ylabel('Setup Time (s)', 'FontSize', LFS);
 ylim([0 1e3]);
 yticks([1 10 100 1e3]);
 yticklabels({'1' '10' '100' '1000'});
 
-legend(legends);
+legend(legends, 'FontSize', LFS);
 grid on;
 set(gca, 'YScale', 'log');
 set(gca, 'XScale', 'log');
+tmp = get(gca, 'XTickLabel');  
+set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
+
+saveas(gcf, 'setuptime.eps', 'epsc');
 
 %% Sim. time as a function of network size (multi-GPU)
 old = CM;
@@ -81,10 +105,16 @@ end
 CM = old;
 
 %% Speedup & Scaleup
+old = CM;
+CM = [C(6,:); C(20,:); C(18,:)];
 plot_scale(results, 'Spice', {'Vogels' 'Brunel' 'Brunel+'});
 plot_scale(results, 'BSim', {'Vogels' 'Brunel'});
+CM = old;
 
 function plot_scale(results, sim, models)
+    global CM;
+    global TFS; global LFS;
+    
     speedup = ones(1, length(models));
     scaleup = speedup;
     for igpu = 1:3
@@ -107,15 +137,37 @@ function plot_scale(results, sim, models)
     
     data = {speedup scaleup};
     ylabels = {'Speedup' 'Scaleup'};
+    ymax = {6, 9};
     for i = 1:2
         figure;
+        hold on;
+        
+        xlim([0.5 4.5]);
+        ylim([0 ymax{i}]);
+        map = get(gca, 'ColorOrder');
+        for e = 1:floor(log2(ymax{i}))
+            plot([0.5 4.5], [2^e 2^e], 'HandleVisibility', 'off', 'LineWidth', 0.5, 'Color', 0.5*ones(1,3));
+        end
+        set(gca, 'ColorOrder', CM, 'NextPlot','ReplaceChildren')
+        
         bar(data{i});
-        title(sim);
-        xlabel('#GPUs');
+        
+        title(sim, 'FontSize', TFS);
+        xlabel('GPU Count', 'FontSize', LFS);
         xticklabels({'1', '2', '4', '8'});
-        ylabel(ylabels{i});
-        legend(models, 'Location', 'Northwest');
+        ylabel(ylabels{i}, 'FontSize', LFS);
+        yticks([0:ymax{i}]);
+        legend(models, 'Location', 'Northwest', 'FontSize', LFS);
         set(gca, 'YGrid', 'on');
+        
+        tmp = get(gca, 'XTickLabel');  
+        set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
+        
+        if i==1
+            saveas(gcf, strcat('speedup', sim, '.eps'), 'epsc');
+        else
+            saveas(gcf, strcat('scaleup', sim, '.eps'), 'epsc');
+        end
     end
 end
 
@@ -138,6 +190,7 @@ end
 
 function plot_group(data)
     global CM;
+    global LFS;
     
     figure;
     hold on;
@@ -153,7 +206,9 @@ function plot_group(data)
         i = i+1;
     end
     grid on;
-    legend(data.keys);
+    legend(data.keys, 'FontSize', LFS);
+    tmp = get(gca, 'XTickLabel');  
+    set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
 end
 
 function xy = filter(json, select, where, group_by)

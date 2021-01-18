@@ -1,4 +1,5 @@
 /build*
+/results/*.eps
 
 .vscode
 !.vscode/launch.json
