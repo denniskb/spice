@@ -1,0 +1,938 @@
+[
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 1.076314,
+		"setuptime": 57.354770
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 1.536366,
+		"setuptime": 120.359667
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 1.985290,
+		"setuptime": 187.353079
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 2.401713,
+		"setuptime": 252.209209
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 2.889145,
+		"setuptime": 320.323493
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 3.511628,
+		"setuptime": 391.610661
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 4.230249,
+		"setuptime": 457.501928
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 5.005981,
+		"setuptime": 522.602710
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.00156_0.005_1",
+		"#syn": 1800000000,
+		"#gpus": 1,
+		"simtime": 5.843799,
+		"setuptime": 591.631543
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 0.497242,
+		"setuptime": 45.247163
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 0.740364,
+		"setuptime": 92.956828
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 0.995161,
+		"setuptime": 144.935165
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 1.273988,
+		"setuptime": 193.217548
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 1.542151,
+		"setuptime": 247.825080
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 1.821650,
+		"setuptime": 307.910775
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 2.111132,
+		"setuptime": 362.939589
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 2.407085,
+		"setuptime": 418.291243
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1800000000,
+		"#gpus": 1,
+		"simtime": 2.689557,
+		"setuptime": 475.126107
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 0.746238,
+		"setuptime": 45.563544
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 1.001500,
+		"setuptime": 92.137107
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 1.187424,
+		"setuptime": 192.308448
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 1.369854,
+		"setuptime": 186.711172
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 1.517770,
+		"setuptime": 232.214305
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 1.685589,
+		"setuptime": 284.989335
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 1.877059,
+		"setuptime": 333.646885
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 2.021044,
+		"setuptime": 380.270638
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1800000000,
+		"#gpus": 1,
+		"simtime": 2.185927,
+		"setuptime": 424.637269
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"simtime": 0.415012,
+		"setuptime": 42.077087
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"simtime": 0.607612,
+		"setuptime": 86.071872
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"simtime": 0.737226,
+		"setuptime": 132.511835
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"simtime": 0.873294,
+		"setuptime": 178.074473
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"simtime": 0.961025,
+		"setuptime": 221.979972
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1200000000,
+		"#gpus": 1,
+		"simtime": 1.059731,
+		"setuptime": 273.735854
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1400000000,
+		"#gpus": 1,
+		"simtime": 1.207833,
+		"setuptime": 323.644226
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1600000000,
+		"#gpus": 1,
+		"simtime": 1.316406,
+		"setuptime": 369.683249
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1800000000,
+		"#gpus": 1,
+		"simtime": 1.395767,
+		"setuptime": 419.050206
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 200000000,
+		"#gpus": 2,
+		"simtime": 1.178934,
+		"setuptime": 114.312107
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 400000000,
+		"#gpus": 2,
+		"simtime": 1.370469,
+		"setuptime": 240.517037
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 600000000,
+		"#gpus": 2,
+		"simtime": 1.636081,
+		"setuptime": 369.787720
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 800000000,
+		"#gpus": 2,
+		"simtime": 1.860537,
+		"setuptime": 506.022176
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1000000000,
+		"#gpus": 2,
+		"simtime": 2.103624,
+		"setuptime": 658.301188
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1200000000,
+		"#gpus": 2,
+		"simtime": 2.366091,
+		"setuptime": 800.485114
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1400000000,
+		"#gpus": 2,
+		"simtime": 2.624052,
+		"setuptime": 950.636824
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1600000000,
+		"#gpus": 2,
+		"simtime": 2.874316,
+		"setuptime": 1100.566839
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1800000000,
+		"#gpus": 2,
+		"simtime": 3.155827,
+		"setuptime": 1257.614309
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 200000000,
+		"#gpus": 2,
+		"simtime": 1.434606,
+		"setuptime": 100.060031
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 400000000,
+		"#gpus": 2,
+		"simtime": 1.689086,
+		"setuptime": 210.152464
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 600000000,
+		"#gpus": 2,
+		"simtime": 1.907972,
+		"setuptime": 318.244981
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 800000000,
+		"#gpus": 2,
+		"simtime": 2.089196,
+		"setuptime": 425.268192
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1000000000,
+		"#gpus": 2,
+		"simtime": 2.263960,
+		"setuptime": 536.400859
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1200000000,
+		"#gpus": 2,
+		"simtime": 2.423363,
+		"setuptime": 653.886863
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1400000000,
+		"#gpus": 2,
+		"simtime": 2.614863,
+		"setuptime": 774.581709
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1600000000,
+		"#gpus": 2,
+		"simtime": 2.764374,
+		"setuptime": 881.654349
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1800000000,
+		"#gpus": 2,
+		"simtime": 2.914290,
+		"setuptime": 997.912805
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 200000000,
+		"#gpus": 2,
+		"simtime": 0.602745,
+		"setuptime": 97.887881
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 400000000,
+		"#gpus": 2,
+		"simtime": 0.788490,
+		"setuptime": 201.721838
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 600000000,
+		"#gpus": 2,
+		"simtime": 0.915179,
+		"setuptime": 310.396204
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 800000000,
+		"#gpus": 2,
+		"simtime": 1.088988,
+		"setuptime": 417.637482
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1000000000,
+		"#gpus": 2,
+		"simtime": 1.172233,
+		"setuptime": 524.832161
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1200000000,
+		"#gpus": 2,
+		"simtime": 1.269498,
+		"setuptime": 645.233891
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1400000000,
+		"#gpus": 2,
+		"simtime": 1.395742,
+		"setuptime": 764.870851
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1600000000,
+		"#gpus": 2,
+		"simtime": 1.522933,
+		"setuptime": 879.500751
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1800000000,
+		"#gpus": 2,
+		"simtime": 1.604306,
+		"setuptime": 1008.800512
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 200000000,
+		"#gpus": 4,
+		"simtime": 1.179930,
+		"setuptime": 114.927464
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 400000000,
+		"#gpus": 4,
+		"simtime": 1.399787,
+		"setuptime": 238.931382
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 600000000,
+		"#gpus": 4,
+		"simtime": 1.622285,
+		"setuptime": 368.239019
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 800000000,
+		"#gpus": 4,
+		"simtime": 1.872479,
+		"setuptime": 500.321038
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1000000000,
+		"#gpus": 4,
+		"simtime": 2.107052,
+		"setuptime": 651.339394
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1200000000,
+		"#gpus": 4,
+		"simtime": 2.367774,
+		"setuptime": 803.402090
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1400000000,
+		"#gpus": 4,
+		"simtime": 2.618864,
+		"setuptime": 946.153762
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1600000000,
+		"#gpus": 4,
+		"simtime": 2.896598,
+		"setuptime": 1094.225905
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1800000000,
+		"#gpus": 4,
+		"simtime": 3.160443,
+		"setuptime": 1253.052728
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 200000000,
+		"#gpus": 4,
+		"simtime": 1.469794,
+		"setuptime": 100.514412
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 400000000,
+		"#gpus": 4,
+		"simtime": 1.677644,
+		"setuptime": 209.893182
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 600000000,
+		"#gpus": 4,
+		"simtime": 1.893252,
+		"setuptime": 316.343543
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 800000000,
+		"#gpus": 4,
+		"simtime": 2.095469,
+		"setuptime": 421.204669
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1000000000,
+		"#gpus": 4,
+		"simtime": 2.261448,
+		"setuptime": 533.147814
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1200000000,
+		"#gpus": 4,
+		"simtime": 2.444492,
+		"setuptime": 649.383041
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1400000000,
+		"#gpus": 4,
+		"simtime": 2.612234,
+		"setuptime": 772.601009
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1600000000,
+		"#gpus": 4,
+		"simtime": 2.783836,
+		"setuptime": 885.901628
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1800000000,
+		"#gpus": 4,
+		"simtime": 2.914090,
+		"setuptime": 1005.660739
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 200000000,
+		"#gpus": 4,
+		"simtime": 0.413484,
+		"setuptime": 38.708813
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 400000000,
+		"#gpus": 4,
+		"simtime": 0.607312,
+		"setuptime": 79.793013
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 600000000,
+		"#gpus": 4,
+		"simtime": 0.735119,
+		"setuptime": 121.662603
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 800000000,
+		"#gpus": 4,
+		"simtime": 0.875050,
+		"setuptime": 166.967681
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1000000000,
+		"#gpus": 4,
+		"simtime": 0.959645,
+		"setuptime": 208.599221
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1200000000,
+		"#gpus": 4,
+		"simtime": 1.059074,
+		"setuptime": 253.594508
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1400000000,
+		"#gpus": 4,
+		"simtime": 1.208520,
+		"setuptime": 299.736926
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1600000000,
+		"#gpus": 4,
+		"simtime": 1.318418,
+		"setuptime": 336.002422
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1800000000,
+		"#gpus": 4,
+		"simtime": 1.395106,
+		"setuptime": 382.921267
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 200000000,
+		"#gpus": 8,
+		"simtime": 0.499052,
+		"setuptime": 42.151424
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 400000000,
+		"#gpus": 8,
+		"simtime": 0.735598,
+		"setuptime": 85.340479
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 600000000,
+		"#gpus": 8,
+		"simtime": 0.992240,
+		"setuptime": 131.515596
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 800000000,
+		"#gpus": 8,
+		"simtime": 1.276181,
+		"setuptime": 176.209263
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1000000000,
+		"#gpus": 8,
+		"simtime": 1.540398,
+		"setuptime": 227.032035
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1200000000,
+		"#gpus": 8,
+		"simtime": 1.820721,
+		"setuptime": 277.919089
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1400000000,
+		"#gpus": 8,
+		"simtime": 2.111125,
+		"setuptime": 325.093626
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1600000000,
+		"#gpus": 8,
+		"simtime": 2.406111,
+		"setuptime": 379.749264
+	},
+	{
+		"sim": "BSim",
+		"model": "vogels",
+		"#syn": 1800000000,
+		"#gpus": 8,
+		"simtime": 2.688980,
+		"setuptime": 430.695576
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 200000000,
+		"#gpus": 8,
+		"simtime": 0.744865,
+		"setuptime": 41.775166
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 400000000,
+		"#gpus": 8,
+		"simtime": 0.997207,
+		"setuptime": 86.291806
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 600000000,
+		"#gpus": 8,
+		"simtime": 1.193266,
+		"setuptime": 130.869527
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 800000000,
+		"#gpus": 8,
+		"simtime": 1.366908,
+		"setuptime": 173.446318
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1000000000,
+		"#gpus": 8,
+		"simtime": 1.519950,
+		"setuptime": 216.962578
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1200000000,
+		"#gpus": 8,
+		"simtime": 1.677451,
+		"setuptime": 264.673582
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1400000000,
+		"#gpus": 8,
+		"simtime": 1.872746,
+		"setuptime": 311.533252
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1600000000,
+		"#gpus": 8,
+		"simtime": 2.022229,
+		"setuptime": 354.877916
+	},
+	{
+		"sim": "BSim",
+		"model": "brunel",
+		"#syn": 1800000000,
+		"#gpus": 8,
+		"simtime": 2.187650,
+		"setuptime": 399.173352
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 200000000,
+		"#gpus": 8,
+		"simtime": 0.414756,
+		"setuptime": 39.276198
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 400000000,
+		"#gpus": 8,
+		"simtime": 0.606553,
+		"setuptime": 79.785714
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 600000000,
+		"#gpus": 8,
+		"simtime": 0.735282,
+		"setuptime": 123.238097
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 800000000,
+		"#gpus": 8,
+		"simtime": 0.874195,
+		"setuptime": 162.203078
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1000000000,
+		"#gpus": 8,
+		"simtime": 0.959272,
+		"setuptime": 207.066335
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1200000000,
+		"#gpus": 8,
+		"simtime": 1.059658,
+		"setuptime": 252.500464
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1400000000,
+		"#gpus": 8,
+		"simtime": 1.207161,
+		"setuptime": 298.474274
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1600000000,
+		"#gpus": 8,
+		"simtime": 1.318540,
+		"setuptime": 342.341228
+	},
+	{
+		"sim": "BSim",
+		"model": "synth_0.05_0.005_1",
+		"#syn": 1800000000,
+		"#gpus": 8,
+		"simtime": 1.395335,
+		"setuptime": 385.268888
+	}
+]

@@ -29,9 +29,6 @@ struct synth : model
 		template <typename Iter, typename Backend>
 		HYBRID static bool update( Iter, float const, snn_info, Backend & bak )
 		{
-			auto now = clock();
-			while( clock() - now < 2000 )
-				;
 			return bak.rand() < 0.005f;
 		}
 
