@@ -24,8 +24,8 @@ using namespace spice::cuda;
 using namespace spice::cuda::util;
 
 
-__constant__ int4 _desc_range[20];
-__constant__ float _desc_p[20];
+__constant__ int4 _desc_range[200];
+__constant__ float _desc_p[200];
 
 __constant__ void * _neuron_storage[20];
 __constant__ void * _synapse_storage[20];
@@ -329,12 +329,12 @@ namespace cuda
 void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, int_ * edges )
 {
 	spice_assert(
-	    desc.connections().size() <= 20,
-	    "spice doesn't support models with more than 20 connections between neuron populations" );
+	    desc.connections().size() <= 200,
+	    "spice doesn't support models with more than 200 connections between neuron populations" );
 	spice_assert( edges || desc.size() * desc.max_degree() == 0 );
 
-	std::array<int4, 20> tmp_range;
-	std::array<float, 20> tmp_p;
+	std::array<int4, 200> tmp_range;
+	std::array<float, 200> tmp_p;
 	for( size_ i = 0; i < desc.connections().size(); i++ )
 	{
 		tmp_range[i].x = std::get<0>( desc.connections().at( i ) );
@@ -603,7 +603,7 @@ void receive(
 		} );
 
 	// TODO
-	if( info.num_neurons <= 3'200'000 / Model::neuron::size_in_bytes || Model::synapse::size > 0 )
+	if( info.num_neurons < 800'000 || Model::synapse::size > 0 )
 		call( [&] {
 			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
 			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(

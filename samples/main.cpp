@@ -1339,7 +1339,7 @@ std::pair<double, double> _bench( std::tuple<bench, gpu> info, layout l, int del
 {
 	try
 	{
-		int const ITER = 1000;
+		int const ITER = 100'000;
 		double tsetup = -1, tsim = -1;
 
 		timer t;
@@ -1360,7 +1360,7 @@ std::pair<double, double> _bench( std::tuple<bench, gpu> info, layout l, int del
 			tsim = t.stop();
 		}
 
-		return { tsetup, tsim * (10000 / ITER) };
+		return { tsetup, tsim * 0.1 };
 	}
 	catch( ... )
 	{
