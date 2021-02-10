@@ -43,7 +43,7 @@ for i = 1:4
             xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
         end
     end
-	plot([0 3] .* 1e9, [10 10], 'Color', 'r', 'LineStyle', '--', 'HandleVisibility', 'off');
+	%plot([0 3] .* 1e9, [10 10], 'Color', 'r', 'LineStyle', '--', 'HandleVisibility', 'off');
     
     saveas(gcf, strcat('simtime_', models{i}, '.eps'), 'epsc');
 end
