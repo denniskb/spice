@@ -201,7 +201,6 @@ static __global__ void _process_neurons(
 
 			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
-				// TODO: mask
 				uint_ const flag = __ballot_sync( active_mask( i, info.num_neurons ), spiked );
 				if( laneid() == 0 ) history[i / 32] = flag;
 
@@ -263,9 +262,7 @@ static __global__ void _process_spikes(
 						    syn,
 						    src,
 							dst,
-							// TODO: Optimize
-						    history( circidx( k - delay, max_history ), src / 32 ) >> ( src % 32 ) &
-						        1u,
+							MODE == HNDL_SPKS && k == iter,
 						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
 						    dt,
 						    info,
@@ -592,24 +589,6 @@ void receive(
     int_ const delay /* = 0 */,
     float const dt /* = 0 */ )
 {
-	if constexpr( Model::synapse::size > 0 )
-		call( [&] {
-			_process_spikes<Model, UPDT_SYNS><<<256, 256, 0, s>>>(
-			    info,
-			    seed(),
-			    adj,
-
-			    updates,
-			    num_updates,
-
-			    ages,
-			    history,
-			    max_history,
-			    iter,
-			    delay,
-			    dt );
-		} );
-
 	// TODO
 	if( info.num_neurons < 800'000 || Model::synapse::size > 0 )
 		call( [&] {
@@ -638,6 +617,24 @@ void receive(
 
 			    spikes,
 			    num_spikes );
+		} );
+
+	if constexpr( Model::synapse::size > 0 )
+		call( [&] {
+			_process_spikes<Model, UPDT_SYNS><<<256, 256, 0, s>>>(
+			    info,
+			    seed(),
+			    adj,
+
+			    updates,
+			    num_updates,
+
+			    ages,
+			    history,
+			    max_history,
+			    iter,
+			    delay,
+			    dt );
 		} );
 }
 template void receive<::spice::vogels_abbott>(
