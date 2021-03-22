@@ -23,7 +23,7 @@ struct integral_constant
 };
 
 template <typename Tuple, typename Fn, size_... I>
-auto map_i( Tuple && t, Fn && f, std::index_sequence<I...> )
+HYBRID auto map_i( Tuple && t, Fn && f, std::index_sequence<I...> )
 {
 	return std::make_tuple( std::forward<Fn>( f )(
 	    std::get<I>( std::forward<Tuple>( t ) ), integral_constant<I>() )... );
@@ -45,7 +45,7 @@ auto map_i( Tuple1 && t1, Tuple2 && t2, Fn && f, std::index_sequence<I...> )
 } // namespace detail
 
 template <typename Tuple, typename Fn>
-auto map_i( Tuple && t, Fn && f )
+HYBRID auto map_i( Tuple && t, Fn && f )
 {
 	return detail::map_i(
 	    std::forward<Tuple>( t ),
@@ -82,7 +82,7 @@ auto map( Tuple1 && t1, Tuple2 && t2, Fn && f )
 }
 
 template <typename Tuple, typename Fn>
-void for_each_i( Tuple & t, Fn && f )
+HYBRID void for_each_i( Tuple & t, Fn && f )
 {
 	map_i( t, [&f]( auto && elem, auto I ) {
 		std::forward<Fn>( f )( std::forward<decltype( elem )>( elem ), I );
@@ -111,6 +111,12 @@ auto reduce( Tuple && t, T && init, Fn && f )
 }
 
 
+template <int_ I, typename Iter>
+HYBRID auto & get( Iter && it )
+{
+	return std::forward<Iter>( it ).template get<I>();
+}
+
 template <typename... T>
 struct type_list
 {
@@ -122,13 +128,23 @@ struct type_list
 
 	template <template <typename> typename Cont>
 	using soa_t = std::tuple<Cont<T>...>;
-};
 
-template <int_ I, typename Iter>
-HYBRID auto & get( Iter it )
-{
-	return it.template get<I>();
-}
+	// TODO: Switch to cuda::std::tuple?
+	template <typename Iter>
+	HYBRID static tuple_t from_soa(Iter it)
+	{
+		tuple_t aos;
+		for_each_i(aos, [&] HYBRID (auto & x, auto I){ x = it.template get<I>(); });
+		return aos;
+	}
+
+	// TODO: Switch to cuda::std::tuple?
+	template <typename Iter>
+	HYBRID static void to_soa(tuple_t const & aos, Iter it)
+	{
+		for_each_i(aos, [&](auto x, auto I){ it.template get<I>() = x; });
+	}
+};
 
 
 template <template <typename> typename Cont, typename... Fields>

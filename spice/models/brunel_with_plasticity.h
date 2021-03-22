@@ -69,7 +69,7 @@ struct brunel_with_plasticity : model
 		}
 
 		template <typename Iter, typename SynIter, typename Backend>
-		HYBRID static void receive( int_, Iter dst, SynIter syn, snn_info info, Backend & bak )
+		HYBRID static void receive( int_, Iter dst, SynIter && syn, snn_info info, Backend & bak )
 		{
 			using util::get;
 
@@ -101,7 +101,7 @@ struct brunel_with_plasticity : model
 
 		template <typename Iter, typename Backend>
 		HYBRID static void update(
-		    Iter syn,
+		    Iter && syn,
 		    int_ const src,
 		    int_ const dst,
 		    bool const pre,

@@ -23,7 +23,7 @@ struct neuron : util::type_list<Ts...>
 	}
 
 	template <typename Iter, typename SynIter, typename Backend>
-	HYBRID static void receive( int_, Iter, SynIter, snn_info, Backend & )
+	HYBRID static void receive( int_, Iter, SynIter &&, snn_info, Backend & )
 	{
 	}
 };
@@ -38,7 +38,7 @@ struct synapse : util::type_list<Ts...>
 
 	template <typename Iter, typename Backend>
 	HYBRID static void
-	update( Iter, int_, int_, int_ const, int_ const, float const, snn_info const, Backend & )
+	update( Iter &&, int_, int_, int_ const, int_ const, float const, snn_info const, Backend & )
 	{
 	}
 };

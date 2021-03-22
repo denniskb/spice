@@ -254,18 +254,26 @@ static __global__ void _process_spikes(
 					Model::synapse::template init(
 					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
 				else if constexpr( Model::synapse::size > 0 )
+				{
+					synapse_iter<typename Model::synapse> it( isyn );
+					auto syn = Model::synapse::from_soa(it);
+
 					for( int_ k = ages[src]; k <= iter; k++ )
 						Model::synapse::template update(
-						    synapse_iter<typename Model::synapse>( isyn ),
+						    syn,
 						    src,
-						    dst,
+							dst,
+							// TODO: Optimize
 						    history( circidx( k - delay, max_history ), src / 32 ) >> ( src % 32 ) &
 						        1u,
 						    history( circidx( k, max_history ), dst / 32 ) >> ( dst % 32 ) & 1u,
 						    dt,
 						    info,
-						    bak );
+							bak );
 
+					Model::synapse::to_soa(syn, it);
+				}
+				
 				if constexpr( MODE == HNDL_SPKS )
 					Model::neuron::template receive(
 					    src,
