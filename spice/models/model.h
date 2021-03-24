@@ -41,6 +41,8 @@ struct synapse : util::type_list<Ts...>
 	update( Iter &&, int_, int_, int_ const, int_ const, float const, snn_info const, Backend & )
 	{
 	}
+
+	HYBRID static bool plastic(int_ const, int_ const, snn_info const){ return true; }
 };
 
 struct model

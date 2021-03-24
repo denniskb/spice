@@ -112,29 +112,31 @@ struct brunel_with_plasticity : model
 		{
 			using util::get;
 
-			auto const npoisson = info.num_neurons / 2;
-			auto const nexc = static_cast<int>( 0.9f * info.num_neurons );
+			float const TstdpInv = 1.0f / 0.02f;
 
-			if( src >= npoisson && src < nexc && dst < nexc )
+			get<Zpre>( syn ) += pre - get<Zpre>( syn ) * ( dt * TstdpInv );
+			get<Zpost>( syn ) += post - get<Zpost>( syn ) * ( dt * TstdpInv );
+
+			if( pre || post )
 			{
-				float const TstdpInv = 1.0f / 0.02f;
+				float const dtInv = 1.0f / dt;
 
-				get<Zpre>( syn ) += pre - get<Zpre>( syn ) * ( dt * TstdpInv );
-				get<Zpost>( syn ) += post - get<Zpost>( syn ) * ( dt * TstdpInv );
-
-				if( pre || post )
-				{
-					float const dtInv = 1.0f / dt;
-
-					get<W>( syn ) = bak.clamp(
-					    get<W>( syn ) -
-					        pre * 0.0202f * get<W>( syn ) * bak.exp( -get<Zpost>( syn ) * dtInv ) +
-					        post * 0.01f * ( 1.0f - get<W>( syn ) ) *
-					            bak.exp( -get<Zpre>( syn ) * dtInv ),
-					    0.0f,
-					    0.0003f );
-				}
+				get<W>( syn ) = bak.clamp(
+					get<W>( syn ) -
+						pre * 0.0202f * get<W>( syn ) * bak.exp( -get<Zpost>( syn ) * dtInv ) +
+						post * 0.01f * ( 1.0f - get<W>( syn ) ) *
+							bak.exp( -get<Zpre>( syn ) * dtInv ),
+					0.0f,
+					0.0003f );
 			}
+		}
+
+		HYBRID static bool plastic(int_ const src, int_ const dst, snn_info const info)
+		{
+			auto const npoisson = info.num_neurons / 2;
+			auto const nexc = 9 * info.num_neurons / 10;
+
+			return ( src >= npoisson && src < nexc && dst < nexc );
 		}
 	};
 };
