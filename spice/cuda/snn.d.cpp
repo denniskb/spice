@@ -161,7 +161,7 @@ void snn<Model>::step(
 
 			    _graph.ages.data(),
 			    _spikes.history.data(),
-			    i,
+			    i-1,
 			    dt );
 
 		zero_async( _spikes.counts.data() + circidx( i, this->delay() ), _sim );
