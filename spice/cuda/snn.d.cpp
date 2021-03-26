@@ -21,12 +21,6 @@ using namespace spice::cuda::util;
 
 namespace spice::cuda
 {
-template <typename Model>
-int_ snn<Model>::MAX_HISTORY() const
-{
-	return std::max( this->delay() + 1, 32 );
-}
-
 #pragma warning( push )
 #pragma warning( disable : 4100 ) // unreferenced formal parameter 'num_synapses' for certain
                                   // template inst.
@@ -49,14 +43,11 @@ void snn<Model>::reserve( size_ const num_neurons, size_ const num_synapses, int
 	if constexpr( Model::synapse::size > 0 )
 	{
 		_synapses.resize( num_synapses );
-
-		_spikes.history_data.resize( MAX_HISTORY() * ( ( num_neurons + 31 ) / 32 ) );
-		_spikes.history = { _spikes.history_data.data(), narrow<int>( ( num_neurons + 31 ) / 32 ) };
+		_spikes.history.resize( num_neurons );
 		_spikes.updates.resize( num_neurons );
-
 		_graph.ages.resize( num_neurons );
 
-		_spikes.history_data.zero_async( _sim );
+		_spikes.history.zero_async( _sim );
 		_graph.ages.zero_async( _sim );
 	}
 }
@@ -169,10 +160,8 @@ void snn<Model>::step(
 			    _spikes.num_updates.data(),
 
 			    _graph.ages.data(),
-			    _spikes.history,
-			    MAX_HISTORY(),
+			    _spikes.history.data(),
 			    i,
-			    this->delay(),
 			    dt );
 
 		zero_async( _spikes.counts.data() + circidx( i, this->delay() ), _sim );
@@ -189,13 +178,11 @@ void snn<Model>::step(
 		    _spikes.ids.row( circidx( i, this->delay() ) ),
 		    _spikes.counts.data() + circidx( i, this->delay() ),
 
-		    _spikes.history,
+		    _spikes.history.data(),
 		    _graph.ages.data(),
 		    _spikes.updates.data(),
 		    _spikes.num_updates.data(),
-		    i,
-		    this->delay(),
-		    MAX_HISTORY() );
+		    i );
 
 		*out_dspikes = _spikes.ids.row( circidx( i, this->delay() ) );
 		*out_dnum_spikes = _spikes.counts.data() + circidx( i, this->delay() );

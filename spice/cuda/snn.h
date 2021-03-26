@@ -56,13 +56,11 @@ private:
 
 	struct
 	{
-		// TODO: Optimize memory consumption (low-priority)
 		util::dbuffer<int> ids_data;
 		spice::util::span2d<int> ids;
 		util::dbuffer<uint_> counts;
 
-		util::dbuffer<uint_> history_data;
-		spice::util::span2d<uint_> history;
+		util::dbuffer<uint_> history;
 
 		util::dbuffer<int> updates;
 		util::dvar<uint_> num_updates;
@@ -73,8 +71,6 @@ private:
 	int_ const _i;
 
 	util::stream _sim;
-
-	int_ MAX_HISTORY() const;
 
 	void reserve( size_ num_neurons, size_ max_degree, int_ delay );
 };

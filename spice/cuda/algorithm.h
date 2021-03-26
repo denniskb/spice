@@ -41,13 +41,11 @@ void update(
     int_ * spikes,
     uint_ * out_num_spikes,
 
-    spice::util::span2d<uint_> history = {},
+    uint_ * history = nullptr,
     int_ * ages = nullptr,
     int_ * updates = nullptr,
     uint_ * num_updates = nullptr,
-    int_ const iter = 0,
-    int_ const delay = 0,
-    int_ const max_history = 0 );
+    int_ const iter = 0 );
 
 template <typename Model>
 void receive(
@@ -62,10 +60,8 @@ void receive(
     uint_ const * num_updates,
 
     int_ * ages = nullptr,
-    spice::util::span2d<uint_> history = {},
-    int_ max_history = 0,
+    uint_ * history = nullptr,
     int_ iter = 0,
-    int_ delay = 0,
     float dt = 0 );
 
 template <typename T>
