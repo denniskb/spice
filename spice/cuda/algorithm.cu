@@ -199,7 +199,7 @@ static __global__ void _process_neurons(
 
 			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
-				history[i] = (history[i] << 1) & spiked;
+				history[i] = (history[i] << 1) | spiked;
 
 				if( iter - ages[i] == 31 )
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
