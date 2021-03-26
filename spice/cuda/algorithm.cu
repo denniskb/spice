@@ -251,13 +251,13 @@ static __global__ void _process_spikes(
 					if( Model::synapse::plastic(src, dst, info) )
 					{
 						uint_ const hist = history[dst];
-						for( int_ k = ages[src]; k <= iter; k++ )
+						for( int_ k = iter - ages[src]; k >= 0; k-- )
 							Model::synapse::template update(
 								synapse_iter<typename Model::synapse>( isyn ),
 								src,
 								dst,
-								MODE == HNDL_SPKS && k == iter,
-								( hist >> ( iter - k ) ) & 1u,
+								MODE == HNDL_SPKS && k == 0,
+								( hist >> k ) & 1u,
 								dt,
 								info,
 								bak );
