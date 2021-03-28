@@ -184,7 +184,10 @@ multi_snn<Model>::multi_snn( spice::snn<Model> const & net )
 			auto const b = std::lower_bound( row.begin(), row.end(), last );
 
 			std::copy( a, b, &slice.at( i * deg ) );
-			std::fill( &slice.at( i * deg ) + ( b - a ), &slice.at( i * deg ) + deg, -1 );
+			std::fill(
+			    &slice.at( i * deg ) + ( b - a ),
+			    &slice.at( i * deg ) + deg,
+			    std::numeric_limits<int_>::max() );
 		}
 
 		d.set();
@@ -339,7 +342,10 @@ std::pair<std::vector<int>, size_> multi_snn<Model>::adj() const
 			std::copy( row.begin(), row.end(), &result.at( i * deg ) + offset );
 			offset += row.size();
 		}
-		std::fill( &result.at( i * deg ) + offset, &result.at( i * deg ) + deg, -1 );
+		std::fill(
+		    &result.at( i * deg ) + offset,
+		    &result.at( i * deg ) + deg,
+		    std::numeric_limits<int_>::max() );
 	}
 
 	return { result, deg };

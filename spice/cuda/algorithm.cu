@@ -1,6 +1,7 @@
 #include "algorithm.h"
 
 #include <spice/cuda/backend.cuh>
+#include <spice/cuda/util/dbuffer.h>
 #include <spice/cuda/util/device.h>
 #include <spice/cuda/util/error.h>
 #include <spice/cuda/util/utility.cuh>
@@ -158,7 +159,31 @@ static __global__ void _generate_adj_ids(
 	}
 
 	for( uint_ i = offset + threadIdx.x; i < ( blockIdx.x + 1 ) * max_degree; i += WARP_SZ )
-		out_edges[i] = -1;
+		out_edges[i] = INT_MAX;
+}
+
+__device__ int_ _lower_bound( int_ const * arr, int_ const len, int_ const x )
+{
+	int_ i = 0, j = len - 1;
+	while( i < j )
+	{
+		int_ mid = ( i + j ) / 2;
+
+		if( arr[mid] >= x )
+			j = mid;
+		else
+			i = mid + 1;
+	}
+
+	return i + ( arr[i] < x );
+}
+
+static __global__ void _generate_pivots( int_ const * adj, int_ const deg, int_ * pivots )
+{
+	adj = adj + blockIdx.x * deg;
+	int_ const pivot = threadIdx.x * 1024;
+	int_ const i = _lower_bound( adj, deg, pivot );
+	pivots[blockIdx.x * blockDim.x + threadIdx.x] = i;
 }
 
 template <typename Model, bool INIT>
@@ -199,10 +224,9 @@ static __global__ void _process_neurons(
 
 			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
-				history[i] = (history[i] << 1) | spiked;
+				history[i] = ( history[i] << 1 ) | spiked;
 
-				if( iter - ages[i] == 31 )
-					updates[atomicInc( num_updates, info.num_neurons )] = i;
+				if( iter - ages[i] == 31 ) updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
 			if( spiked ) spikes[atomicInc( num_spikes, info.num_neurons )] = i;
@@ -242,27 +266,27 @@ static __global__ void _process_spikes(
 			uint_ const isyn = adj.row( src ) - adj.row( 0 ) + j;
 			int_ const dst = adj( src, j );
 
-			if( dst >= 0 )
+			if( dst < INT_MAX )
 			{
 				if constexpr( MODE == INIT_SYNS )
 					Model::synapse::template init(
 					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
 				else if constexpr( Model::synapse::size > 0 )
-					if( Model::synapse::plastic(src, dst, info) )
+					if( Model::synapse::plastic( src, dst, info ) )
 					{
 						uint_ const hist = history[dst];
 						for( int_ k = iter - ages[src]; k >= 0; k-- )
 							Model::synapse::template update(
-								synapse_iter<typename Model::synapse>( isyn ),
-								src,
-								dst,
-								MODE == HNDL_SPKS && k == 0,
-								( hist >> k ) & 1u,
-								dt,
-								info,
-								bak );
+							    synapse_iter<typename Model::synapse>( isyn ),
+							    src,
+							    dst,
+							    MODE == HNDL_SPKS && k == 0,
+							    ( hist >> k ) & 1u,
+							    dt,
+							    info,
+							    bak );
 					}
-				
+
 				if constexpr( MODE == HNDL_SPKS )
 					Model::neuron::template receive(
 					    src,
@@ -302,7 +326,7 @@ static __global__ void _process_spikes_cache_aware(
 		int_ const src = spikes[s];
 		int_ const dst = adj( src, WARP_SZ * o + threadIdx.x );
 
-		if( dst >= 0 )
+		if( dst < INT_MAX )
 			Model::neuron::template receive(
 			    src,
 			    neuron_iter<typename Model::neuron>( dst ),
@@ -312,12 +336,54 @@ static __global__ void _process_spikes_cache_aware(
 	}
 }
 
+template <typename Model>
+static __global__ void _gather(
+    snn_info const info,
+    ulong_ const seed,
+    span2d<int_ const> adj,
+
+    int_ const * spikes = nullptr,
+    uint_ const * num_spikes = nullptr,
+
+    int_ const * pivots = nullptr )
+{
+	__shared__ int_ state[1024];
+
+	int_ const I = threadid();
+	if( I >= info.num_neurons ) return;
+
+	int_ const deg_pivots = ( info.num_neurons + 1023 ) / 1024 + 1;
+	backend bak( I ^ seed );
+
+	neuron_iter<typename Model::neuron> it( I );
+
+	state[threadIdx.x] = it.template get<0>();
+	__syncthreads();
+
+	for( int_ s = warpid_block(); s < *num_spikes; s += 32 )
+	{
+		int_ const src = spikes[s];
+		int_ const first = pivots[src * deg_pivots + blockIdx.x];
+		int_ const last = pivots[src * deg_pivots + blockIdx.x + 1];
+
+		for( int_ i = first + laneid(); i < last; i += 32 )
+		{
+			int_ const dst = adj( src, i ) - blockIdx.x * 1024;
+			atomicAdd( &state[dst], 1 );
+		}
+	}
+	__syncthreads();
+	it.template get<0>() = state[threadIdx.x];
+}
+
 template <typename T>
 static __global__ void _zero_async( T * t )
 {
 	*t = T( 0 );
 }
 
+
+static spice::cuda::util::dbuffer<int_> pivots;
 
 namespace spice
 {
@@ -327,7 +393,8 @@ void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, in
 {
 	spice_assert(
 	    desc.connections().size() <= 200,
-	    "spice doesn't support models with more than 200 connections between neuron populations" );
+	    "spice doesn't support models with more than 200 connections between neuron "
+	    "populations" );
 	spice_assert( edges || desc.size() * desc.max_degree() == 0 );
 
 	std::array<int4, 200> tmp_range;
@@ -367,7 +434,17 @@ void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, in
 		    narrow<int>( desc.size() ),
 		    narrow<uint_>( desc.max_degree() ),
 		    edges );
+
+		pivots.resize( desc.size() * ( ( desc.size() + 1023 ) / 1024 + 1 ) );
+		generate_pivots( s, desc, edges, pivots.data() );
 	} );
+}
+
+void generate_pivots(
+    cudaStream_t s, spice::util::layout const & desc, int_ const * adj, int_ * pivots )
+{
+	_generate_pivots<<<desc.size(), ( desc.size() + 1023 ) / 1024 + 1, 0, s>>>(
+	    adj, desc.max_degree(), pivots );
 }
 
 template <typename Model>
@@ -522,7 +599,7 @@ template void update<::spice::brunel>(
     uint_ *,
     int_ const );
 template void update<::spice::brunel_with_plasticity>(
-	cudaStream_t,
+    cudaStream_t,
     int_,
     int_,
     int_,
@@ -570,6 +647,7 @@ void receive(
 	// TODO
 	if( info.num_neurons < 800'000 || Model::synapse::size > 0 )
 		call( [&] {
+			//*
 			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
 			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
 			    info,
@@ -583,6 +661,10 @@ void receive(
 			    history,
 			    iter,
 			    dt );
+			/*/
+			_gather<Model><<<( info.num_neurons + 1023 ) / 1024, 1024, 0, s>>>(
+			    info, seed(), adj, spikes, num_spikes, pivots.data() );
+			//*/
 		} );
 	else
 		call( [&] {
@@ -624,7 +706,7 @@ template void receive<::spice::vogels_abbott>(
     int_ const iter,
     float const dt );
 template void receive<::spice::brunel>(
-	cudaStream_t,
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
@@ -636,7 +718,7 @@ template void receive<::spice::brunel>(
     int_ const iter,
     float const dt );
 template void receive<::spice::brunel_with_plasticity>(
-	cudaStream_t,
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
@@ -648,7 +730,7 @@ template void receive<::spice::brunel_with_plasticity>(
     int_ const iter,
     float const dt );
 template void receive<::spice::synth>(
-	cudaStream_t,
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
     int_ const *,

@@ -21,8 +21,7 @@ adj_list::adj_list( size_ num_nodes, size_ max_degree, int_ const * edges )
 	spice_assert( num_nodes <= std::numeric_limits<int>::max(), "invalid node count" );
 	spice_assert( max_degree <= std::numeric_limits<int>::max(), "invalid degree" );
 	spice_assert(
-	    num_nodes * max_degree <= std::numeric_limits<uint_>::max(),
-	    "no. of edges out of boudns" );
+	    num_nodes * max_degree <= std::numeric_limits<uint_>::max(), "no. of edges out of boudns" );
 }
 
 
@@ -31,11 +30,11 @@ nonstd::span<int_ const> adj_list::neighbors( size_ i_node ) const
 	spice_assert( i_node < num_nodes(), "index out of bounds" );
 
 	auto const first = &_edges[i_node * max_degree()];
-
-	std::ptrdiff_t d = narrow<ptrdiff_t>( max_degree() ) - 1;
-	while( d >= 0 && first[d] < 0 ) --d;
-
-	return { first, static_cast<size_>( d + 1 ) };
+	return {
+	    first,
+	    narrow_cast<size_>(
+	        std::lower_bound( first, first + max_degree(), std::numeric_limits<int_>::max() ) -
+	        first ) };
 }
 
 size_ adj_list::edge_index( size_ i_src, size_ i_dst ) const
@@ -86,7 +85,8 @@ void adj_list::generate( layout const & desc, std::vector<int> & edges )
 				edges[offset++] = first + narrow_cast<int>( neighbor_ids[k] * scale ) + k;
 		}
 
-		while( offset < ( i + 1 ) * desc.max_degree() ) edges[offset++] = -1;
+		while( offset < ( i + 1 ) * desc.max_degree() )
+			edges[offset++] = std::numeric_limits<int_>::max();
 	}
 }
 

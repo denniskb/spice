@@ -13,6 +13,8 @@ namespace spice
 namespace cuda
 {
 void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, int_ * edges );
+void generate_pivots(
+    cudaStream_t s, spice::util::layout const & desc, int_ const * adj, int_ * pivots );
 
 template <typename Model>
 void upload_meta(
