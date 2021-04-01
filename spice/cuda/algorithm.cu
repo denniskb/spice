@@ -180,10 +180,13 @@ __device__ int_ _lower_bound( int_ const * arr, int_ const len, int_ const x )
 
 static __global__ void _generate_pivots( int_ const * adj, int_ const deg, int_ * pivots )
 {
+	__shared__ uint_ bounds[1024];
 	adj = adj + blockIdx.x * deg;
 	int_ const pivot = threadIdx.x * 1024;
-	int_ const i = _lower_bound( adj, deg, pivot );
-	pivots[blockIdx.x * blockDim.x + threadIdx.x] = i;
+	uint_ const i = _lower_bound( adj, deg, pivot );
+	bounds[threadIdx.x] = i;
+	__syncthreads();
+	pivots[blockIdx.x * blockDim.x + threadIdx.x] = ( i << 16 ) | bounds[threadIdx.x + 1];
 }
 
 template <typename Model, bool INIT>
@@ -336,6 +339,28 @@ static __global__ void _process_spikes_cache_aware(
 	}
 }
 
+template <typename Neuron>
+struct shared_iter
+{
+	int_ * const data;
+	int_ const i;
+
+	__device__ shared_iter( int_ * p, int_ id )
+	    : data( p )
+	    , i( id )
+	{
+	}
+
+	template <int_ I>
+	__device__ auto & get()
+	{
+		return reinterpret_cast<std::tuple_element_t<I, typename Neuron::tuple_t> &>(
+		    data[I * 1024 + i] );
+	}
+
+	__device__ int_ id() const { return i; }
+};
+
 template <typename Model>
 static __global__ void _gather(
     snn_info const info,
@@ -347,33 +372,48 @@ static __global__ void _gather(
 
     int_ const * pivots = nullptr )
 {
-	__shared__ int_ state[1024];
-
 	int_ const I = threadid();
 	if( I >= info.num_neurons ) return;
 
 	int_ const deg_pivots = ( info.num_neurons + 1023 ) / 1024 + 1;
 	backend bak( I ^ seed );
 
-	neuron_iter<typename Model::neuron> it( I );
+	__shared__ int state[Model::neuron::size * 1024];
+	neuron_iter<typename Model::neuron> nit( I );
+	shared_iter<typename Model::neuron> sit( state, threadIdx.x );
 
-	state[threadIdx.x] = it.template get<0>();
+	// TODO: Generalize
+	if constexpr( Model::neuron::size > 0 ) get<0>( sit ) = get<0>( nit );
+	if constexpr( Model::neuron::size > 1 ) get<1>( sit ) = get<1>( nit );
+	if constexpr( Model::neuron::size > 2 ) get<2>( sit ) = get<2>( nit );
+	if constexpr( Model::neuron::size > 3 ) get<3>( sit ) = get<3>( nit );
 	__syncthreads();
 
 	for( int_ s = warpid_block(); s < *num_spikes; s += 32 )
 	{
 		int_ const src = spikes[s];
-		int_ const first = pivots[src * deg_pivots + blockIdx.x];
-		int_ const last = pivots[src * deg_pivots + blockIdx.x + 1];
+		uint_ const bounds = pivots[src * deg_pivots + blockIdx.x];
+		int_ const first = bounds >> 16;
+		int_ const last = bounds & 0xffff;
 
 		for( int_ i = first + laneid(); i < last; i += 32 )
 		{
 			int_ const dst = adj( src, i ) - blockIdx.x * 1024;
-			atomicAdd( &state[dst], 1 );
+
+			Model::neuron::template receive(
+			    src,
+			    shared_iter<typename Model::neuron>( state, dst ),
+			    const_synapse_iter<typename Model::synapse>( -1 ),
+			    info,
+			    bak );
 		}
 	}
 	__syncthreads();
-	it.template get<0>() = state[threadIdx.x];
+
+	if constexpr( Model::neuron::size > 0 ) get<0>( nit ) = get<0>( sit );
+	if constexpr( Model::neuron::size > 1 ) get<1>( nit ) = get<1>( sit );
+	if constexpr( Model::neuron::size > 2 ) get<2>( nit ) = get<2>( sit );
+	if constexpr( Model::neuron::size > 3 ) get<3>( nit ) = get<3>( sit );
 }
 
 template <typename T>
@@ -647,7 +687,7 @@ void receive(
 	// TODO
 	if( info.num_neurons < 800'000 || Model::synapse::size > 0 )
 		call( [&] {
-			//*
+			/*
 			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
 			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
 			    info,

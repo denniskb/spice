@@ -123,7 +123,7 @@ static void plot2_RunTime( benchmark::State & state )
 	else
 		P = 0.05f;
 	size_ const N = narrow_cast<size_>( std::sqrt( NSYN / P ) ) / 32 * 32;
-	size_ const ITER = Model::synapse::size > 0 ? 1000 : 10000;
+	size_ const ITER = Model::synapse::size > 0 ? 1000 : 2000;
 
 	state.counters["num_neurons"] = narrow_cast<double>( N );
 	state.counters["num_syn"] = narrow_cast<double>( NSYN );
@@ -149,8 +149,8 @@ static void plot2_RunTime( benchmark::State & state )
 			timer t;
 			for( size_ i = 0;
 			     i < ITER / ( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value ?
-			                      net->delay() :
-			                      1 );
+                                  net->delay() :
+                                  1 );
 			     i++ )
 				net->step();
 
@@ -180,27 +180,6 @@ BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, brunel )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 512'000'000, 2048'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, brunel_with_plasticity )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 128'000'000, 512'000'000 );
-
-BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, synth )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 512'000'000, 2048'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, vogels_abbott )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 512'000'000, 2048'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, brunel )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 512'000'000, 2048'000'000 );
-BENCHMARK_TEMPLATE( plot2_RunTime, cuda::multi_snn, brunel_with_plasticity )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 128'000'000, 512'000'000 );
 
 
 static void gpu_throttle( benchmark::State & state )
