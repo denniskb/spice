@@ -102,6 +102,7 @@ struct brunel_with_plasticity : model
 		template <typename Iter, typename Backend>
 		HYBRID static void update(
 		    Iter && syn,
+		    int_ const nsteps,
 		    bool const pre,
 		    bool const post,
 		    float const dt,
@@ -111,22 +112,20 @@ struct brunel_with_plasticity : model
 			using util::get;
 
 			float const TstdpInv = 1.0f / 0.02f;
+			float const dtInv = 1.0f / dt;
 
-			get<Zpre>( syn ) += pre - get<Zpre>( syn ) * ( dt * TstdpInv );
-			get<Zpost>( syn ) += post - get<Zpost>( syn ) * ( dt * TstdpInv );
+			get<Zpre>( syn ) *= bak.pow( 1 - dt * TstdpInv, nsteps );
+			get<Zpost>( syn ) *= bak.pow( 1 - dt * TstdpInv, nsteps );
 
-			if( pre || post )
-			{
-				float const dtInv = 1.0f / dt;
+			get<Zpre>( syn ) += pre;
+			get<Zpost>( syn ) += post;
 
-				get<W>( syn ) = bak.clamp(
-				    get<W>( syn ) -
-				        pre * 0.0202f * get<W>( syn ) * bak.exp( -get<Zpost>( syn ) * dtInv ) +
-				        post * 0.01f * ( 1.0f - get<W>( syn ) ) *
-				            bak.exp( -get<Zpre>( syn ) * dtInv ),
-				    0.0f,
-				    0.0003f );
-			}
+			get<W>( syn ) = bak.clamp(
+			    get<W>( syn ) -
+			        pre * 0.0202f * get<W>( syn ) * bak.exp( -get<Zpost>( syn ) * dtInv ) +
+			        post * 0.01f * ( 1.0f - get<W>( syn ) ) * bak.exp( -get<Zpre>( syn ) * dtInv ),
+			    0.0f,
+			    0.0003f );
 		}
 
 		HYBRID static bool plastic( int_ const src, int_ const dst, snn_info const info )

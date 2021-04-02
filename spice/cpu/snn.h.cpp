@@ -166,6 +166,7 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 				    if( Model::synapse::plastic( src, dst, this->info() ) )
 					    Model::synapse::template update(
 					        iter( _synapses->data(), syn ),
+					        1,
 					        ( *_spikes.flags )[pre][src],
 					        ( *_spikes.flags )[post][dst],
 					        dt,

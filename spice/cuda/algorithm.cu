@@ -249,12 +249,33 @@ static __global__ void _process_spikes(
 				else if constexpr( Model::synapse::size > 0 )
 					if( Model::synapse::plastic( src, dst, info ) )
 					{
-						uint_ const hist = history[dst];
-						for( int_ k = iter - ages[src]; k >= 0; k-- )
+						int_ k = iter - ages[src];
+						uint_ hist = history[dst] << ( 31 - k ) >> ( 31 - k );
+						while( hist )
+						{
+							int_ const shift = 31 - __clz( hist );
+							int_ const steps = k - shift + 1;
+							k = shift;
+
 							Model::synapse::template update(
 							    synapse_iter<typename Model::synapse>( isyn ),
+							    steps,
 							    MODE == HNDL_SPKS && k == 0,
 							    ( hist >> k ) & 1u,
+							    dt,
+							    info,
+							    bak );
+
+							hist = hist << ( 32 - k ) >> ( 32 - k );
+							k--;
+						}
+						// TODO: fuse both
+						if( k >= 0 )
+							Model::synapse::template update(
+							    synapse_iter<typename Model::synapse>( isyn ),
+							    k + 1,
+							    MODE == HNDL_SPKS,
+							    false,
 							    dt,
 							    info,
 							    bak );

@@ -48,6 +48,8 @@ struct backend
 		return expf( x );
 	}
 
+	__device__ static float pow( float x, float y ) { return powf( x, y ); }
+
 private:
 	spice::util::xoroshiro128p rng;
 };

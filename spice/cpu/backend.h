@@ -46,6 +46,8 @@ struct backend
 		return std::exp( x );
 	}
 
+	static float pow( float x, float y ) { return std::pow( x, y ); }
+
 private:
 	util::xoroshiro128p rng;
 };
