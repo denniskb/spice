@@ -281,8 +281,6 @@ static __global__ void _process_spikes(
 						for( int_ k = iter - ages[src]; k >= 0; k-- )
 							Model::synapse::template update(
 							    synapse_iter<typename Model::synapse>( isyn ),
-							    src,
-							    dst,
 							    MODE == HNDL_SPKS && k == 0,
 							    ( hist >> k ) & 1u,
 							    dt,

@@ -180,6 +180,10 @@ BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, brunel )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
     ->ExpRange( 512'000'000, 2048'000'000 );
+BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, brunel_with_plasticity )
+    ->UseManualTime()
+    ->Unit( benchmark::kMicrosecond )
+    ->ExpRange( 128'000'000, 512'000'000 );
 
 
 static void gpu_throttle( benchmark::State & state )

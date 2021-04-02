@@ -41,7 +41,7 @@ struct brunel_with_plasticity : model
 
 			float const TmemInv = 1.0 / 0.02; // s
 			float const Vrest = 0.0;          // v
-			int_ const Tref = 20;              // dt
+			int_ const Tref = 20;             // dt
 			float const Vthres = 0.02f;       // v
 
 			if( n.id() < static_cast<uint_>( info.num_neurons / 2 ) ) // poisson neuron
@@ -102,8 +102,6 @@ struct brunel_with_plasticity : model
 		template <typename Iter, typename Backend>
 		HYBRID static void update(
 		    Iter && syn,
-		    int_ const src,
-		    int_ const dst,
 		    bool const pre,
 		    bool const post,
 		    float const dt,
@@ -122,16 +120,16 @@ struct brunel_with_plasticity : model
 				float const dtInv = 1.0f / dt;
 
 				get<W>( syn ) = bak.clamp(
-					get<W>( syn ) -
-						pre * 0.0202f * get<W>( syn ) * bak.exp( -get<Zpost>( syn ) * dtInv ) +
-						post * 0.01f * ( 1.0f - get<W>( syn ) ) *
-							bak.exp( -get<Zpre>( syn ) * dtInv ),
-					0.0f,
-					0.0003f );
+				    get<W>( syn ) -
+				        pre * 0.0202f * get<W>( syn ) * bak.exp( -get<Zpost>( syn ) * dtInv ) +
+				        post * 0.01f * ( 1.0f - get<W>( syn ) ) *
+				            bak.exp( -get<Zpre>( syn ) * dtInv ),
+				    0.0f,
+				    0.0003f );
 			}
 		}
 
-		HYBRID static bool plastic(int_ const src, int_ const dst, snn_info const info)
+		HYBRID static bool plastic( int_ const src, int_ const dst, snn_info const info )
 		{
 			auto const npoisson = info.num_neurons / 2;
 			auto const nexc = 9 * info.num_neurons / 10;
