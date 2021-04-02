@@ -163,15 +163,14 @@ void snn<Model>::step( std::vector<int> * out_spikes )
 		{
 			for_each(
 			    [&]( int_ syn, int_ src, int_ dst ) {
-				    Model::synapse::template update(
-				        iter( _synapses->data(), syn ),
-				        src,
-				        dst,
-				        ( *_spikes.flags )[pre][src],
-				        ( *_spikes.flags )[post][dst],
-				        dt,
-				        this->info(),
-				        _backend );
+				    if( Model::synapse::plastic( src, dst, this->info() ) )
+					    Model::synapse::template update(
+					        iter( _synapses->data(), syn ),
+					        ( *_spikes.flags )[pre][src],
+					        ( *_spikes.flags )[post][dst],
+					        dt,
+					        this->info(),
+					        _backend );
 			    },
 			    narrow<int>( this->num_neurons() ),
 			    []( int_ x ) { return x; },

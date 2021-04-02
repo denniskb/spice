@@ -199,10 +199,9 @@ static __global__ void _process_neurons(
 
 			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
-				history[i] = (history[i] << 1) | spiked;
+				history[i] = ( history[i] << 1 ) | spiked;
 
-				if( iter - ages[i] == 31 )
-					updates[atomicInc( num_updates, info.num_neurons )] = i;
+				if( iter - ages[i] == 31 ) updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
 			if( spiked ) spikes[atomicInc( num_spikes, info.num_neurons )] = i;
@@ -248,21 +247,19 @@ static __global__ void _process_spikes(
 					Model::synapse::template init(
 					    synapse_iter<typename Model::synapse>( isyn ), src, dst, info, bak );
 				else if constexpr( Model::synapse::size > 0 )
-					if( Model::synapse::plastic(src, dst, info) )
+					if( Model::synapse::plastic( src, dst, info ) )
 					{
 						uint_ const hist = history[dst];
 						for( int_ k = iter - ages[src]; k >= 0; k-- )
 							Model::synapse::template update(
-								synapse_iter<typename Model::synapse>( isyn ),
-								src,
-								dst,
-								MODE == HNDL_SPKS && k == 0,
-								( hist >> k ) & 1u,
-								dt,
-								info,
-								bak );
+							    synapse_iter<typename Model::synapse>( isyn ),
+							    MODE == HNDL_SPKS && k == 0,
+							    ( hist >> k ) & 1u,
+							    dt,
+							    info,
+							    bak );
 					}
-				
+
 				if constexpr( MODE == HNDL_SPKS )
 					Model::neuron::template receive(
 					    src,
@@ -522,7 +519,7 @@ template void update<::spice::brunel>(
     uint_ *,
     int_ const );
 template void update<::spice::brunel_with_plasticity>(
-	cudaStream_t,
+    cudaStream_t,
     int_,
     int_,
     int_,
@@ -624,7 +621,7 @@ template void receive<::spice::vogels_abbott>(
     int_ const iter,
     float const dt );
 template void receive<::spice::brunel>(
-	cudaStream_t,
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
@@ -636,7 +633,7 @@ template void receive<::spice::brunel>(
     int_ const iter,
     float const dt );
 template void receive<::spice::brunel_with_plasticity>(
-	cudaStream_t,
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
@@ -648,7 +645,7 @@ template void receive<::spice::brunel_with_plasticity>(
     int_ const iter,
     float const dt );
 template void receive<::spice::synth>(
-	cudaStream_t,
+    cudaStream_t,
     snn_info const,
     span2d<int_ const>,
     int_ const *,
