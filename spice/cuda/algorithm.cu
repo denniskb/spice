@@ -177,7 +177,8 @@ static __global__ void _process_neurons(
     int_ const * ages = nullptr,
     int_ * updates = nullptr,
     uint_ * num_updates = nullptr,
-    int_ const iter = 0 )
+    int_ const iter = 0,
+    int_ const delay = 0 )
 {
 	spice_assert( info.num_neurons < INT_MAX - num_threads() );
 	spice_assert( n == 1 || slice_width % WARP_SZ == 0 );
@@ -199,9 +200,11 @@ static __global__ void _process_neurons(
 
 			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
-				history[i] = ( history[i] << 1 ) | spiked;
+				uint_ const hist = ( history[i] << 1 ) | spiked;
+				history[i] = hist;
 
-				if( iter - ages[i] == 31 ) updates[atomicInc( num_updates, info.num_neurons )] = i;
+				if( !( ( hist >> ( delay - 1 ) ) & 1 ) && iter - ages[i] == 31 )
+					updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
 			if( spiked ) spikes[atomicInc( num_spikes, info.num_neurons )] = i;
@@ -487,7 +490,8 @@ void update(
     int_ * ages /* = nullptr */,
     int_ * updates /* = nullptr */,
     uint_ * num_updates /* = nullptr */,
-    int_ const iter /* = 0 */ )
+    int_ const iter /* = 0 */,
+    int_ const delay /* = 0 */ )
 {
 	spice_assert( slice_width > 0 );
 	spice_assert( i >= 0 );
@@ -508,7 +512,8 @@ void update(
 		    ages,
 		    updates,
 		    num_updates,
-		    iter );
+		    iter,
+		    delay );
 	} );
 }
 template void update<::spice::vogels_abbott>(
@@ -524,7 +529,8 @@ template void update<::spice::vogels_abbott>(
     int_ *,
     int_ *,
     uint_ *,
-    int_ constt );
+    int_ constt,
+    int_ const );
 template void update<::spice::brunel>(
     cudaStream_t,
     int_,
@@ -538,6 +544,7 @@ template void update<::spice::brunel>(
     int_ *,
     int_ *,
     uint_ *,
+    int_ const,
     int_ const );
 template void update<::spice::brunel_with_plasticity>(
     cudaStream_t,
@@ -552,6 +559,7 @@ template void update<::spice::brunel_with_plasticity>(
     int_ *,
     int_ *,
     uint_ *,
+    int_ const,
     int_ const );
 template void update<::spice::synth>(
     cudaStream_t,
@@ -566,6 +574,7 @@ template void update<::spice::synth>(
     int_ *,
     int_ *,
     uint_ *,
+    int_ const,
     int_ const );
 
 template <typename Model>

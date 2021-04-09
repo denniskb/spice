@@ -45,7 +45,8 @@ void update(
     int_ * ages = nullptr,
     int_ * updates = nullptr,
     uint_ * num_updates = nullptr,
-    int_ const iter = 0 );
+    int_ const iter = 0,
+    int_ const delay = 0 );
 
 template <typename Model>
 void receive(
