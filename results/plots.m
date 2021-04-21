@@ -19,7 +19,7 @@ LFS = 14;
 
 %% Sim. time as function of network size (single GPU)
 models = {'vogels' 'brunel' 'brunel+' 'synth_0.00156_0.005_1'};
-titles = {'Vogels' 'Brunel' 'Brunel+' 'Synthetic'};
+titles = {'Vogels' 'Brunel' 'Brunel+' 'Synth'};
 for i = 1:4
     plot_group(filter(results, 'simtime', {'x_gpus' 1 'model' models{i}}, 'sim'));
     title(titles{i}, "FontSize", TFS);
@@ -29,7 +29,7 @@ for i = 1:4
     else
         xlabel('Synapse Count', 'FontSize', LFS);
     end
-    ylabel('Simulation Time (s)', 'FontSize', LFS);
+    ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
     if strcmp(models{i}, 'brunel+')
         xlim([0 7.5e8]);
         xticks([0:0.25:0.75] * 1e9);
@@ -256,10 +256,7 @@ function xy = filter_unique(json, select, where)
             y = [y o.(select)];
         end
     end
-    
-    if strcmp(select, 'simtime')
-        y = y * 10;
-    end
+
     xy = [x; y];
 end
 
