@@ -205,7 +205,8 @@ static __global__ void _process_neurons(
     int_ const * ages = nullptr,
     int_ * updates = nullptr,
     uint_ * num_updates = nullptr,
-    int_ const iter = 0 )
+    int_ const iter = 0,
+    int_ const delay = 0 )
 {
 	spice_assert( info.num_neurons < INT_MAX - num_threads() );
 	spice_assert( n == 1 || slice_width % WARP_SZ == 0 );
@@ -227,9 +228,11 @@ static __global__ void _process_neurons(
 
 			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
-				history[i] = ( history[i] << 1 ) | spiked;
+				uint_ const hist = ( history[i] << 1 ) | spiked;
+				history[i] = hist;
 
-				if( iter - ages[i] == 31 ) updates[atomicInc( num_updates, info.num_neurons )] = i;
+				if( !( ( hist >> ( delay - 1 ) ) & 1 ) && iter - ages[i] == 31 )
+					updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
 			if( spiked ) spikes[atomicInc( num_spikes, info.num_neurons )] = i;
@@ -277,24 +280,45 @@ static __global__ void _process_spikes(
 				else if constexpr( Model::synapse::size > 0 )
 					if( Model::synapse::plastic( src, dst, info ) )
 					{
-						uint_ const hist = history[dst];
-						for( int_ k = iter - ages[src]; k >= 0; k-- )
+						int_ k = iter - ages[src];
+						uint_ hist = history[dst] << ( 31 - k ) >> ( 31 - k );
+						while( hist )
+						{
+							int_ const shift = 31 - __clz( hist );
+							int_ const steps = k - shift + 1;
+							k = shift;
+
 							Model::synapse::template update(
 							    synapse_iter<typename Model::synapse>( isyn ),
+							    steps,
 							    MODE == HNDL_SPKS && k == 0,
 							    ( hist >> k ) & 1u,
 							    dt,
 							    info,
 							    bak );
+
+							hist = hist << ( 32 - k ) >> ( 32 - k );
+							k--;
+						}
+						// TODO: fuse both
+						if( k >= 0 )
+							Model::synapse::template update(
+							    synapse_iter<typename Model::synapse>( isyn ),
+							    k + 1,
+							    MODE == HNDL_SPKS,
+							    false,
+							    dt,
+							    info,
+							    bak );
 					}
 
-				if constexpr( MODE == HNDL_SPKS )
-					Model::neuron::template receive(
-					    src,
-					    neuron_iter<typename Model::neuron>( dst ),
-					    const_synapse_iter<typename Model::synapse>( isyn ),
-					    info,
-					    bak );
+				/*if constexpr( MODE == HNDL_SPKS )
+				    Model::neuron::template receive(
+				        src,
+				        neuron_iter<typename Model::neuron>( dst ),
+				        const_synapse_iter<typename Model::synapse>( isyn ),
+				        info,
+				        bak );*/
 			}
 		}
 
@@ -396,12 +420,12 @@ static __global__ void _gather(
 
 		for( int_ i = first + laneid(); i < last; i += 32 )
 		{
-			int_ const dst = adj( src, i ) - blockIdx.x * 1024;
+			int_ const dst = adj( src, i ) % 1024;
 
 			Model::neuron::template receive(
 			    src,
 			    shared_iter<typename Model::neuron>( state, dst ),
-			    const_synapse_iter<typename Model::synapse>( -1 ),
+			    const_synapse_iter<typename Model::synapse>( i + src * adj.width() ),
 			    info,
 			    bak );
 		}
@@ -584,7 +608,8 @@ void update(
     int_ * ages /* = nullptr */,
     int_ * updates /* = nullptr */,
     uint_ * num_updates /* = nullptr */,
-    int_ const iter /* = 0 */ )
+    int_ const iter /* = 0 */,
+    int_ const delay /* = 0 */ )
 {
 	spice_assert( slice_width > 0 );
 	spice_assert( i >= 0 );
@@ -605,7 +630,8 @@ void update(
 		    ages,
 		    updates,
 		    num_updates,
-		    iter );
+		    iter,
+		    delay );
 	} );
 }
 template void update<::spice::vogels_abbott>(
@@ -621,7 +647,8 @@ template void update<::spice::vogels_abbott>(
     int_ *,
     int_ *,
     uint_ *,
-    int_ constt );
+    int_ constt,
+    int_ const );
 template void update<::spice::brunel>(
     cudaStream_t,
     int_,
@@ -635,6 +662,7 @@ template void update<::spice::brunel>(
     int_ *,
     int_ *,
     uint_ *,
+    int_ const,
     int_ const );
 template void update<::spice::brunel_with_plasticity>(
     cudaStream_t,
@@ -649,6 +677,7 @@ template void update<::spice::brunel_with_plasticity>(
     int_ *,
     int_ *,
     uint_ *,
+    int_ const,
     int_ const );
 template void update<::spice::synth>(
     cudaStream_t,
@@ -663,6 +692,7 @@ template void update<::spice::synth>(
     int_ *,
     int_ *,
     uint_ *,
+    int_ const,
     int_ const );
 
 template <typename Model>
@@ -685,7 +715,7 @@ void receive(
 	// TODO
 	if( info.num_neurons < 800'000 || Model::synapse::size > 0 )
 		call( [&] {
-			/*
+			//*
 			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
 			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
 			    info,
@@ -699,7 +729,7 @@ void receive(
 			    history,
 			    iter,
 			    dt );
-			/*/
+			//*/
 			_gather<Model><<<( info.num_neurons + 1023 ) / 1024, 1024, 0, s>>>(
 			    info, seed(), adj, spikes, num_spikes, pivots.data() );
 			//*/

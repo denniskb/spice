@@ -38,7 +38,7 @@ struct synapse : util::type_list<Ts...>
 
 	template <typename Iter, typename Backend>
 	HYBRID static void
-	update( Iter &&, bool const, bool const, float const, snn_info const, Backend & )
+	update( Iter &&, int_ const, bool const, bool const, float const, snn_info const, Backend & )
 	{
 	}
 
