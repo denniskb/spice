@@ -105,13 +105,12 @@ static __global__ void _generate_adj_ids(
     int_ const desc_len,
     int_ const N,
     uint_ const max_degree,
-    int_ * const out_edges )
+    __restrict__ int_ * out_edges )
 {
-	__shared__ float row[768];
-
 	spice::util::xoroshiro128p rng( threadid() ^ seed );
 
-	uint_ offset = blockIdx.x * max_degree;
+	out_edges += blockIdx.x * max_degree;
+
 	int_ total_degree = 0;
 	for( int_ c = 0; c < desc_len; c++ )
 	{
@@ -123,42 +122,36 @@ static __global__ void _generate_adj_ids(
 		degree = __shfl_sync( MASK_ALL, degree, 0 );
 		total_degree += degree;
 
-		while( degree > 0 )
+		float total = 0.0f;
+		float tail = __shfl_sync( MASK_ALL, exprnd( rng ), 0 ) + degree;
+		int_ i = threadIdx.x;
+		for( ; i < floor32( degree ); i += WARP_SZ )
 		{
-			int_ const d = min( 768, degree );
-			int_ const r = (int)( (long_)d * range / degree );
+			float sum;
+			float f = total + warp::inclusive_scan( exprnd( rng ), sum, MASK_ALL );
+			total += sum;
+			tail += sum - 32;
 
-			// accumulate
-			float total = 0.0f;
-			for( int_ i = threadIdx.x; i < d; i += WARP_SZ )
-			{
-				float f = exprnd( rng );
+			float const scale = ( range - degree ) / tail;
 
-				float sum;
-				f = total + warp::inclusive_scan( f, sum, active_mask( i, d ) );
-				total += sum;
-
-				row[i] = f;
-			}
-
-			// normalize
-			{
-				total += exprnd( rng );
-				total = __shfl_sync( MASK_ALL, total, 0 );
-
-				float const scale = ( r - d ) / total;
-				for( int_ i = threadIdx.x; i < d; i += WARP_SZ )
-					( out_edges + offset )[i] = first + static_cast<int>( row[i] * scale ) + i;
-			}
-
-			offset += d;
-			degree -= 768;
-			first += r;
-			range -= r;
+			out_edges[i] = first + static_cast<int_>( f * scale ) + i;
 		}
+
+		if( i < degree )
+		{
+			float sum;
+			float f = total + warp::inclusive_scan( exprnd( rng ), sum, active_mask( i, degree ) );
+			tail += sum - ( degree - floor32( i ) );
+
+			float const scale = ( range - degree ) / tail;
+
+			out_edges[i] = first + static_cast<int_>( f * scale ) + i;
+		}
+
+		out_edges += degree;
 	}
 
-	for( uint_ i = offset + threadIdx.x; i < ( blockIdx.x + 1 ) * max_degree; i += WARP_SZ )
+	for( uint_ i = threadIdx.x; i < max_degree - total_degree; i += WARP_SZ )
 		out_edges[i] = INT_MAX;
 }
 
@@ -312,13 +305,13 @@ static __global__ void _process_spikes(
 							    bak );
 					}
 
-				/*if constexpr( MODE == HNDL_SPKS )
-				    Model::neuron::template receive(
-				        src,
-				        neuron_iter<typename Model::neuron>( dst ),
-				        const_synapse_iter<typename Model::synapse>( isyn ),
-				        info,
-				        bak );*/
+				if constexpr( MODE == HNDL_SPKS )
+					Model::neuron::template receive(
+					    src,
+					    neuron_iter<typename Model::neuron>( dst ),
+					    const_synapse_iter<typename Model::synapse>( isyn ),
+					    info,
+					    bak );
 			}
 		}
 
@@ -497,8 +490,8 @@ void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, in
 		    narrow<uint_>( desc.max_degree() ),
 		    edges );
 
-		pivots.resize( desc.size() * ( ( desc.size() + 1023 ) / 1024 + 1 ) );
-		generate_pivots( s, desc, edges, pivots.data() );
+		// pivots.resize( desc.size() * ( ( desc.size() + 1023 ) / 1024 + 1 ) );
+		// generate_pivots( s, desc, edges, pivots.data() );
 	} );
 }
 
@@ -729,7 +722,7 @@ void receive(
 			    history,
 			    iter,
 			    dt );
-			//*/
+			/*/
 			_gather<Model><<<( info.num_neurons + 1023 ) / 1024, 1024, 0, s>>>(
 			    info, seed(), adj, spikes, num_spikes, pivots.data() );
 			//*/
