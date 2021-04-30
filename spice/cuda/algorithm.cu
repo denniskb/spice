@@ -104,7 +104,7 @@ static __global__ void _generate_adj_ids(
     ulong_ const seed,
     int_ const desc_len,
     int_ const N,
-    uint_ const max_degree,
+    int_ const max_degree,
     __restrict__ int_ * out_edges )
 {
 	spice::util::xoroshiro128p rng( threadid() ^ seed );
@@ -116,43 +116,33 @@ static __global__ void _generate_adj_ids(
 	{
 		if( blockIdx.x < _desc_range[c].x || blockIdx.x >= _desc_range[c].y ) continue;
 
-		int_ first = _desc_range[c].z;
-		int_ range = _desc_range[c].w - first;
-		int_ degree = min( max_degree - total_degree, binornd( rng, range, _desc_p[c] ) );
-		degree = __shfl_sync( MASK_ALL, degree, 0 );
+		int_ const first = _desc_range[c].z;
+		int_ const range = _desc_range[c].w - first;
+		int_ const degree = __shfl_sync(
+		    MASK_ALL, min( max_degree - total_degree, binornd( rng, range, _desc_p[c] ) ), 0 );
+		int_ const tail = degree - floor32( degree );
 		total_degree += degree;
 
-		float total = 0.0f;
-		float tail = __shfl_sync( MASK_ALL, exprnd( rng ), 0 ) + degree;
-		int_ i = threadIdx.x;
-		for( ; i < floor32( degree ); i += WARP_SZ )
-		{
+		auto gen = [&, total = 0.0f, residue = __shfl_sync( MASK_ALL, exprnd( rng ), 0 )](
+		               uint_ const mask, float const expected_sum, int_ const i ) mutable {
 			float sum;
-			float f = total + warp::inclusive_scan( exprnd( rng ), sum, MASK_ALL );
+			float f = total + warp::inclusive_scan( exprnd( rng ), sum, mask );
 			total += sum;
-			tail += sum - 32;
+			residue += sum - expected_sum;
 
-			float const scale = ( range - degree ) / tail;
+			out_edges[i] =
+			    first + i +
+			    static_cast<int_>( roundf( f * ( range - degree ) / ( degree + residue ) ) );
+		};
 
-			out_edges[i] = first + static_cast<int_>( f * scale ) + i;
-		}
-
-		if( i < degree )
-		{
-			float sum;
-			float f = total + warp::inclusive_scan( exprnd( rng ), sum, active_mask( i, degree ) );
-			tail += sum - ( degree - floor32( i ) );
-
-			float const scale = ( range - degree ) / tail;
-
-			out_edges[i] = first + static_cast<int_>( f * scale ) + i;
-		}
+		int_ i = threadIdx.x;
+		for( ; i < floor32( degree ); i += WARP_SZ ) gen( MASK_ALL, WARP_SZ, i );
+		if( i < degree ) gen( set_lsbs( tail ), tail, i );
 
 		out_edges += degree;
 	}
 
-	for( uint_ i = threadIdx.x; i < max_degree - total_degree; i += WARP_SZ )
-		out_edges[i] = INT_MAX;
+	for( int_ i = threadIdx.x; i < max_degree - total_degree; i += WARP_SZ ) out_edges[i] = INT_MAX;
 }
 
 __device__ int_ _lower_bound( int_ const * arr, int_ const len, int_ const x )
