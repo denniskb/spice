@@ -12,9 +12,9 @@ namespace spice
 {
 namespace cuda
 {
-void generate_rnd_adj_list( cudaStream_t s, spice::util::layout const & desc, int_ * edges );
+void generate_adj_list( cudaStream_t s, spice::util::layout const & desc, int_ * edges );
 void generate_pivots(
-    cudaStream_t s, spice::util::layout const & desc, int_ const * adj, int_ * pivots );
+    cudaStream_t s, int_ const n, int_ const max_degree, int_ const * edges, uint_ * pivots );
 
 template <typename Model>
 void upload_meta(
@@ -56,6 +56,7 @@ void receive(
 
     snn_info info,
     spice::util::span2d<int_ const> adj,
+    uint_ const * pivots,
 
     int_ const * spikes,
     uint_ const * num_spikes,

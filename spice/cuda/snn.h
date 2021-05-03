@@ -23,7 +23,7 @@ public:
 	     int_ slice_width = -1,
 	     int_ n = 1,
 	     int_ i = 0 );
-	snn( std::vector<int> const & adj,
+	snn( std::vector<int_> const & adj,
 	     size_ width,
 	     float dt,
 	     int_ delay = 1,
@@ -32,14 +32,14 @@ public:
 	     int_ i = 0 );
 	snn( spice::snn<Model> const & net );
 
-	void step( std::vector<int> * out_spikes = nullptr ) override;
+	void step( std::vector<int_> * out_spikes = nullptr ) override;
 	void
-	step( int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes = nullptr );
+	step( int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int_> * out_spikes = nullptr );
 	util::stream & sim_stream();
 
 	size_ num_neurons() const override;
 	size_ num_synapses() const override;
-	std::pair<std::vector<int>, size_> adj() const override;
+	std::pair<std::vector<int_>, size_> adj() const override;
 	std::vector<typename Model::neuron::tuple_t> neurons() const override;
 	std::vector<typename Model::synapse::tuple_t> synapses() const override;
 
@@ -49,20 +49,21 @@ private:
 
 	struct
 	{
-		util::dbuffer<int> edges;
+		util::dbuffer<int_> edges;
 		spice::util::adj_list adj;
-		util::dbuffer<int> ages;
+		util::dbuffer<uint_> pivots;
+		util::dbuffer<int_> ages;
 	} _graph;
 
 	struct
 	{
-		util::dbuffer<int> ids_data;
-		spice::util::span2d<int> ids;
+		util::dbuffer<int_> ids_data;
+		spice::util::span2d<int_> ids;
 		util::dbuffer<uint_> counts;
 
 		util::dbuffer<uint_> history;
 
-		util::dbuffer<int> updates;
+		util::dbuffer<int_> updates;
 		util::dvar<uint_> num_updates;
 	} _spikes;
 

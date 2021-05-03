@@ -32,6 +32,7 @@ void snn<Model>::reserve( size_ const num_neurons, size_ const num_synapses, int
 	// TODO: Hysteresis
 	_graph.edges.resize( num_synapses );
 	_graph.adj = { num_neurons, num_synapses / num_neurons, _graph.edges.data() };
+	_graph.pivots.resize( num_neurons * ( ( num_neurons + 1023 ) / 1024 ) );
 
 	_spikes.ids_data.resize( delay * num_neurons );
 	_spikes.ids = { _spikes.ids_data.data(), narrow<int>( num_neurons ) };
@@ -71,7 +72,9 @@ snn<Model>::snn(
 	spice_assert( delay >= 1 );
 
 	reserve( desc.size(), desc.size() * desc.max_degree(), delay );
-	generate_rnd_adj_list( _sim, desc, _graph.edges.data() );
+	generate_adj_list( _sim, desc, _graph.edges.data() );
+	generate_pivots(
+	    _sim, desc.size(), desc.max_degree(), _graph.edges.data(), _graph.pivots.data() );
 
 	upload_meta<Model>( _sim, _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
@@ -105,6 +108,7 @@ snn<Model>::snn(
 
 	reserve( adj.size() / width, adj.size(), delay );
 	_graph.edges = adj;
+	generate_pivots( _sim, adj.size() / width, width, _graph.edges.data(), _graph.pivots.data() );
 
 	upload_meta<Model>( _sim, _neurons.data(), _synapses.data() );
 	spice::cuda::init<Model>(
@@ -126,6 +130,12 @@ snn<Model>::snn( spice::snn<Model> const & net )
 	reserve( net.num_neurons(), net.num_synapses(), net.delay() );
 
 	_graph.edges = net.adj().first;
+	generate_pivots(
+	    _sim,
+	    net.num_neurons(),
+	    net.num_synapses() / net.num_neurons(),
+	    _graph.edges.data(),
+	    _graph.pivots.data() );
 	_neurons.from_aos( net.neurons() );
 	_synapses.from_aos( net.synapses() );
 
@@ -153,6 +163,7 @@ void snn<Model>::step(
 
 			    this->info(),
 			    { _graph.edges.data(), narrow<int>( _graph.adj.max_degree() ) },
+			    _graph.pivots.data(),
 
 			    _spikes.ids.row( circidx( i, this->delay() ) ),
 			    _spikes.counts.data() + circidx( i, this->delay() ),

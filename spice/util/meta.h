@@ -44,6 +44,16 @@ auto map_i( Tuple1 && t1, Tuple2 && t2, Fn && f, std::index_sequence<I...> )
 }
 } // namespace detail
 
+template <size_ N, typename Fn>
+HYBRID void for_n( Fn && f )
+{
+	if constexpr( N > 0 )
+	{
+		std::forward<Fn>( f )( detail::integral_constant<N - 1>() );
+		for_n<N - 1>( std::forward<Fn>( f ) );
+	}
+}
+
 template <typename Tuple, typename Fn>
 HYBRID auto map_i( Tuple && t, Fn && f )
 {
@@ -124,25 +134,39 @@ struct type_list
 	using ptuple_t = std::tuple<T *...>;
 	using cptuple_t = std::tuple<const T *...>;
 	static constexpr size_ size = sizeof...( T );
-	static constexpr size_ size_in_bytes = (sizeof( T ) + ... + 0);
+	static constexpr size_ size_in_bytes = ( sizeof( T ) + ... + 0 );
+
+	template <size_ I>
+	static constexpr size_ ith_size_in_bytes()
+	{
+		constexpr size_ szs[] = { sizeof( T )... };
+		return szs[I];
+	}
+
+	template <size_ I>
+	static constexpr size_ offset_in_bytes()
+	{
+		constexpr size_ szs[] = { sizeof( T )... };
+		size_ result = 0;
+		for( long_ i = 0; i < I; i++ ) result += szs[i];
+		return result;
+	}
 
 	template <template <typename> typename Cont>
 	using soa_t = std::tuple<Cont<T>...>;
 
-	// TODO: Switch to cuda::std::tuple?
 	template <typename Iter>
-	HYBRID static tuple_t from_soa(Iter it)
+	static tuple_t from_soa( Iter it )
 	{
 		tuple_t aos;
-		for_each_i(aos, [&] HYBRID (auto & x, auto I){ x = it.template get<I>(); });
+		for_each_i( aos, [&] HYBRID( auto & x, auto I ) { x = it.template get<I>(); } );
 		return aos;
 	}
 
-	// TODO: Switch to cuda::std::tuple?
 	template <typename Iter>
-	HYBRID static void to_soa(tuple_t const & aos, Iter it)
+	static void to_soa( tuple_t const & aos, Iter it )
 	{
-		for_each_i(aos, [&](auto x, auto I){ it.template get<I>() = x; });
+		for_each_i( aos, [&]( auto x, auto I ) { it.template get<I>() = x; } );
 	}
 };
 

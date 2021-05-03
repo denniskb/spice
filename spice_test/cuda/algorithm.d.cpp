@@ -25,7 +25,7 @@ TEST( dAlgorithm, AdjList )
 	// B->C = 50%
 	dbuffer<int> d_e( 60 * desc.max_degree() );
 	auto deg = desc.max_degree();
-	generate_rnd_adj_list( nullptr, desc, d_e.data() );
+	generate_adj_list( nullptr, desc, d_e.data() );
 	cudaDeviceSynchronize();
 
 	std::vector<int> h_e( d_e );

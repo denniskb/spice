@@ -14,7 +14,7 @@ namespace cuda
 namespace util
 {
 __device__ inline int_ threadid() { return threadIdx.x + blockIdx.x * blockDim.x; }
-__device__ inline int_ laneid() { return threadIdx.x % WARP_SZ; }
+__device__ inline int_ laneid() { return threadIdx.x & ( WARP_SZ - 1 ); }
 __device__ inline int_ warpid_block() { return threadIdx.x / WARP_SZ; }
 __device__ inline int_ warpid_grid() { return threadid() / WARP_SZ; }
 __device__ inline int_ num_threads() { return blockDim.x * gridDim.x; }
