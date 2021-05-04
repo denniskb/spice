@@ -190,7 +190,7 @@ static __global__ void _process_neurons(
     int_ * spikes = nullptr,
     uint_ * num_spikes = nullptr,
 
-    uint_ * history = nullptr,
+    ulong_ * history = nullptr,
     int_ const * ages = nullptr,
     int_ * updates = nullptr,
     uint_ * num_updates = nullptr,
@@ -217,10 +217,10 @@ static __global__ void _process_neurons(
 
 			if constexpr( Model::synapse::size > 0 ) // plast.
 			{
-				uint_ const hist = ( history[i] << 1 ) | spiked;
+				ulong_ const hist = ( history[i] << 1 ) | spiked;
 				history[i] = hist;
 
-				if( !( ( hist >> ( delay - 1 ) ) & 1 ) && iter - ages[i] == 31 )
+				if( !( ( hist >> ( delay - 1 ) ) & 1 ) && iter - ages[i] == 63 )
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
@@ -245,7 +245,7 @@ static __global__ void _process_spikes(
     uint_ const * num_spikes = nullptr,
 
     int_ * ages = nullptr,
-    uint_ * history = nullptr,
+    ulong_ * history = nullptr,
     int_ const iter = 0,
     float const dt = 0 )
 {
@@ -281,16 +281,16 @@ static __global__ void _process_spikes(
 						};
 
 						int_ k = iter - ages[src];
-						uint_ hist = history[dst] << ( 31 - k ) >> ( 31 - k );
+						ulong_ hist = history[dst] << ( 63 - k ) >> ( 63 - k );
 						while( hist )
 						{
-							int_ const shift = 31 - __clz( hist );
+							int_ const shift = 63 - __clzll( hist );
 							int_ const steps = k - shift + 1;
 							k = shift;
 
-							updt( steps, MODE == HNDL_SPKS && k == 0, ( hist >> k ) & 1u );
+							updt( steps, MODE == HNDL_SPKS && k == 0, true );
 
-							hist = hist << ( 32 - k ) >> ( 32 - k );
+							hist ^= ulong_( 1 ) << k;
 							k--;
 						}
 						if( k >= 0 ) updt( k + 1, MODE == HNDL_SPKS, false );
@@ -548,7 +548,7 @@ void update(
     int_ * spikes,
     uint_ * num_spikes,
 
-    uint_ * history /* = {} */,
+    ulong_ * history /* = {} */,
     int_ * ages /* = nullptr */,
     int_ * updates /* = nullptr */,
     uint_ * num_updates /* = nullptr */,
@@ -587,7 +587,7 @@ template void update<::spice::vogels_abbott>(
     float,
     int_ *,
     uint_ *,
-    uint_ *,
+    ulong_ *,
     int_ *,
     int_ *,
     uint_ *,
@@ -602,7 +602,7 @@ template void update<::spice::brunel>(
     float,
     int_ *,
     uint_ *,
-    uint_ *,
+    ulong_ *,
     int_ *,
     int_ *,
     uint_ *,
@@ -617,7 +617,7 @@ template void update<::spice::brunel_with_plasticity>(
     float,
     int_ *,
     uint_ *,
-    uint_ *,
+    ulong_ *,
     int_ *,
     int_ *,
     uint_ *,
@@ -632,7 +632,7 @@ template void update<::spice::synth>(
     float,
     int_ *,
     uint_ *,
-    uint_ *,
+    ulong_ *,
     int_ *,
     int_ *,
     uint_ *,
@@ -653,7 +653,7 @@ void receive(
     uint_ const * num_updates,
 
     int_ * ages /* = nullptr */,
-    uint_ * history /* = nullptr */,
+    ulong_ * history /* = nullptr */,
     int_ const iter /* = 0 */,
     float const dt /* = 0 */ )
 {
@@ -705,7 +705,7 @@ template void receive<::spice::vogels_abbott>(
     int_ const *,
     uint_ const *,
     int_ *,
-    uint_ *,
+    ulong_ *,
     int_ const iter,
     float const dt );
 template void receive<::spice::brunel>(
@@ -718,7 +718,7 @@ template void receive<::spice::brunel>(
     int_ const *,
     uint_ const *,
     int_ *,
-    uint_ *,
+    ulong_ *,
     int_ const iter,
     float const dt );
 template void receive<::spice::brunel_with_plasticity>(
@@ -731,7 +731,7 @@ template void receive<::spice::brunel_with_plasticity>(
     int_ const *,
     uint_ const *,
     int_ *,
-    uint_ *,
+    ulong_ *,
     int_ const iter,
     float const dt );
 template void receive<::spice::synth>(
@@ -744,7 +744,7 @@ template void receive<::spice::synth>(
     int_ const *,
     uint_ const *,
     int_ *,
-    uint_ *,
+    ulong_ *,
     int_ const iter,
     float const dt );
 

@@ -43,7 +43,7 @@ void update(
     int_ * spikes,
     uint_ * out_num_spikes,
 
-    uint_ * history = nullptr,
+    ulong_ * history = nullptr,
     int_ * ages = nullptr,
     int_ * updates = nullptr,
     uint_ * num_updates = nullptr,
@@ -64,7 +64,7 @@ void receive(
     uint_ const * num_updates,
 
     int_ * ages = nullptr,
-    uint_ * history = nullptr,
+    ulong_ * history = nullptr,
     int_ iter = 0,
     float dt = 0 );
 

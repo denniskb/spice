@@ -61,7 +61,7 @@ private:
 		spice::util::span2d<int_> ids;
 		util::dbuffer<uint_> counts;
 
-		util::dbuffer<uint_> history;
+		util::dbuffer<ulong_> history;
 
 		util::dbuffer<int_> updates;
 		util::dvar<uint_> num_updates;
