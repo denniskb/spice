@@ -334,8 +334,8 @@ struct shared_iter
 	template <int_ I>
 	__device__ auto & get()
 	{
-		constexpr size_ offset = Neuron::template offset_in_bytes<I>();
-		constexpr size_ sz = Neuron::template ith_size_in_bytes<I>();
+		constexpr int_ offset = Neuron::template offset_in_bytes<I>();
+		constexpr int_ sz = Neuron::template ith_size_in_bytes<I>();
 
 		return reinterpret_cast<std::tuple_element_t<I, typename Neuron::tuple_t> &>(
 		    data[offset * 1024 + sz * i] );
@@ -367,12 +367,12 @@ static __global__ void _gather(
 		for_n<Model::neuron::size>( [&]( auto i ) { get<i>( sit ) = get<i>( nit ); } );
 	__syncthreads();
 
-	for( int_ s = warpid_block(); s < *num_spikes; s += 32 )
+	for( int_ s = warpid_block(); s < *num_spikes; s += WARP_SZ )
 	{
 		int_ const src = spikes[s];
 		uint_ const bounds = pivots[src * deg_pivots + blockIdx.x];
 
-		for( int_ i = laneid() + ( bounds & 0xffff ), last = bounds >> 16; i < last; i += 32 )
+		for( int_ i = laneid() + ( bounds & 0xffff ), last = bounds >> 16; i < last; i += WARP_SZ )
 		{
 			int_ const dst = adj( src, i ) & 0x3ff;
 
