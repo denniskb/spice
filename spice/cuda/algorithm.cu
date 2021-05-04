@@ -41,7 +41,7 @@ static ulong_ seed()
 class iter_base
 {
 public:
-	__device__ explicit iter_base( int_ i )
+	__device__ explicit iter_base( uint_ i )
 	    : _i( i )
 	{
 	}
@@ -379,7 +379,7 @@ static __global__ void _gather(
 			Model::neuron::template receive(
 			    src,
 			    shared_iter<typename Model::neuron>( state, dst ),
-			    const_synapse_iter<typename Model::synapse>( -1 ),
+			    const_synapse_iter<typename Model::synapse>( -1u ),
 			    info,
 			    bak );
 		}
