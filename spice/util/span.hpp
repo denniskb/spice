@@ -474,7 +474,7 @@ span_DISABLE_MSVC_WARNINGS( 26439 26440 26472 26473 26481 26490 )
 
 #define span_CONTRACT_CHECK( type, cond )                        \
 	cond ? static_cast<void>( 0 ) :                              \
-	       nonstd::span_lite::detail::report_contract_violation( \
+           nonstd::span_lite::detail::report_contract_violation( \
 	           span_LOCATION( __FILE__, __LINE__ ) ": " type " violation." )
 
 #ifdef __GNUG__
@@ -783,8 +783,7 @@ public:
 	    : data_( ptr )
 	    , size_( count )
 	{
-		span_EXPECTS(
-		    ( ptr == span_nullptr && count == 0 ) || ( ptr != span_nullptr && count >= 0 ) );
+		span_EXPECTS( ( ptr == span_nullptr && count == 0 ) || ( ptr != span_nullptr ) );
 	}
 
 	span_constexpr_exp span( pointer firstElem, pointer lastElem )
@@ -960,20 +959,20 @@ public:
 		return span<element_type, Count>(
 		    data() + Offset,
 		    Count != dynamic_extent ?
-		        Count :
-		        ( Extent != dynamic_extent ? Extent - Offset : size() - Offset ) );
+                Count :
+                ( Extent != dynamic_extent ? Extent - Offset : size() - Offset ) );
 	}
 
 	span_constexpr_exp span<element_type, dynamic_extent> first( count_type count ) const
 	{
-		span_EXPECTS( 0 <= count && count <= size() );
+		span_EXPECTS( count <= size() );
 
 		return span<element_type, dynamic_extent>( data(), count );
 	}
 
 	span_constexpr_exp span<element_type, dynamic_extent> last( count_type count ) const
 	{
-		span_EXPECTS( 0 <= count && count <= size() );
+		span_EXPECTS( count <= size() );
 
 		return span<element_type, dynamic_extent>( data() + ( size() - count ), count );
 	}
@@ -982,9 +981,8 @@ public:
 	subspan( count_type offset, count_type count = static_cast<count_type>( dynamic_extent ) ) const
 	{
 		span_EXPECTS(
-		    ( ( 0 <= offset && offset <= size() ) ) &&
-		    ( count == static_cast<count_type>( dynamic_extent ) ||
-		      ( 0 <= count && offset + count <= size() ) ) );
+		    ( ( offset <= size() ) ) && ( count == static_cast<count_type>( dynamic_extent ) ||
+		                                  ( offset + count <= size() ) ) );
 
 		return span<element_type, dynamic_extent>(
 		    data() + offset,
