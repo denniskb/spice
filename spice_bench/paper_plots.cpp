@@ -82,9 +82,9 @@ static void plot0_AdjGen( benchmark::State & state )
 		time_event start, stop;
 		for( auto _ : state )
 		{
-			generate_rnd_adj_list( nullptr, desc.cut( N / 19, 1, 0 ), e.data() );
+			generate_adj_list( nullptr, desc, e.data() );
 			start.record();
-			for( int_ i = 0; i < 10; i++ ) generate_rnd_adj_list( nullptr, desc, e.data() );
+			for( int_ i = 0; i < 10; i++ ) generate_adj_list( nullptr, desc, e.data() );
 			// cudaMemsetAsync( e.data(), 0, 4 * NSYN );
 			stop.record();
 			stop.synchronize();
@@ -168,10 +168,6 @@ static void plot2_RunTime( benchmark::State & state )
 		return;
 	}
 }
-BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, synth )
-    ->UseManualTime()
-    ->Unit( benchmark::kMicrosecond )
-    ->ExpRange( 512'000'000, 2048'000'000 );
 BENCHMARK_TEMPLATE( plot2_RunTime, cuda::snn, vogels_abbott )
     ->UseManualTime()
     ->Unit( benchmark::kMicrosecond )
