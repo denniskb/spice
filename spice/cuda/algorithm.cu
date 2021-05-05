@@ -284,14 +284,12 @@ static __global__ void _process_spikes(
 						ulong_ hist = history[dst] << ( 63 - k ) >> ( 63 - k );
 						while( hist )
 						{
-							int_ const shift = 63 - __clzll( hist );
-							int_ const steps = k - shift + 1;
-							k = shift;
+							int_ const hsbsub1 = 62 - __clzll( hist );
 
-							updt( steps, MODE == HNDL_SPKS && k == 0, true );
+							updt( k - hsbsub1, MODE == HNDL_SPKS && hsbsub1 == -1, true );
 
-							hist ^= ulong_( 1 ) << k;
-							k--;
+							hist ^= ulong_( 1 ) << ( hsbsub1 + 1 );
+							k = hsbsub1;
 						}
 						if( k >= 0 ) updt( k + 1, MODE == HNDL_SPKS, false );
 					}
