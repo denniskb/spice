@@ -291,7 +291,7 @@ static __global__ void _process_spikes(
 							hist ^= ulong_( 1 ) << ( hsbsub1 + 1 );
 							k = hsbsub1;
 						}
-						if( k >= 0 ) updt( k + 1, MODE == HNDL_SPKS, false );
+						updt( k + 1, MODE == HNDL_SPKS && k >= 0, false );
 					}
 
 				if constexpr( MODE == HNDL_SPKS )

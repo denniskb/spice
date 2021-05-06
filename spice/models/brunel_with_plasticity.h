@@ -114,11 +114,9 @@ struct brunel_with_plasticity : model
 			float const TstdpInv = 1.0f / 0.02f;
 			float const dtInv = 1.0f / dt;
 
-			get<Zpre>( syn ) *= bak.pow( 1 - dt * TstdpInv, nsteps );
-			get<Zpost>( syn ) *= bak.pow( 1 - dt * TstdpInv, nsteps );
-
-			get<Zpre>( syn ) += pre;
-			get<Zpost>( syn ) += post;
+			get<Zpre>( syn ) = fmaf( get<Zpre>( syn ), bak.pow( 1 - dt * TstdpInv, nsteps ), pre );
+			get<Zpost>( syn ) =
+			    fmaf( get<Zpost>( syn ), bak.pow( 1 - dt * TstdpInv, nsteps ), post );
 
 			get<W>( syn ) = bak.clamp(
 			    get<W>( syn ) -
