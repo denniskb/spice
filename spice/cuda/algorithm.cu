@@ -365,15 +365,11 @@ static __global__ void _gather(
 		for_n<Model::neuron::size>( [&]( auto i ) { get<i>( sit ) = get<i>( nit ); } );
 	__syncthreads();
 
-	for( int_ d = 0; d < delay; d++,
-	          in_num_spikes++,
-	          out_num_spikes++,
-	          in_spikes += info.num_neurons,
-	          out_spikes += info.num_neurons )
+	for( int_ d = 0; d < delay; d++ )
 	{
-		for( int_ s = warpid_block(); s < *in_num_spikes; s += WARP_SZ )
+		for( int_ s = warpid_block(); s < in_num_spikes[d]; s += WARP_SZ )
 		{
-			int_ const src = in_spikes[s];
+			int_ const src = in_spikes[d * info.num_neurons + s];
 			uint_ const bounds = pivots[src * deg_pivots + blockIdx.x];
 
 			for( int_ i = laneid() + ( bounds & 0xffff ), last = bounds >> 16; i < last;
@@ -393,7 +389,8 @@ static __global__ void _gather(
 
 		if( I < info.num_neurons )
 			if( Model::neuron::template update( sit, dt, info, bak ) )
-				out_spikes[atomicInc( out_num_spikes, info.num_neurons )] = I;
+				out_spikes
+				    [d * info.num_neurons + atomicInc( &out_num_spikes[d], info.num_neurons )] = I;
 		__syncthreads();
 	}
 

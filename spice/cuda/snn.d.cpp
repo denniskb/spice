@@ -214,7 +214,6 @@ void snn<Model>::step(
 			int_ const ping = i % 2 ? this->delay() : 0;
 			int_ const pong = this->delay() - ping;
 
-			// if( i % this->delay() == 0 )
 			zero_async( _spikes.counts.data() + pong, _sim, this->delay() );
 
 			gather<Model>(
