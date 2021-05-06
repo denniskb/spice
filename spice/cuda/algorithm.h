@@ -56,7 +56,6 @@ void receive(
 
     snn_info info,
     spice::util::span2d<int_ const> adj,
-    uint_ const * pivots,
 
     int_ const * spikes,
     uint_ const * num_spikes,
@@ -68,7 +67,23 @@ void receive(
     int_ iter = 0,
     float dt = 0 );
 
+template <typename Model>
+void gather(
+    cudaStream_t s,
+
+    snn_info const info,
+    float const dt,
+    int_ const delay,
+    spice::util::span2d<int_ const> adj,
+    uint_ const * pivots,
+
+    int_ const * in_spikes,
+    uint_ const * in_num_spikes,
+
+    int_ * out_spikes,
+    uint_ * out_num_spikes );
+
 template <typename T>
-void zero_async( T * t, cudaStream_t s = nullptr );
+void zero_async( T * t, cudaStream_t s = nullptr, int_ const n = 1 );
 } // namespace cuda
 } // namespace spice

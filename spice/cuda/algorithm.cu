@@ -315,12 +315,12 @@ static __global__ void _process_spikes(
 template <typename Neuron>
 struct shared_iter
 {
-	char * const data;
-	int_ const i;
+	char * const _data;
+	int_ const _id;
 
 	__device__ shared_iter( char * p, int_ id )
-	    : data( p )
-	    , i( id )
+	    : _data( p )
+	    , _id( id )
 	{
 	}
 
@@ -331,21 +331,26 @@ struct shared_iter
 		constexpr int_ sz = Neuron::template ith_size_in_bytes<I>();
 
 		return reinterpret_cast<std::tuple_element_t<I, typename Neuron::tuple_t> &>(
-		    data[offset * 1024 + sz * i] );
+		    _data[offset * 1024 + sz * ( _id & 0x3ff )] );
 	}
 
-	__device__ int_ id() const { return i; }
+	__device__ int_ id() const { return _id; }
 };
 
 template <typename Model>
 static __global__ void _gather(
-    snn_info const info,
     ulong_ const seed,
+    snn_info const info,
+    float const dt,
+    int_ const delay,
     span2d<int_ const> adj,
-    uint_ const * pivots,
+    __restrict__ uint_ const * pivots,
 
-    int_ const * spikes,
-    uint_ const * num_spikes )
+    __restrict__ int_ const * in_spikes,
+    __restrict__ uint_ const * in_num_spikes,
+
+    __restrict__ int_ * out_spikes,
+    __restrict__ uint_ * out_num_spikes )
 {
 	__shared__ char state[Model::neuron::size_in_bytes * 1024];
 
@@ -354,30 +359,43 @@ static __global__ void _gather(
 	int_ const deg_pivots = ( info.num_neurons + 1023 ) / 1024;
 
 	neuron_iter<typename Model::neuron> nit( I );
-	shared_iter<typename Model::neuron> sit( state, threadIdx.x );
+	shared_iter<typename Model::neuron> sit( state, I );
 
 	if( I < info.num_neurons )
 		for_n<Model::neuron::size>( [&]( auto i ) { get<i>( sit ) = get<i>( nit ); } );
 	__syncthreads();
 
-	for( int_ s = warpid_block(); s < *num_spikes; s += WARP_SZ )
+	for( int_ d = 0; d < delay; d++,
+	          in_num_spikes++,
+	          out_num_spikes++,
+	          in_spikes += info.num_neurons,
+	          out_spikes += info.num_neurons )
 	{
-		int_ const src = spikes[s];
-		uint_ const bounds = pivots[src * deg_pivots + blockIdx.x];
-
-		for( int_ i = laneid() + ( bounds & 0xffff ), last = bounds >> 16; i < last; i += WARP_SZ )
+		for( int_ s = warpid_block(); s < *in_num_spikes; s += WARP_SZ )
 		{
-			int_ const dst = adj( src, i ) & 0x3ff;
+			int_ const src = in_spikes[s];
+			uint_ const bounds = pivots[src * deg_pivots + blockIdx.x];
 
-			Model::neuron::template receive(
-			    src,
-			    shared_iter<typename Model::neuron>( state, dst ),
-			    const_synapse_iter<typename Model::synapse>( -1u ),
-			    info,
-			    bak );
+			for( int_ i = laneid() + ( bounds & 0xffff ), last = bounds >> 16; i < last;
+			     i += WARP_SZ )
+			{
+				int_ const dst = adj( src, i );
+
+				Model::neuron::template receive(
+				    src,
+				    shared_iter<typename Model::neuron>( state, dst ),
+				    const_synapse_iter<typename Model::synapse>( -1u ),
+				    info,
+				    bak );
+			}
 		}
+		__syncthreads();
+
+		if( I < info.num_neurons )
+			if( Model::neuron::template update( sit, dt, info, bak ) )
+				out_spikes[atomicInc( out_num_spikes, info.num_neurons )] = I;
+		__syncthreads();
 	}
-	__syncthreads();
 
 	if( I < info.num_neurons )
 		for_n<Model::neuron::size>( [&]( auto i ) { get<i>( nit ) = get<i>( sit ); } );
@@ -386,7 +404,7 @@ static __global__ void _gather(
 template <typename T>
 static __global__ void _zero_async( T * t )
 {
-	*t = T( 0 );
+	t[threadIdx.x] = T( 0 );
 }
 
 
@@ -504,7 +522,6 @@ template void upload_meta<::spice::synth>(
     ::spice::synth::neuron::ptuple_t const &,
     ::spice::synth::synapse::ptuple_t const & );
 
-// TOOD: Fuse these two into one function using conditional compilation ('if constexpr')
 template <typename Model>
 void init(
     cudaStream_t s,
@@ -643,7 +660,6 @@ void receive(
 
     snn_info const info,
     span2d<int_ const> adj,
-    uint_ const * pivots,
 
     int_ const * spikes,
     uint_ const * num_spikes,
@@ -655,27 +671,21 @@ void receive(
     int_ const iter /* = 0 */,
     float const dt /* = 0 */ )
 {
-	if constexpr( Model::synapse::size > 0 )
-		call( [&] {
-			int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
-			_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
-			    info,
-			    seed(),
-			    adj,
+	call( [&] {
+		int_ const nblocks = Model::synapse::size > 0 ? 256 : 512;
+		_process_spikes<Model, HNDL_SPKS><<<nblocks, 65536 / nblocks, 0, s>>>(
+		    info,
+		    seed(),
+		    adj,
 
-			    spikes,
-			    num_spikes,
+		    spikes,
+		    num_spikes,
 
-			    ages,
-			    history,
-			    iter,
-			    dt );
-		} );
-	else
-		call( [&] {
-			_gather<Model><<<( info.num_neurons + 1023 ) / 1024, 1024, 0, s>>>(
-			    info, seed(), adj, pivots, spikes, num_spikes );
-		} );
+		    ages,
+		    history,
+		    iter,
+		    dt );
+	} );
 
 	if constexpr( Model::synapse::size > 0 )
 		call( [&] {
@@ -697,7 +707,6 @@ template void receive<::spice::vogels_abbott>(
     cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-    uint_ const *,
     int_ const *,
     uint_ const *,
     int_ const *,
@@ -710,7 +719,6 @@ template void receive<::spice::brunel>(
     cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-    uint_ const *,
     int_ const *,
     uint_ const *,
     int_ const *,
@@ -723,7 +731,6 @@ template void receive<::spice::brunel_with_plasticity>(
     cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-    uint_ const *,
     int_ const *,
     uint_ const *,
     int_ const *,
@@ -736,7 +743,6 @@ template void receive<::spice::synth>(
     cudaStream_t,
     snn_info const,
     span2d<int_ const>,
-    uint_ const *,
     int_ const *,
     uint_ const *,
     int_ const *,
@@ -746,16 +752,89 @@ template void receive<::spice::synth>(
     int_ const iter,
     float const dt );
 
-template <typename T>
-void zero_async( T * t, cudaStream_t s /* = nullptr */ )
+template <typename Model>
+void gather(
+    cudaStream_t s,
+
+    snn_info const info,
+    float const dt,
+    int const delay,
+    span2d<int_ const> adj,
+    uint_ const * pivots,
+
+    int_ const * in_spikes,
+    uint_ const * in_num_spikes,
+
+    int_ * out_spikes,
+    uint_ * out_num_spikes )
 {
-	call( [&] { _zero_async<T><<<1, 1, 0, s>>>( t ); } );
+	_gather<Model><<<( info.num_neurons + 1023 ) / 1024, 1024, 0, s>>>(
+	    seed(),
+	    info,
+	    dt,
+	    delay,
+	    adj,
+	    pivots,
+
+	    in_spikes,
+	    in_num_spikes,
+
+	    out_spikes,
+	    out_num_spikes );
 }
-template void zero_async<int>( int_ *, cudaStream_t );
-template void zero_async<int64_t>( int64_t *, cudaStream_t );
-template void zero_async<uint_>( uint_ *, cudaStream_t );
-template void zero_async<uint64_t>( uint64_t *, cudaStream_t );
-template void zero_async<float>( float *, cudaStream_t );
-template void zero_async<double>( double *, cudaStream_t );
+template void gather<::spice::synth>(
+    cudaStream_t,
+
+    snn_info const,
+    float const,
+    int_ const,
+    span2d<int_ const>,
+    uint_ const *,
+
+    int_ const *,
+    uint_ const *,
+
+    int_ *,
+    uint_ * );
+template void gather<::spice::vogels_abbott>(
+    cudaStream_t,
+
+    snn_info const,
+    float const,
+    int_ const,
+    span2d<int_ const>,
+    uint_ const *,
+
+    int_ const *,
+    uint_ const *,
+
+    int_ *,
+    uint_ * );
+template void gather<::spice::brunel>(
+    cudaStream_t,
+
+    snn_info const,
+    float const,
+    int_ const,
+    span2d<int_ const>,
+    uint_ const *,
+
+    int_ const *,
+    uint_ const *,
+
+    int_ *,
+    uint_ * );
+
+template <typename T>
+void zero_async( T * t, cudaStream_t s /* = nullptr */, int_ const n /* = 1 */ )
+{
+	call( [&] { _zero_async<T><<<1, n, 0, s>>>( t ); } );
+}
+template void zero_async<int>( int_ *, cudaStream_t, int_ const );
+template void zero_async<int64_t>( int64_t *, cudaStream_t, int_ const );
+template void zero_async<uint_>( uint_ *, cudaStream_t, int_ const );
+template void zero_async<uint64_t>( uint64_t *, cudaStream_t, int_ const );
+template void zero_async<float>( float *, cudaStream_t, int_ const );
+template void zero_async<double>( double *, cudaStream_t, int_ const );
 } // namespace cuda
 } // namespace spice

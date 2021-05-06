@@ -45,7 +45,7 @@ auto map_i( Tuple1 && t1, Tuple2 && t2, Fn && f, std::index_sequence<I...> )
 } // namespace detail
 
 template <size_ N, typename Fn>
-HYBRID void for_n( Fn && f )
+HYBRID constexpr void for_n( Fn && f )
 {
 	if constexpr( N > 0 )
 	{
@@ -146,9 +146,8 @@ struct type_list
 	template <size_ I>
 	static constexpr size_ offset_in_bytes()
 	{
-		constexpr size_ szs[] = { sizeof( T )... };
 		size_ result = 0;
-		for( long_ i = 0; i < I; i++ ) result += szs[i];
+		for_n<I>( [&]( auto i ) { result += ith_size_in_bytes<i>(); } );
 		return result;
 	}
 

@@ -148,9 +148,8 @@ static void plot2_RunTime( benchmark::State & state )
 
 			timer t;
 			for( size_ i = 0;
-			     i < ITER / ( std::is_same<net_t<Model>, cuda::multi_snn<Model>>::value ?
-                                  net->delay() :
-                                  1 );
+			     i <
+			     ITER / ( std::is_same<Model, brunel_with_plasticity>::value ? 1 : net->delay() );
 			     i++ )
 				net->step();
 
