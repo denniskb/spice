@@ -114,69 +114,6 @@ size_ layout::size() const { return _n; }
 std::vector<layout::edge> const & layout::connections() const { return _connections; }
 size_ layout::max_degree() const { return _max_degree; }
 
-std::pair<size_, size_> layout::static_load_balance( size_ const n, size_ const i ) const
-{
-	spice_assert( n > 0 );
-	spice_assert( i < n );
-
-	std::vector<int> szs;
-	std::vector<size_> costs;
-	{
-		std::map<int, std::pair<int, double>> pop2size_cost;
-		for( auto const & c : connections() )
-		{
-			size_ const src_size = std::get<1>( c ) - std::get<0>( c );
-			size_ const dst_size = std::get<3>( c ) - std::get<2>( c );
-
-			pop2size_cost[std::get<0>( c )].first = src_size;
-
-			auto x = pop2size_cost[std::get<2>( c )];
-			x.first = dst_size;
-			x.second += src_size * dst_size * static_cast<double>( std::get<4>( c ) );
-			pop2size_cost[std::get<2>( c )] = x;
-		}
-
-		for( auto const & [k, v] : pop2size_cost )
-		{
-			szs.push_back( v.first );
-			costs.push_back( v.first + static_cast<size_>( std::round( v.second ) ) );
-		}
-	}
-	std::inclusive_scan( szs.begin(), szs.end(), szs.begin() );
-	std::inclusive_scan( costs.begin(), costs.end(), costs.begin() );
-
-	auto partition = [&]( size_ pivot ) -> size_ {
-		if( !pivot ) return 0;
-		auto I = std::lower_bound( costs.begin(), costs.end(), pivot );
-		auto i = I - costs.begin();
-
-		if( i ) pivot -= costs[i - 1];
-
-		return pivot * ( szs[i] - ( i ? szs[i - 1] : 0 ) ) /
-		           ( costs[i] - ( i ? costs[i - 1] : 0 ) ) +
-		       ( i ? szs[i - 1] : 0 );
-	};
-
-	return { partition( costs.back() * i / n ), partition( costs.back() * ( i + 1 ) / n ) };
-}
-
-layout::slice<> layout::cut( std::pair<size_, size_> range ) const
-{
-	spice_assert( range.first <= size() );
-	spice_assert( range.second <= size() );
-	spice_assert( range.first <= range.second );
-
-	std::vector<layout::edge> part;
-	for( auto c : connections() )
-	{
-		std::get<2>( c ) = std::max( narrow<int_>( range.first ), std::get<2>( c ) );
-		std::get<3>( c ) = std::min( narrow<int_>( range.second ), std::get<3>( c ) );
-		if( std::get<2>( c ) < std::get<3>( c ) ) part.push_back( std::move( c ) );
-	}
-
-	return { layout( size(), part ), range.first, range.second };
-}
-
 layout layout::cut( size_ slice_width, size_ n_gpus, size_ i_gpu ) const
 {
 	spice_assert( slice_width > 0 );

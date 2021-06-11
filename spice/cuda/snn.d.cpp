@@ -29,7 +29,6 @@ void snn<Model>::reserve( size_ const num_neurons, size_ const num_synapses, int
 {
 	spice_assert( num_synapses % num_neurons == 0 );
 
-	// TODO: Hysteresis
 	_graph.edges.resize( num_synapses );
 	_graph.adj = { num_neurons, num_synapses / num_neurons, _graph.edges.data() };
 	_graph.pivots.resize( num_neurons * ( ( num_neurons + 1023 ) / 1024 ) );

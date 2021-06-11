@@ -460,7 +460,7 @@ void generate_adj_list( cudaStream_t s, spice::util::layout const & desc, int_ *
 void generate_pivots(
     cudaStream_t s, int_ const n, int_ const max_degree, int_ const * edges, uint_ * pivots )
 {
-	spice_assert((n+1023)/1024+1 <= 1024);
+	spice_assert( ( n + 1023 ) / 1024 + 1 <= 1024) ;
 	
 	call( [&] {
 		_generate_pivots<<<n, ( n + 1023 ) / 1024 + 1, 0, s>>>( edges, max_degree, pivots );

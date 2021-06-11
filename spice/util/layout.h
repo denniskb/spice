@@ -36,16 +36,6 @@ public:
 	std::vector<edge> const & connections() const;
 	size_ max_degree() const;
 
-	std::pair<size_, size_> static_load_balance( size_ n, size_ i ) const;
-	template <typename T = layout>
-	struct slice
-	{
-		T part;
-		size_ first;
-		size_ last;
-	};
-	slice<> cut( std::pair<size_, size_> range ) const;
-
 	layout cut( size_ slice_width, size_ n_gpus, size_ i_gpu ) const;
 
 private:
