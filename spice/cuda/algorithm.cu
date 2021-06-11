@@ -387,10 +387,8 @@ static __global__ void _gather(
 		}
 		__syncthreads();
 
-		if( I < info.num_neurons )
-			if( Model::neuron::template update( sit, dt, info, bak ) )
-				out_spikes
-				    [d * info.num_neurons + atomicInc( &out_num_spikes[d], info.num_neurons )] = I;
+		if( I < info.num_neurons && Model::neuron::template update( sit, dt, info, bak ) )
+			out_spikes[d * info.num_neurons + atomicInc( &out_num_spikes[d], info.num_neurons )] = I;
 		__syncthreads();
 	}
 
