@@ -6,46 +6,32 @@ clc;
 results = [
     jsondecode(fileread('spice.json'));
     jsondecode(fileread('bsim.json'));
-    jsondecode(fileread('neurongpu.json'))
+    jsondecode(fileread('neurongpu.json'));
+    jsondecode(fileread('genn.json'));
 ];
 
-C = distinct_colors(20, 'w');
+C = distinct_colors(5, 'w');
 global CM;
-CM = [C(13,:); C(8,:); C(5,:)];
+CM = [C(1,:); C(2,:); C(3,:); C(4,:); C(5,:)];
 
 global TFS; global LFS;
 TFS = 16;
 LFS = 14;
 
 %% Sim. time as function of network size (single GPU)
-models = {'vogels' 'brunel' 'brunel+' 'synth_0.00156_0.005_1'};
-titles = {'Vogels' 'Brunel' 'Brunel+' 'Synth'};
-for i = 1:4
+models = {'vogels' 'brunel' 'brunel+'};
+titles = {'Vogels' 'Brunel' 'Brunel+'};
+for i = 1:length(models)
     plot_group(filter(results, 'simtime', {'x_gpus' 1 'model' models{i}}, 'sim'));
     title(titles{i}, "FontSize", TFS);
-    if i == 4
-        xlabel({'Synapse Count'; 'Neuron Count'}, 'FontSize', LFS);
-        %set(gca, 'YScale', 'log');
-    else
-        xlabel('Synapse Count', 'FontSize', LFS);
-    end
+    xlabel('Synapse Count', 'FontSize', LFS);
     ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
-    if strcmp(models{i}, 'brunel+')
-        xlim([0 7.5e8]);
-        xticks([0:0.25:0.75] * 1e9);
-        xticklabels({'0' '0.25B' '0.5B' '0.75B'});
-    else
-        if i == 4
-            xticks([0:0.5:3] .* 1e9);
-            xticklabels({'0\newline0' '0.5B\newline0.6M' '  1B\newline0.8M' '1.5B\newline 1M' '  2B\newline1.1M' '2.5B\newline1.3M' '  3B\newline1.4M'});
-        else
-            xticks([0:0.5:3] .* 1e9);
-            xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
-        end
-    end
+    %xticks([0:0.5:3] .* 1e9);
+    %xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
+
 	%plot([0 3] .* 1e9, [10 10], 'Color', 'r', 'LineStyle', '--', 'HandleVisibility', 'off');
     
-    saveas(gcf, strcat('simtime_', models{i}, '.eps'), 'epsc');
+    %saveas(gcf, strcat('simtime_', models{i}, '.eps'), 'epsc');
 end
 
 %% Setup time as a function of network size

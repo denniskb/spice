@@ -1,6 +1,6 @@
 [
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 5.00e+08,
 		"#gpus": 1,
@@ -8,7 +8,7 @@
 		"simtime": 0.654048
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 1.00e+09,
 		"#gpus": 1,
@@ -16,7 +16,7 @@
 		"simtime": 0.908943
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 1.50e+09,
 		"#gpus": 1,
@@ -24,7 +24,7 @@
 		"simtime": 1.33846
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 2.00e+09,
 		"#gpus": 1,
@@ -32,7 +32,7 @@
 		"simtime": 1.61052
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 2.50e+09,
 		"#gpus": 1,
@@ -40,7 +40,7 @@
 		"simtime": 1.90529
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 3.00e+09,
 		"#gpus": 1,
@@ -48,7 +48,7 @@
 		"simtime": 2.16024
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 3.50e+09,
 		"#gpus": 1,
@@ -56,7 +56,7 @@
 		"simtime": 2.44541
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 4.00e+09,
 		"#gpus": 1,
@@ -64,7 +64,7 @@
 		"simtime": 2.71355
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 4.50e+09,
 		"#gpus": 1,
@@ -72,7 +72,7 @@
 		"simtime": 2.98458
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 5.00e+09,
 		"#gpus": 1,
@@ -80,7 +80,7 @@
 		"simtime": 3.24843
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 5.50e+09,
 		"#gpus": 1,
@@ -88,7 +88,7 @@
 		"simtime": 3.79328
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 6.00e+09,
 		"#gpus": 1,
@@ -96,7 +96,7 @@
 		"simtime": 4.08684
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 6.50e+09,
 		"#gpus": 1,
@@ -104,7 +104,7 @@
 		"simtime": 4.36841
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 7.00e+09,
 		"#gpus": 1,
@@ -112,7 +112,7 @@
 		"simtime": 4.63495
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 7.50e+09,
 		"#gpus": 1,
@@ -120,7 +120,7 @@
 		"simtime": 4.90368
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 8.00e+09,
 		"#gpus": 1,
@@ -128,7 +128,7 @@
 		"simtime": 5.18379
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 8.50e+09,
 		"#gpus": 1,
@@ -136,7 +136,7 @@
 		"simtime": 5.41772
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 9.00e+09,
 		"#gpus": 1,
@@ -144,7 +144,7 @@
 		"simtime": 5.67412
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 9.50e+09,
 		"#gpus": 1,
@@ -152,7 +152,7 @@
 		"simtime": 5.95286
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel",
 		"#syn": 1.00e+10,
 		"#gpus": 1,
@@ -160,167 +160,167 @@
 		"simtime": 6.21102
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.237201,
-		"simtime": 2.96235
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.235976,
+		"simtime": 2.95177
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 2.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.263178,
-		"simtime": 4.74019
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.25662,
+		"simtime": 4.81801
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 3.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.270972,
-		"simtime": 7.45506
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.268835,
+		"simtime": 8.05744
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 4.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.348226,
-		"simtime": 7.38894
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.325335,
+		"simtime": 8.58392
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 5.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.396014,
-		"simtime": 9.74088
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.377272,
+		"simtime": 10.2533
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 6.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.421991,
-		"simtime": 14.1806
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.418714,
+		"simtime": 28.2625
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 7.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.500107,
-		"simtime": 14.7199
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.500601,
+		"simtime": 13.9738
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 8.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.542352,
-		"simtime": 16.4621
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.546559,
+		"simtime": 15.7492
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 9.00e+08,
 		"#gpus": 1,
-		"setuptime": 0.578544,
-		"simtime": 20.8874
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.605313,
+		"simtime": 19.8808
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.00e+09,
 		"#gpus": 1,
-		"setuptime": 0.647787,
-		"simtime": 53.805
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.669688,
+		"simtime": 24.788
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.10e+09,
 		"#gpus": 1,
-		"setuptime": 0.70241,
-		"simtime": 25.6591
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.732988,
+		"simtime": 29.0007
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.20e+09,
 		"#gpus": 1,
-		"setuptime": 0.775082,
-		"simtime": 29.1219
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.818418,
+		"simtime": 30.6225
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.30e+09,
 		"#gpus": 1,
-		"setuptime": 0.815518,
-		"simtime": 63.4468
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.851416,
+		"simtime": 49.1212
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.40e+09,
 		"#gpus": 1,
-		"setuptime": 0.874126,
-		"simtime": 78.8384
-	},
-	{
-		"sim": "genn",
+		"setuptime": 0.872691,
+		"simtime": 78.4872
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.50e+09,
 		"#gpus": 1,
-		"setuptime": 0.932593,
-		"simtime": 83.1467
-	},
-	{
-		"sim": "genn",
+		"setuptime": 1.00621,
+		"simtime": 86.8124
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.60e+09,
 		"#gpus": 1,
-		"setuptime": 0.999975,
-		"simtime": 71.1086
-	},
-	{
-		"sim": "genn",
+		"setuptime": 1.06143,
+		"simtime": 77.4714
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.70e+09,
 		"#gpus": 1,
-		"setuptime": 1.07142,
-		"simtime": 88.2086
-	},
-	{
-		"sim": "genn",
+		"setuptime": 1.13292,
+		"simtime": 89.21
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.80e+09,
 		"#gpus": 1,
-		"setuptime": 1.14165,
-		"simtime": 88.9933
-	},
-	{
-		"sim": "genn",
+		"setuptime": 1.18402,
+		"simtime": 77.9324
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 1.90e+09,
 		"#gpus": 1,
-		"setuptime": 1.19618,
-		"simtime": 77.119
-	},
-	{
-		"sim": "genn",
+		"setuptime": 1.19291,
+		"simtime": 94.722
+	}
+	,{
+		"sim": "GeNN",
 		"model": "brunel+",
 		"#syn": 2.00e+09,
 		"#gpus": 1,
-		"setuptime": 1.3,
-		"simtime": 117.752
+		"setuptime": 1.38279,
+		"simtime": 118.024
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 2.50e+08,
 		"#gpus": 1,
@@ -328,7 +328,7 @@
 		"simtime": 0.933902
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 5.00e+08,
 		"#gpus": 1,
@@ -336,7 +336,7 @@
 		"simtime": 1.53866
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 7.50e+08,
 		"#gpus": 1,
@@ -344,7 +344,7 @@
 		"simtime": 2.08447
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 1.00e+09,
 		"#gpus": 1,
@@ -352,7 +352,7 @@
 		"simtime": 2.61981
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 1.25e+09,
 		"#gpus": 1,
@@ -360,7 +360,7 @@
 		"simtime": 3.13629
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 1.50e+09,
 		"#gpus": 1,
@@ -368,7 +368,7 @@
 		"simtime": 3.65728
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 1.75e+09,
 		"#gpus": 1,
@@ -376,7 +376,7 @@
 		"simtime": 4.09173
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 2.00e+09,
 		"#gpus": 1,
@@ -384,7 +384,7 @@
 		"simtime": 4.53325
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 2.25e+09,
 		"#gpus": 1,
@@ -392,7 +392,7 @@
 		"simtime": 5.07384
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 2.50e+09,
 		"#gpus": 1,
@@ -400,7 +400,7 @@
 		"simtime": 5.59631
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 2.75e+09,
 		"#gpus": 1,
@@ -408,7 +408,7 @@
 		"simtime": 6.03607
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "vogels",
 		"#syn": 3.00e+09,
 		"#gpus": 1,
@@ -416,7 +416,7 @@
 		"simtime": 6.68244
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 2.50e+08,
 		"#gpus": 1,
@@ -424,7 +424,7 @@
 		"simtime": 1.69474
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 5.00e+08,
 		"#gpus": 1,
@@ -432,7 +432,7 @@
 		"simtime": 2.25456
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 7.50e+08,
 		"#gpus": 1,
@@ -440,7 +440,7 @@
 		"simtime": 2.68484
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 1.00e+09,
 		"#gpus": 1,
@@ -448,7 +448,7 @@
 		"simtime": 3.04597
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 1.25e+09,
 		"#gpus": 1,
@@ -456,7 +456,7 @@
 		"simtime": 3.36632
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 1.50e+09,
 		"#gpus": 1,
@@ -464,7 +464,7 @@
 		"simtime": 3.63792
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 1.75e+09,
 		"#gpus": 1,
@@ -472,7 +472,7 @@
 		"simtime": 3.98066
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 2.00e+09,
 		"#gpus": 1,
@@ -480,7 +480,7 @@
 		"simtime": 4.23569
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 2.25e+09,
 		"#gpus": 1,
@@ -488,7 +488,7 @@
 		"simtime": 4.46716
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 2.50e+09,
 		"#gpus": 1,
@@ -496,7 +496,7 @@
 		"simtime": 4.69372
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 2.75e+09,
 		"#gpus": 1,
@@ -504,7 +504,7 @@
 		"simtime": 4.89925
 	},
 	{
-		"sim": "genn",
+		"sim": "GeNN",
 		"model": "synth_0.00156_0.005_1",
 		"#syn": 3.00e+09,
 		"#gpus": 1,

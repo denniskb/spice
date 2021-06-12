@@ -1,0 +1,66 @@
+[
+	{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 100000000,
+		"#gpus": 1,
+		"setuptime": 0.306839,
+		"simtime": 19.7174
+	}
+	,{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 200000000,
+		"#gpus": 1,
+		"setuptime": 0.296456,
+		"simtime": 38.3308
+	}
+	,{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 300000000,
+		"#gpus": 1,
+		"setuptime": 0.323163,
+		"simtime": 57.4406
+	}
+	,{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 400000000,
+		"#gpus": 1,
+		"setuptime": 0.327949,
+		"simtime": 76.4205
+	}
+	,{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 500000000,
+		"#gpus": 1,
+		"setuptime": 0.352621,
+		"simtime": 94.9795
+	}
+	,{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 600000000,
+		"#gpus": 1,
+		"setuptime": 0.348102,
+		"simtime": 114.404
+	}
+	,{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 700000000,
+		"#gpus": 1,
+		"setuptime": 0.367887,
+		"simtime": 132.727
+	}
+	,{
+		"sim": "SpiceEager",
+		"model": "brunel+",
+		"#syn": 800000000,
+		"#gpus": 1,
+		"setuptime": 0.375731,
+		"simtime": 150.851
+	}
+]

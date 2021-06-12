@@ -1,0 +1,194 @@
+[
+	{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 250000000,
+		"#gpus": 1,
+		"setuptime": 0.295193,
+		"simtime": 0.270539
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 500000000,
+		"#gpus": 1,
+		"setuptime": 0.295827,
+		"simtime": 0.50977
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 750000000,
+		"#gpus": 1,
+		"setuptime": 0.288291,
+		"simtime": 0.787177
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"setuptime": 0.300195,
+		"simtime": 1.15265
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 1250000000,
+		"#gpus": 1,
+		"setuptime": 0.297164,
+		"simtime": 1.43583
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 1500000000,
+		"#gpus": 1,
+		"setuptime": 0.322667,
+		"simtime": 1.75834
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 1750000000,
+		"#gpus": 1,
+		"setuptime": 0.328072,
+		"simtime": 2.072
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 2000000000,
+		"#gpus": 1,
+		"setuptime": 0.365623,
+		"simtime": 2.4352
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 2250000000,
+		"#gpus": 1,
+		"setuptime": 0.365009,
+		"simtime": 2.7939
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 2500000000,
+		"#gpus": 1,
+		"setuptime": 0.35209,
+		"simtime": 3.11944
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 2750000000,
+		"#gpus": 1,
+		"setuptime": 0.378771,
+		"simtime": 3.4491
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "vogels",
+		"#syn": 3000000000,
+		"#gpus": 1,
+		"setuptime": 0.404013,
+		"simtime": 3.80083
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 250000000,
+		"#gpus": 1,
+		"setuptime": 0.326959,
+		"simtime": 0.40841
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 500000000,
+		"#gpus": 1,
+		"setuptime": 0.308509,
+		"simtime": 0.608474
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 750000000,
+		"#gpus": 1,
+		"setuptime": 0.294545,
+		"simtime": 0.819491
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 1000000000,
+		"#gpus": 1,
+		"setuptime": 0.323585,
+		"simtime": 1.0327
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 1250000000,
+		"#gpus": 1,
+		"setuptime": 0.326798,
+		"simtime": 1.24481
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 1500000000,
+		"#gpus": 1,
+		"setuptime": 0.325102,
+		"simtime": 1.43972
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 1750000000,
+		"#gpus": 1,
+		"setuptime": 0.351445,
+		"simtime": 1.64769
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 2000000000,
+		"#gpus": 1,
+		"setuptime": 0.356899,
+		"simtime": 1.84595
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 2250000000,
+		"#gpus": 1,
+		"setuptime": 0.370992,
+		"simtime": 2.04357
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 2500000000,
+		"#gpus": 1,
+		"setuptime": 0.361817,
+		"simtime": 2.21581
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 2750000000,
+		"#gpus": 1,
+		"setuptime": 0.391384,
+		"simtime": 2.39895
+	}
+	,{
+		"sim": "SpiceNaive",
+		"model": "brunel",
+		"#syn": 3000000000,
+		"#gpus": 1,
+		"setuptime": 0.357814,
+		"simtime": 2.61079
+	}
+]
