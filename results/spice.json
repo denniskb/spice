@@ -4,7 +4,7 @@
 		"model": "vogels",
 		"#syn": 250000000,
 		"#gpus": 1,
-		"setuptime": 1.02628,
+		"setuptime": 0.280261,
 		"simtime": 0.10647
 	}
 	,{
