@@ -79,7 +79,7 @@ event = filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel+'}, 'sim');
 event = event('Spice');
 
 figure;
-bar([1 eager(2,end) / lazy(2,end) eager(2,end) / event(2,end)], 'FaceColor', CM(4,:));
+bar([1 eager(2,end) / lazy(2,end) eager(2,end) / event(2,end)], 'FaceColor', CM(2,:));
 tmp = gca;
 tmp.YGrid = 'on';
 title('Plastic Models', 'FontSize', TFS);
@@ -92,7 +92,32 @@ tmp = get(gca, 'XTickLabel');
 set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
 tmp = get(gca, 'YTickLabel');
 set(gca, 'YTickLabel', tmp, 'fontsize', LFS);
-    
+
+
+naive = filter(jsondecode(fileread('spice_naive.json')), 'simtime', {}, 'model');
+naive_vogels = naive('vogels');
+naive_brunel = naive('brunel');
+vogels = filter(results, 'simtime', {'sim' 'Spice' 'model' 'vogels'}, 'sim');
+vogels = vogels('Spice');
+brunel = filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel'}, 'sim');
+brunel = brunel('Spice');
+
+figure;
+b = bar([1 1; naive_vogels(2,end) / vogels(2,end) naive_brunel(2,end) / brunel(2,end)]);
+b(1).FaceColor = CM(1,:);
+b(2).FaceColor = CM(3,:);
+tmp = gca;
+tmp.YGrid = 'on';
+title('Static Models', 'FontSize', TFS);
+xlabel('Optimizations', 'FontSize', LFS);
+ylabel('Speedup (x)', 'FontSize', LFS);
+xticklabels({'Global' 'Shared'});
+legend({'Vogels' 'Brunel'}, 'Location', 'NorthWest', 'FontSize', LFS);
+tmp = get(gca, 'XTickLabel');  
+set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
+tmp = get(gca, 'YTickLabel');
+set(gca, 'YTickLabel', tmp, 'fontsize', LFS);
+
 
 function i = indexof(x, v)
     i = length(v)/2 + 0.5;
