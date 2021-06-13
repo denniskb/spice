@@ -23,7 +23,7 @@ TFS = 16;
 LFS = 14;
 
 %% Sim. time as function of network size (single GPU)
-plot_group(filter(results, 'simtime', {'x_gpus' 1 'model' 'vogels'}, 'sim'));
+plot_group(filter(results, 'simtime', {'model' 'vogels' 'x_gpus' 1}, 'sim'));
 title('Vogels');
 xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
@@ -31,7 +31,7 @@ xticks([0:0.5:3] .* 1e9);
 xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
 %saveas(gcf, 'simtime_vogels.eps', 'epsc');
 
-plot_group(filter(results, 'simtime', {'x_gpus' 1 'model' 'brunel'}, 'sim'));
+plot_group(filter(results, 'simtime', {'model' 'brunel' 'x_gpus' 1}, 'sim'));
 title('Brunel');
 xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
@@ -42,7 +42,7 @@ set(gca, 'XScale', 'log');
 
 c = CM;
 CM = CM([2 4],:);
-plot_group(filter(results, 'simtime', {'x_gpus' 1 'model' 'brunel+'}, 'sim'));
+plot_group(filter(results, 'simtime', {'model' 'brunel+'}, 'sim'));
 title('Brunel+');
 xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
@@ -55,7 +55,7 @@ set(gca, 'YScale', 'log');
 CM = c;
 
 %% Setup time as a function of network size (vogels)
-plot_group(filter(results, 'setuptime', {'x_gpus' 1 'model' 'vogels'}, 'sim'));
+plot_group(filter(results, 'setuptime', {'model' 'vogels' 'x_gpus' 1}, 'sim'));
 genn = filter(results, 'setuptime', {'model' 'vogels' 'sim' 'GeNN'}, 'sim');
 xy = genn('GeNN');
 plot(xy(1,:), xy(2,:) + 15, 'LineWidth', 2, 'Color', CM(2,:), 'LineStyle', '--');
@@ -70,6 +70,29 @@ legend({'BSim' 'GeNN' 'NeuronGPU' 'Spice' 'GeNN /w comp.'}, 'Location', 'NorthEa
 set(gca, 'YScale', 'log');
 %saveas(gcf, 'setuptime.eps', 'epsc');
 
+%% Speedups of various opt.
+eager = filter(jsondecode(fileread('spice_eager.json')), 'simtime', {}, 'sim');
+eager = eager('SpiceEager');
+lazy  = filter(jsondecode(fileread('spice_lazy.json')), 'simtime', {}, 'sim');
+lazy  = lazy('SpiceLazy');
+event = filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel+'}, 'sim');
+event = event('Spice');
+
+figure;
+bar([1 eager(2,end) / lazy(2,end) eager(2,end) / event(2,end)], 'FaceColor', CM(4,:));
+tmp = gca;
+tmp.YGrid = 'on';
+title('Plastic Models', 'FontSize', TFS);
+ylim([0 30]);
+xlabel('Optimizations', 'FontSize', LFS);
+ylabel('Speedup (x)', 'FontSize', LFS);
+xticklabels({'Eager' 'Lazy' 'Event'});
+legend({'Brunel+'}, 'Location', 'NorthWest', 'FontSize', LFS);
+tmp = get(gca, 'XTickLabel');  
+set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
+tmp = get(gca, 'YTickLabel');
+set(gca, 'YTickLabel', tmp, 'fontsize', LFS);
+    
 
 function i = indexof(x, v)
     i = length(v)/2 + 0.5;
@@ -103,6 +126,8 @@ function plot_group(data)
     legend(data.keys, 'FontSize', LFS, 'Location', 'NorthWest');
     tmp = get(gca, 'XTickLabel');  
     set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
+    tmp = get(gca, 'YTickLabel');
+    set(gca, 'YTickLabel', tmp, 'fontsize', LFS);
 end
 
 function xy = filter(json, select, where, group_by)
