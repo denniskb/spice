@@ -48,9 +48,8 @@ xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
 xticks([0:4:20] .* 1e8);
 xticklabels({'0' '0.4B' '0.8B' '1.2B' '1.6B' '2B'});
-yticks([1 3 5 10 100]);
-yticklabels({'1' '3' '5' '10' '100'});
-set(gca, 'YScale', 'log');
+ylim([0 20]);
+yticks(0:5:20);
 %saveas(gcf, 'simtime_brunel+.eps', 'epsc');
 CM = c;
 
