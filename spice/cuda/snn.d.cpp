@@ -156,7 +156,7 @@ void snn<Model>::step(
     int_ ** out_dspikes, uint_ ** out_dnum_spikes, std::vector<int> * out_spikes /* = nullptr */ )
 {
 	this->_step( [&]( int_ const i, float const dt ) {
-		if constexpr( false || Model::synapse::size > 0 )
+		if constexpr( Model::synapse::size > 0 )
 		{
 			if( i >= this->delay() )
 				receive<Model>(
