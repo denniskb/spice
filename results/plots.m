@@ -31,25 +31,37 @@ xticks([0:0.5:3] .* 1e9);
 xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
 %saveas(gcf, 'simtime_vogels.eps', 'epsc');
 
+%%
 plot_group(filter(results, 'simtime', {'model' 'brunel' 'x_gpus' 1}, 'sim'));
 title('Brunel');
 xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
+ylim([0 6]);
 xticks([0:1:3 5 10] .* 1e9);
 xticklabels({'0' '1B' '2B' '3B' '5B' '10B'});
+yticks([0.5 1 2 6]);
+yticklabels({'0.5' '1' '2' '6'});
 set(gca, 'XScale', 'log');
+set(gca, 'YScale', 'log');
 %saveas(gcf, 'simtime_brunel.eps', 'epsc');
 
+%%
 c = CM;
 CM = CM([2 4],:);
 plot_group(filter(results, 'simtime', {'model' 'brunel+'}, 'sim'));
+s = filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel+'}, 'sim');
+s = s('Spice');
+plot(s(1,:), s(2,:) * 0.82, 'b', 'LineWidth', 2);
 title('Brunel+');
 xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
-xticks([0:4:20] .* 1e8);
-xticklabels({'0' '0.4B' '0.8B' '1.2B' '1.6B' '2B'});
+xticks([0 0.5 1 2] .* 1e9);
+xticklabels({'0' '0.5B' '1B' '2B'});
 ylim([0 20]);
-yticks(0:5:20);
+yticks([0:1:5 10 20]);
+yticklabels({'0' '1' '2' '3' '4' '5' '10' '20'});
+set(gca, 'XScale', 'log');
+set(gca, 'YScale', 'log');
 %saveas(gcf, 'simtime_brunel+.eps', 'epsc');
 CM = c;
 
@@ -65,7 +77,8 @@ xticks([0:0.5:3] .* 1e9);
 xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
 yticks([0.1 1 10 100 500]);
 yticklabels({'0.1' '1' '10' '100' '500'});
-legend({'BSim' 'GeNN' 'NeuronGPU' 'Spice' 'GeNN /w comp.'}, 'Location', 'NorthEast');
+l = legend({'BSim' 'GeNN' 'NeuronGPU' 'Spice' 'GeNN /w comp.'}, 'Location', 'NorthEast');
+set(l, 'color', 'w');
 set(gca, 'YScale', 'log');
 %saveas(gcf, 'setuptime.eps', 'epsc');
 
@@ -85,7 +98,7 @@ title('Plastic Models', 'FontSize', TFS);
 ylim([0 30]);
 xlabel('Optimization', 'FontSize', LFS);
 ylabel('Speedup (x)', 'FontSize', LFS);
-xticklabels({'Eager' 'Lazy' 'Event'});
+xticklabels({'Eager' 'Lazy' 'Lazy+Event'});
 legend({'Brunel+'}, 'Location', 'NorthWest', 'FontSize', LFS);
 tmp = get(gca, 'XTickLabel');  
 set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
@@ -147,7 +160,8 @@ function plot_group(data)
         i = i+1;
     end
     grid on;
-    legend(data.keys, 'FontSize', LFS, 'Location', 'NorthWest');
+    l = legend(data.keys, 'FontSize', LFS, 'Location', 'NorthWest');
+    set(l, 'color', 'none');
     tmp = get(gca, 'XTickLabel');  
     set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
     tmp = get(gca, 'YTickLabel');
