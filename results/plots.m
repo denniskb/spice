@@ -29,7 +29,7 @@ xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
 xticks([0:0.5:3] .* 1e9);
 xticklabels({'0' '0.5B' '1B' '1.5B' '2B' '2.5B' '3B'});
-%saveas(gcf, 'simtime_vogels.eps', 'epsc');
+saveas(gcf, 'simtime_vogels.eps', 'epsc');
 
 %%
 plot_group(filter(results, 'simtime', {'model' 'brunel' 'x_gpus' 1}, 'sim'));
@@ -43,15 +43,12 @@ yticks([0.5 1 2 6]);
 yticklabels({'0.5' '1' '2' '6'});
 set(gca, 'XScale', 'log');
 set(gca, 'YScale', 'log');
-%saveas(gcf, 'simtime_brunel.eps', 'epsc');
+saveas(gcf, 'simtime_brunel.eps', 'epsc');
 
 %%
 c = CM;
 CM = CM([2 4],:);
 plot_group(filter(results, 'simtime', {'model' 'brunel+'}, 'sim'));
-s = filter(results, 'simtime', {'sim' 'Spice' 'model' 'brunel+'}, 'sim');
-s = s('Spice');
-plot(s(1,:), s(2,:) * 0.82, 'b', 'LineWidth', 2);
 title('Brunel+');
 xlabel('Synapse Count', 'FontSize', LFS);
 ylabel('Real Time\div Biological Time (x)', 'FontSize', LFS);
@@ -62,7 +59,7 @@ yticks([0:1:5 10 20]);
 yticklabels({'0' '1' '2' '3' '4' '5' '10' '20'});
 set(gca, 'XScale', 'log');
 set(gca, 'YScale', 'log');
-%saveas(gcf, 'simtime_brunel+.eps', 'epsc');
+saveas(gcf, 'simtime_brunel+.eps', 'epsc');
 CM = c;
 
 %% Setup time as a function of network size (vogels)
@@ -80,7 +77,7 @@ yticklabels({'0.1' '1' '10' '100' '500'});
 l = legend({'BSim' 'GeNN' 'NeuronGPU' 'Spice' 'GeNN /w comp.'}, 'Location', 'NorthEast');
 set(l, 'color', 'w');
 set(gca, 'YScale', 'log');
-%saveas(gcf, 'setuptime.eps', 'epsc');
+saveas(gcf, 'setuptime.eps', 'epsc');
 
 %% Speedups of various opt.
 eager = filter(jsondecode(fileread('spice_eager.json')), 'simtime', {}, 'sim');
@@ -104,6 +101,8 @@ tmp = get(gca, 'XTickLabel');
 set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
 tmp = get(gca, 'YTickLabel');
 set(gca, 'YTickLabel', tmp, 'fontsize', LFS);
+
+saveas(gcf, 'speedup_plastic.eps', 'epsc');
 
 
 naive = filter(jsondecode(fileread('spice_naive.json')), 'simtime', {}, 'model');
@@ -129,6 +128,8 @@ tmp = get(gca, 'XTickLabel');
 set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
 tmp = get(gca, 'YTickLabel');
 set(gca, 'YTickLabel', tmp, 'fontsize', LFS);
+
+saveas(gcf, 'speedup_static.eps', 'epsc');
 
 
 function i = indexof(x, v)
