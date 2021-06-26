@@ -220,7 +220,7 @@ static __global__ void _process_neurons(
 				ulong_ const hist = ( history[i] << 1 ) | spiked;
 				history[i] = hist;
 
-				if( !( ( hist >> ( delay - 1 ) ) & 1 ) && iter - ages[i] == 63 )
+				if( !( hist >> ( delay - 1 ) ) && iter - ages[i] == 63 )
 					updates[atomicInc( num_updates, info.num_neurons )] = i;
 			}
 
