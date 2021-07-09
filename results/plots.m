@@ -95,7 +95,7 @@ title('Plastic Models', 'FontSize', TFS);
 ylim([0 30]);
 xlabel('Optimization', 'FontSize', LFS);
 ylabel('Speedup (x)', 'FontSize', LFS);
-xticklabels({'Eager' 'Lazy' 'Lazy+Event'});
+xticklabels({'Naive' 'Lazy' 'Lazy+Event'});
 legend({'Brunel+'}, 'Location', 'NorthWest', 'FontSize', LFS);
 tmp = get(gca, 'XTickLabel');  
 set(gca, 'XTickLabel', tmp, 'fontsize', LFS);
