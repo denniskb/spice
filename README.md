@@ -1,5 +1,7 @@
 ![banner by Hans Braxmeier](spices.jpg)
 
+*You're on the "gather" branch representing our [HPEC 2021](https://bautembach.de/#hpec2021) paper. The optimizations implemented here are completely orthogonal to (multi-GPU) Spice but simply haven't been merged back to master yet.*
+
 # Spice
 
 Spice (/spaɪk/) is a multi-GPU, time-driven (aka clock-based), general-purpose spiking neural network simulator. Its features include:
