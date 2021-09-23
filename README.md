@@ -9,8 +9,9 @@ Spice (/spaɪk/) is a multi-GPU, time-driven (aka clock-based), general-purpose 
 - Modern, user-friendly API
 
 ## Publications
-- [Multi-GPU SNN Simulation with Perfect Static Load Balancing](https://bautembach.de/#multi-spice) (2021)
-- [Faster and Simpler SNN Simulation with Work Queues](https://bautembach.de/#spice) (2020)
+- [Even Faster SNN Simulation with Lazy+Event-driven Plasticity and Shared Atomics](https://bautembach.de/#hpec2021) (2021)
+- [Multi-GPU SNN Simulation with Perfect Static Load Balancing](https://bautembach.de/#ijcnn2021) (2021) (branch:[gather](https://github.com/denniskb/spice/tree/gather))
+- [Faster and Simpler SNN Simulation with Work Queues](https://bautembach.de/#ijcnn2020) (2020)
 
 ## Requirements
 - CUDA SDK 11 or higher
